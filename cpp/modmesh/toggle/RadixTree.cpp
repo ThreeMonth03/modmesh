@@ -100,7 +100,7 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         }
     }
 
-    outstream << TimeRegistry::me().report() << std::endl;
+    outstream << TimeRegistry::me().detailed_report() << std::endl;
     TimeRegistry::me().clear();
 }
 

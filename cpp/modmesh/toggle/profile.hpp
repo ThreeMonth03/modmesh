@@ -155,6 +155,20 @@ public:
     std::string report() const
     {
         std::ostringstream ostm;
+        for (auto it = m_entry.begin(); it != m_entry.end(); ++it)
+        {
+            ostm
+                << it->first << " : "
+                << "count = " << it->second.count() << " , "
+                << "time = " << it->second.time() << " (second)"
+                << std::endl;
+        }
+        return ostm.str();
+    }
+
+    std::string detailed_report() const
+    {
+        std::ostringstream ostm;
         ostm << "      " << total_call_count() << " function calls in " << total_time() << " seconds" << std::endl;
         ostm << std::endl;
         ostm << std::setw(40) << "Function Name" << std::setw(25) << "Call Count" << std::setw(25) << "Total Time (s)" << std::setw(25) << "Per Call (s)" << std::setw(25) << "Cumulative Time (s)" << std::setw(25) << "Per Call (s)" << std::endl;
