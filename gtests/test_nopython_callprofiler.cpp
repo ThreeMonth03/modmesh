@@ -240,9 +240,9 @@ TEST_F(CallProfilerTest, test_statistic)
     // for first `foo1()` call
     std::stringstream ss;
     pProfiler->print_statistics(ss);
-    std::cout << ss.str() << std::endl;
+    // std::cout << ss.str() << std::endl;
     std::string line;
-    
+
     // Check the total time and call count
     getline(ss, line);
     int ref_call_count = 7;
@@ -268,7 +268,7 @@ TEST_F(CallProfilerTest, test_statistic)
         getline(ss, line);
         std::stringstream ss_word(line);
 
-        std::string func_type;
+        std::string buf;
         std::string func_name = "";
         int call_count;
         double ttime;
@@ -276,18 +276,16 @@ TEST_F(CallProfilerTest, test_statistic)
         double ctime;
         double per_call_ctime;
 
-        ss_word >> func_type;
-        if (func_type == "void")
+        // read the function name
+        while (ss_word >> buf && buf != "1" && buf != "2" && buf != "4")
         {
-            ss_word >> func_name;
-            func_name = func_type + " " + func_name;
+            func_name += buf + " ";
         }
-        else
-        {
-            func_name = func_type;
-        }
+        // remove the last space
+        func_name.pop_back();
 
-        ss_word >> call_count;
+        // read the rest of the values
+        call_count = std::stoi(buf);
         ss_word >> ttime;
         ss_word >> per_call_ttime;
         ss_word >> ctime;
