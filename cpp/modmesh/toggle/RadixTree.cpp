@@ -90,12 +90,20 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         {
             const RadixTreeNode<CallerProfile> * current_node = nodes_buffer.front();
             nodes_buffer.pop();
-            TimeRegistry::me().add(current_node->data().caller_name, current_node->data().total_time.count() / 1e9, current_node->data().total_time.count() / 1e9, current_node->data().call_count);
+            TimeRegistry::me().add(
+                current_node->data().caller_name,
+                current_node->data().total_time.count() / 1e9,
+                current_node->data().total_time.count() / 1e9,
+                current_node->data().call_count);
 
             for (const auto & child : current_node->children())
             {
                 nodes_buffer.push(child.get());
-                TimeRegistry::me().add(current_node->data().caller_name, 0, -child->data().total_time.count() / 1e9, 0);
+                TimeRegistry::me().add(
+                    current_node->data().caller_name,
+                    0,
+                    -child->data().total_time.count() / 1e9,
+                    0);
             }
         }
     }
