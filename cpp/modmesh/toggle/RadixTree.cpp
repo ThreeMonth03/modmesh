@@ -72,9 +72,9 @@ void CallProfiler::print_profiling_result(const RadixTreeNode<CallerProfile> & n
     }
 }
 
-void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream) const
+void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream)
 {
-    std::ostringstream oss;
+    TimeRegistry::me().clear();
 
     std::queue<const RadixTreeNode<CallerProfile> *> nodes_buffer;
     for (const auto & child : node.children())
@@ -82,7 +82,7 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         nodes_buffer.push(child.get());
     }
 
-    // BFS algorithm
+    // BFS algorithm and put the node information into TimeRegistry.
     while (!nodes_buffer.empty())
     {
         const int nodes_buffer_size = nodes_buffer.size();
@@ -90,17 +90,28 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         {
             const RadixTreeNode<CallerProfile> * current_node = nodes_buffer.front();
             nodes_buffer.pop();
-            TimeRegistry::me().add(current_node->data().caller_name, current_node->data().total_time.count() / 1e9, current_node->data().total_time.count() / 1e9, current_node->data().call_count);
+            TimeRegistry::me().add(
+                current_node->data().caller_name,
+                current_node->data().total_time.count() / 1e9,
+                current_node->data().total_time.count() / 1e9,
+                current_node->data().call_count);
 
             for (const auto & child : current_node->children())
             {
                 nodes_buffer.push(child.get());
-                TimeRegistry::me().add(current_node->data().caller_name, 0, -child->data().total_time.count() / 1e9, 0);
+                TimeRegistry::me().add(
+                    current_node->data().caller_name,
+                    0,
+                    -child->data().total_time.count() / 1e9,
+                    0);
             }
         }
     }
 
+    // Print the statistics.
     outstream << TimeRegistry::me().detailed_report() << std::endl;
+
+    // Reset the TimeRegistry.
     TimeRegistry::me().clear();
 }
 

@@ -297,7 +297,7 @@ public:
 
 private:
     void print_profiling_result(const RadixTreeNode<CallerProfile> & node, const int depth, std::ostream & outstream) const;
-    void print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream) const;
+    static void print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream);
 
 private:
     RadixTree<CallerProfile> m_radix_tree; /// the data structure of the callers
