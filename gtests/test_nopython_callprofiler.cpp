@@ -240,9 +240,9 @@ TEST_F(CallProfilerTest, test_statistic)
     // for first `foo1()` call
     std::stringstream ss;
     pProfiler->print_statistics(ss);
-
+    std::cout << ss.str() << std::endl;
     std::string line;
-
+    
     // Check the total time and call count
     getline(ss, line);
     int ref_call_count = 7;
