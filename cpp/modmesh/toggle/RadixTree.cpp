@@ -74,7 +74,7 @@ void CallProfiler::print_profiling_result(const RadixTreeNode<CallerProfile> & n
 
 void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream) const
 {
-    std::ostringstream oss;
+    TimeRegistry::me().clear();
 
     std::queue<const RadixTreeNode<CallerProfile> *> nodes_buffer;
     for (const auto & child : node.children())
@@ -82,7 +82,7 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         nodes_buffer.push(child.get());
     }
 
-    // BFS algorithm
+    // BFS algorithm and put the node information into TimeRegistry.
     while (!nodes_buffer.empty())
     {
         const int nodes_buffer_size = nodes_buffer.size();
@@ -100,7 +100,10 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
         }
     }
 
+    // Print the statistics.
     outstream << TimeRegistry::me().detailed_report() << std::endl;
+
+    // Reset the TimeRegistry.
     TimeRegistry::me().clear();
 }
 

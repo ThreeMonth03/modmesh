@@ -169,12 +169,32 @@ public:
     std::string detailed_report() const
     {
         std::ostringstream ostm;
-        ostm << "      " << total_call_count() << " function calls in " << total_time() << " seconds" << std::endl;
+        /// Header
+        ostm
+            << "      " << total_call_count()
+            << " function calls in " << total_time()
+            << " seconds" << std::endl;
         ostm << std::endl;
-        ostm << std::setw(40) << "Function Name" << std::setw(25) << "Call Count" << std::setw(25) << "Total Time (s)" << std::setw(25) << "Per Call (s)" << std::setw(25) << "Cumulative Time (s)" << std::setw(25) << "Per Call (s)" << std::endl;
+        ostm
+            << std::setw(40) << "Function Name"
+            << std::setw(25) << "Call Count"
+            << std::setw(25) << "Total Time (s)"
+            << std::setw(25) << "Per Call (s)"
+            << std::setw(25) << "Cumulative Time (s)"
+            << std::setw(25) << "Per Call (s)"
+            << std::endl;
+
+        /// Body
         for (auto it = m_entry.begin(); it != m_entry.end(); ++it)
         {
-            ostm << std::setw(40) << it->first << std::setw(25) << it->second.count() << std::setw(25) << it->second.time() << std::setw(25) << it->second.time() / it->second.count() << std::setw(25) << it->second.ctime() << std::setw(25) << it->second.ctime() / it->second.count() << std::endl;
+            ostm
+                << std::setw(40) << it->first
+                << std::setw(25) << it->second.count()
+                << std::setw(25) << it->second.time()
+                << std::setw(25) << it->second.time() / it->second.count()
+                << std::setw(25) << it->second.ctime()
+                << std::setw(25) << it->second.ctime() / it->second.count()
+                << std::endl;
         }
         return ostm.str();
     }
@@ -202,7 +222,7 @@ public:
     }
 
     double total_time() const { return m_total_time; }
-    double total_call_count() const { return m_total_call_count; }
+    long long total_call_count() const { return m_total_call_count; }
 
     std::vector<std::string> names() const
     {
