@@ -237,7 +237,6 @@ TEST_F(CallProfilerTest, test_statistic)
     //        void modmesh::detail::foo2()                        2                 0.108001                0.0540006                0.0700011                0.0350006
     //        void modmesh::detail::foo3()                        4                0.0760001                    0.019                0.0760001                    0.019
 
-    // for first `foo1()` call
     std::stringstream ss;
     pProfiler->print_statistics(ss);
     // std::cout << ss.str() << std::endl;
