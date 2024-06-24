@@ -267,16 +267,26 @@ TEST_F(CallProfilerTest, test_statistic)
         // read the words in the line
         getline(ss, line);
         std::stringstream ss_word(line);
+
         std::string func_type;
-        std::string func_name;
+        std::string func_name = "";
         int call_count;
         double ttime;
         double per_call_ttime;
         double ctime;
         double per_call_ctime;
+
         ss_word >> func_type;
-        ss_word >> func_name;
-        func_name = func_type + " " + func_name;
+        if (func_type == "void")
+        {
+            ss_word >> func_name;
+            func_name = func_type + " " + func_name;
+        }
+        else
+        {
+            func_name = func_type;
+        }
+
         ss_word >> call_count;
         ss_word >> ttime;
         ss_word >> per_call_ttime;

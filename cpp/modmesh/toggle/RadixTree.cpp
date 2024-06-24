@@ -72,7 +72,7 @@ void CallProfiler::print_profiling_result(const RadixTreeNode<CallerProfile> & n
     }
 }
 
-void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream) const
+void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream)
 {
     TimeRegistry::me().clear();
 
