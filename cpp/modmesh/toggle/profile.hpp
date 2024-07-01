@@ -181,19 +181,20 @@ public:
             << std::setw(25) << "Total Time (s)"
             << std::setw(25) << "Per Call (s)"
             << std::setw(25) << "Cumulative Time (s)"
-            << std::setw(25) << "Per Call (s)";
+            << std::setw(25) << "Per Call (s)"
+            << std::endl;
 
         /// Body
         for (auto it = m_entry.begin(); it != m_entry.end(); ++it)
         {
             ostm
-                << std::endl
                 << std::setw(40) << it->first
                 << std::setw(25) << it->second.count()
                 << std::setw(25) << it->second.time()
                 << std::setw(25) << it->second.time() / it->second.count()
                 << std::setw(25) << it->second.ctime()
-                << std::setw(25) << it->second.ctime() / it->second.count();
+                << std::setw(25) << it->second.ctime() / it->second.count()
+                << std::endl;
         }
         return ostm.str();
     }
