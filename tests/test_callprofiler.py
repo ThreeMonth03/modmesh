@@ -46,6 +46,7 @@ def profile_function(func):
         _ = modmesh.CallProfilerProbe(func.__name__)
         result = func(*args, **kwargs)
         return result
+
     return wrapper
 
 
@@ -82,9 +83,12 @@ class CallProfilerTC(unittest.TestCase):
         foo1()
         result = modmesh.call_profiler.result()
 
-        path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                            "data", "profiler_python_schema.json")
-        with open(path, 'r') as schema_file:
+        path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            "data",
+            "profiler_python_schema.json",
+        )
+        with open(path, "r") as schema_file:
             schema = json.load(schema_file)
 
         try:
@@ -192,3 +196,92 @@ class CallProfilerTC(unittest.TestCase):
 
         modmesh.call_profiler.reset()
         foo()
+
+    def test_get_stat(self):
+        time1 = 0.5
+        time2 = 0.1
+        time3 = 0.2
+
+        @profile_function
+        def bar():
+            busy_loop(time1)
+
+        @profile_function
+        def foo():
+            busy_loop(time2)
+            bar()
+
+        @profile_function
+        def baz():
+            busy_loop(time3)
+            foo()
+
+        modmesh.call_profiler.reset()
+        bar()
+        bar()
+        foo()
+        baz()
+        root_stat = modmesh.call_profiler.stat()
+
+        # Check the number of lines
+        stat_line_list = root_stat.split("\n")
+        self.assertEqual(len(stat_line_list), 7)
+
+        # Check the first line
+        words = stat_line_list[0].split()
+        self.assertEqual(words[0], "7")
+        self.assertEqual(words[1], "function")
+        self.assertEqual(words[2], "calls")
+        self.assertEqual(words[3], "in")
+        ref_total_time = time1 * 4 + time2 * 2 + time3
+        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 2e-4)
+        self.assertEqual(words[5], "seconds")
+
+        # Check the second line
+        self.assertEqual(stat_line_list[1], "")
+
+        # Check the third line
+        ref_line3 = (
+            "                           Function Name"
+            + "               Call Count"
+            + "           Total Time (s)"
+            + "             Per Call (s)"
+            + "      Cumulative Time (s)"
+            + "             Per Call (s)"
+        )
+        self.assertEqual(stat_line_list[2], ref_line3)
+
+        # Check remaining lines
+        stat_dict = {}
+        for line in stat_line_list[3:-1]:
+            words = line.split()
+            stat_dict[words[0]] = {
+                "call_count": int(words[1]),
+                "total_time": float(words[2]),
+                "total_per_call": float(words[3]),
+                "cumulative_time": float(words[4]),
+                "cumulative_per_call": float(words[5]),
+            }
+        self.assertEqual(stat_dict["bar"]["call_count"], 4)
+        self.assertTrue(stat_dict["bar"]["total_time"] - (time1 * 4) <= 2e-4)
+        self.assertTrue(stat_dict["bar"]["total_per_call"] - time1 <= 1e-4)
+        self.assertTrue(stat_dict["bar"]["cumulative_time"] - (time1 * 4) <= 2e-4)
+        self.assertTrue(stat_dict["bar"]["cumulative_per_call"] - time1 <= 1e-4)
+
+        self.assertEqual(stat_dict["foo"]["call_count"], 2)
+        self.assertTrue(
+            stat_dict["foo"]["total_time"] - (time1 * 2 + time2 * 2) <= 2e-4
+        )
+        self.assertTrue(stat_dict["foo"]["total_per_call"] - (time1 + time2) <= 1e-4)
+        self.assertTrue(stat_dict["foo"]["cumulative_time"] - (time2 * 2) <= 2e-4)
+        self.assertTrue(stat_dict["foo"]["cumulative_per_call"] - time2 <= 1e-4)
+
+        self.assertEqual(stat_dict["baz"]["call_count"], 1)
+        self.assertTrue(
+            stat_dict["baz"]["total_time"] - (time1 + time2 + time3) <= 2e-4
+        )
+        self.assertTrue(
+            stat_dict["baz"]["total_per_call"] - (time1 + time2 + time3) <= 1e-4
+        )
+        self.assertTrue(stat_dict["baz"]["cumulative_time"] - time3 <= 2e-4)
+        self.assertTrue(stat_dict["baz"]["cumulative_per_call"] - time3 <= 1e-4)

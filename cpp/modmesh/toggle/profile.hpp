@@ -171,30 +171,29 @@ public:
         std::ostringstream ostm;
         /// Header
         ostm
-            << "      " << total_call_count()
+            << std::setw(40) << total_call_count()
             << " function calls in " << total_time()
             << " seconds" << std::endl;
-        ostm << std::endl;
         ostm
+            << std::endl
             << std::setw(40) << "Function Name"
             << std::setw(25) << "Call Count"
             << std::setw(25) << "Total Time (s)"
             << std::setw(25) << "Per Call (s)"
             << std::setw(25) << "Cumulative Time (s)"
-            << std::setw(25) << "Per Call (s)"
-            << std::endl;
+            << std::setw(25) << "Per Call (s)";
 
         /// Body
         for (auto it = m_entry.begin(); it != m_entry.end(); ++it)
         {
             ostm
+                << std::endl
                 << std::setw(40) << it->first
                 << std::setw(25) << it->second.count()
                 << std::setw(25) << it->second.time()
                 << std::setw(25) << it->second.time() / it->second.count()
                 << std::setw(25) << it->second.ctime()
-                << std::setw(25) << it->second.ctime() / it->second.count()
-                << std::endl;
+                << std::setw(25) << it->second.ctime() / it->second.count();
         }
         return ostm.str();
     }
