@@ -28,6 +28,7 @@
 
 #include <modmesh/toggle/RadixTree.hpp>
 #include <modmesh/toggle/profile.hpp>
+
 namespace modmesh
 {
 
@@ -109,7 +110,7 @@ void CallProfiler::print_statistics(const RadixTreeNode<CallerProfile> & node, s
     }
 
     // Print the statistics.
-    outstream << TimeRegistry::me().detailed_report() << std::endl;
+    outstream << TimeRegistry::me().detailed_report();
 
     // Reset the TimeRegistry.
     TimeRegistry::me().clear();

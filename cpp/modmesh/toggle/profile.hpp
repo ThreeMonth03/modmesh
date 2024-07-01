@@ -171,11 +171,11 @@ public:
         std::ostringstream ostm;
         /// Header
         ostm
-            << "      " << total_call_count()
+            << std::setw(40) << total_call_count()
             << " function calls in " << total_time()
             << " seconds" << std::endl;
-        ostm << std::endl;
         ostm
+            << std::endl
             << std::setw(40) << "Function Name"
             << std::setw(25) << "Call Count"
             << std::setw(25) << "Total Time (s)"
