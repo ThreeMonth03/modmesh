@@ -262,26 +262,23 @@ class CallProfilerTC(unittest.TestCase):
                 "cumulative_time": float(words[4]),
                 "cumulative_per_call": float(words[5]),
             }
-        self.assertEqual(stat_dict["bar"]["call_count"], 4)
-        self.assertTrue(stat_dict["bar"]["total_time"] - (time1 * 4) <= 2e-4)
-        self.assertTrue(stat_dict["bar"]["total_per_call"] - time1 <= 1e-4)
-        self.assertTrue(stat_dict["bar"]["cumulative_time"] - (time1 * 4) <= 2e-4)
-        self.assertTrue(stat_dict["bar"]["cumulative_per_call"] - time1 <= 1e-4)
+        bar_dict = stat_dict["bar"]
+        self.assertEqual(bar_dict["call_count"], 4)
+        self.assertTrue(bar_dict["total_time"] - (time1 * 4) <= 2e-4)
+        self.assertTrue(bar_dict["total_per_call"] - time1 <= 1e-4)
+        self.assertTrue(bar_dict["cumulative_time"] - (time1 * 4) <= 2e-4)
+        self.assertTrue(bar_dict["cumulative_per_call"] - time1 <= 1e-4)
 
-        self.assertEqual(stat_dict["foo"]["call_count"], 2)
-        self.assertTrue(
-            stat_dict["foo"]["total_time"] - (time1 * 2 + time2 * 2) <= 2e-4
-        )
-        self.assertTrue(stat_dict["foo"]["total_per_call"] - (time1 + time2) <= 1e-4)
-        self.assertTrue(stat_dict["foo"]["cumulative_time"] - (time2 * 2) <= 2e-4)
-        self.assertTrue(stat_dict["foo"]["cumulative_per_call"] - time2 <= 1e-4)
+        foo_dict = stat_dict["foo"]
+        self.assertEqual(foo_dict["call_count"], 2)
+        self.assertTrue(foo_dict["total_time"] - (time1 * 2 + time2 * 2) <= 2e-4)
+        self.assertTrue(foo_dict["total_per_call"] - (time1 + time2) <= 1e-4)
+        self.assertTrue(foo_dict["cumulative_time"] - (time2 * 2) <= 2e-4)
+        self.assertTrue(foo_dict["cumulative_per_call"] - time2 <= 1e-4)
 
-        self.assertEqual(stat_dict["baz"]["call_count"], 1)
-        self.assertTrue(
-            stat_dict["baz"]["total_time"] - (time1 + time2 + time3) <= 2e-4
-        )
-        self.assertTrue(
-            stat_dict["baz"]["total_per_call"] - (time1 + time2 + time3) <= 1e-4
-        )
-        self.assertTrue(stat_dict["baz"]["cumulative_time"] - time3 <= 2e-4)
-        self.assertTrue(stat_dict["baz"]["cumulative_per_call"] - time3 <= 1e-4)
+        baz_dict = stat_dict["baz"]
+        self.assertEqual(baz_dict["call_count"], 1)
+        self.assertTrue(baz_dict["total_time"] - (time1 + time2 + time3) <= 2e-4)
+        self.assertTrue(baz_dict["total_per_call"] - (time1 + time2 + time3) <= 1e-4)
+        self.assertTrue(baz_dict["cumulative_time"] - time3 <= 2e-4)
+        self.assertTrue(baz_dict["cumulative_per_call"] - time3 <= 1e-4)
