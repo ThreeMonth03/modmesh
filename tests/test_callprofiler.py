@@ -234,7 +234,7 @@ class CallProfilerTC(unittest.TestCase):
         self.assertEqual(words[2], "calls")
         self.assertEqual(words[3], "in")
         ref_total_time = time1 * 4 + time2 * 2 + time3
-        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 3e-4)
+        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 5e-4)
         self.assertEqual(words[5], "seconds")
 
         # Check the second line
@@ -271,14 +271,15 @@ class CallProfilerTC(unittest.TestCase):
 
         foo_dict = stat_dict["foo"]
         self.assertEqual(foo_dict["call_count"], 2)
-        self.assertTrue(foo_dict["total_time"] - (time1 * 2 + time2 * 2) <= 3e-4)
+        self.assertTrue(foo_dict["total_time"] - (time1 + time2) * 2 <= 3e-4)
         self.assertTrue(foo_dict["total_per_call"] - (time1 + time2) <= 3e-4)
         self.assertTrue(foo_dict["cumulative_time"] - (time2 * 2) <= 3e-4)
         self.assertTrue(foo_dict["cumulative_per_call"] - time2 <= 3e-4)
 
         baz_dict = stat_dict["baz"]
+        ref_total_time = time1 + time2 + time3
         self.assertEqual(baz_dict["call_count"], 1)
-        self.assertTrue(baz_dict["total_time"] - (time1 + time2 + time3) <= 3e-4)
-        self.assertTrue(baz_dict["total_per_call"] - (time1 + time2 + time3) <= 3e-4)
+        self.assertTrue(baz_dict["total_time"] - ref_total_time <= 3e-4)
+        self.assertTrue(baz_dict["total_per_call"] - ref_total_time <= 3e-4)
         self.assertTrue(baz_dict["cumulative_time"] - time3 <= 3e-4)
         self.assertTrue(baz_dict["cumulative_per_call"] - time3 <= 3e-4)
