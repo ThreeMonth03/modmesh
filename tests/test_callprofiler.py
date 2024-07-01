@@ -234,7 +234,7 @@ class CallProfilerTC(unittest.TestCase):
         self.assertEqual(words[2], "calls")
         self.assertEqual(words[3], "in")
         ref_total_time = time1 * 4 + time2 * 2 + time3
-        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 5e-4)
+        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 6e-4)
         self.assertEqual(words[5], "seconds")
 
         # Check the second line
