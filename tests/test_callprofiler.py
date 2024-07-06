@@ -46,7 +46,6 @@ def profile_function(func):
         _ = modmesh.CallProfilerProbe(func.__name__)
         result = func(*args, **kwargs)
         return result
-
     return wrapper
 
 
@@ -83,12 +82,9 @@ class CallProfilerTC(unittest.TestCase):
         foo1()
         result = modmesh.call_profiler.result()
 
-        path = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            "data",
-            "profiler_python_schema.json",
-        )
-        with open(path, "r") as schema_file:
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                            "data", "profiler_python_schema.json")
+        with open(path, 'r') as schema_file:
             schema = json.load(schema_file)
 
         try:
@@ -196,7 +192,6 @@ class CallProfilerTC(unittest.TestCase):
 
         modmesh.call_profiler.reset()
         foo()
-
     def test_get_stat(self):
         time1 = 0.5
         time2 = 0.1
@@ -234,7 +229,7 @@ class CallProfilerTC(unittest.TestCase):
         self.assertEqual(words[2], "calls")
         self.assertEqual(words[3], "in")
         ref_total_time = time1 * 4 + time2 * 2 + time3
-        self.assertTrue(abs(float(words[4]) - ref_total_time) <= 6e-4)
+        self.assertLessEqual(abs(float(words[4]) - ref_total_time), 6e-4)
         self.assertEqual(words[5], "seconds")
 
         # Check the second line
@@ -262,24 +257,25 @@ class CallProfilerTC(unittest.TestCase):
                 "cumulative_time": float(words[4]),
                 "cumulative_per_call": float(words[5]),
             }
+
         bar_dict = stat_dict["bar"]
         self.assertEqual(bar_dict["call_count"], 4)
-        self.assertTrue(bar_dict["total_time"] - (time1 * 4) <= 3e-4)
-        self.assertTrue(bar_dict["total_per_call"] - time1 <= 3e-4)
-        self.assertTrue(bar_dict["cumulative_time"] - (time1 * 4) <= 3e-4)
-        self.assertTrue(bar_dict["cumulative_per_call"] - time1 <= 3e-4)
+        self.assertLessEqual(abs(bar_dict["total_time"] - time1 * 4), 3e-4)
+        self.assertLessEqual(abs(bar_dict["total_per_call"] - time1), 3e-4)
+        self.assertLessEqual(abs(bar_dict["cumulative_time"] - time1 * 4), 3e-4)
+        self.assertLessEqual(abs(bar_dict["cumulative_per_call"] - time1), 3e-4)
 
         foo_dict = stat_dict["foo"]
         self.assertEqual(foo_dict["call_count"], 2)
-        self.assertTrue(foo_dict["total_time"] - (time1 + time2) * 2 <= 3e-4)
-        self.assertTrue(foo_dict["total_per_call"] - (time1 + time2) <= 3e-4)
-        self.assertTrue(foo_dict["cumulative_time"] - (time2 * 2) <= 3e-4)
-        self.assertTrue(foo_dict["cumulative_per_call"] - time2 <= 3e-4)
+        self.assertLessEqual(abs(foo_dict["total_time"] - (time1 + time2) * 2), 3e-4)
+        self.assertLessEqual(abs(foo_dict["total_per_call"] - (time1 + time2)), 3e-4)
+        self.assertLessEqual(abs(foo_dict["cumulative_time"] - time2 * 2), 3e-4)
+        self.assertLessEqual(abs(foo_dict["cumulative_per_call"] - time2), 3e-4)
 
         baz_dict = stat_dict["baz"]
         ref_total_time = time1 + time2 + time3
         self.assertEqual(baz_dict["call_count"], 1)
-        self.assertTrue(baz_dict["total_time"] - ref_total_time <= 3e-4)
-        self.assertTrue(baz_dict["total_per_call"] - ref_total_time <= 3e-4)
-        self.assertTrue(baz_dict["cumulative_time"] - time3 <= 3e-4)
-        self.assertTrue(baz_dict["cumulative_per_call"] - time3 <= 3e-4)
+        self.assertLessEqual(abs(baz_dict["total_time"] - ref_total_time), 3e-4)
+        self.assertLessEqual(abs(baz_dict["total_per_call"] - ref_total_time), 3e-4)
+        self.assertLessEqual(abs(baz_dict["cumulative_time"] - time3), 3e-4)
+        self.assertLessEqual(abs(baz_dict["cumulative_per_call"] - time3), 3e-4)
