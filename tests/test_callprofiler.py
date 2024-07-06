@@ -46,6 +46,7 @@ def profile_function(func):
         _ = modmesh.CallProfilerProbe(func.__name__)
         result = func(*args, **kwargs)
         return result
+
     return wrapper
 
 
@@ -82,9 +83,12 @@ class CallProfilerTC(unittest.TestCase):
         foo1()
         result = modmesh.call_profiler.result()
 
-        path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                            "data", "profiler_python_schema.json")
-        with open(path, 'r') as schema_file:
+        path = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            "data",
+            "profiler_python_schema.json",
+        )
+        with open(path, "r") as schema_file:
             schema = json.load(schema_file)
 
         try:
@@ -192,6 +196,7 @@ class CallProfilerTC(unittest.TestCase):
 
         modmesh.call_profiler.reset()
         foo()
+
     def test_get_stat(self):
         time1 = 0.5
         time2 = 0.1
@@ -275,6 +280,7 @@ class CallProfilerTC(unittest.TestCase):
         baz_dict = stat_dict["baz"]
         ref_total_time = time1 + time2 + time3
         self.assertEqual(baz_dict["call_count"], 1)
+
         self.assertLessEqual(abs(baz_dict["total_time"] - ref_total_time), 3e-4)
         self.assertLessEqual(abs(baz_dict["total_per_call"] - ref_total_time), 3e-4)
         self.assertLessEqual(abs(baz_dict["cumulative_time"] - time3), 3e-4)
