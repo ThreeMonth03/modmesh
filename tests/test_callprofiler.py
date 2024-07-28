@@ -284,3 +284,5 @@ class CallProfilerTC(unittest.TestCase):
         self.assertGreaterEqual(baz_dict["total_per_call"], ref_per_call)
         self.assertGreaterEqual(baz_dict["cumulative_time"], time3)
         self.assertGreaterEqual(baz_dict["cumulative_per_call"], time3)
+
+# vim: set ff=unix fenc=utf8 et sw=4 ts=4 sts=4:

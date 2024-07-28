@@ -27,6 +27,7 @@
  */
 
 #include <modmesh/toggle/pymod/toggle_pymod.hpp> // Must be the first include.
+#include <modmesh/toggle/SerializableProfiler.hpp>
 #include <modmesh/modmesh.hpp>
 #include <queue>
 #include <unordered_map>
