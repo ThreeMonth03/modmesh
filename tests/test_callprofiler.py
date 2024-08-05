@@ -292,16 +292,15 @@ class CallProfilerTC(unittest.TestCase):
 
         # There are 3 keys in the serialization_dict
         self.assertEqual(serialization_dict["id_map"], {})
-        self.assertEqual(serialization_dict["unique_id"], 0)       
+        self.assertEqual(serialization_dict["unique_id"], 0)
         self.assertIn("radix_tree", serialization_dict)
-        
+
         radix_tree = serialization_dict["radix_tree"]
         self.assertEqual(radix_tree["key"], -1)
         self.assertEqual(radix_tree["name"], "")
         self.assertEqual(radix_tree["call_count"], 0)
         self.assertEqual(radix_tree["total_time"], 0)
         self.assertEqual(radix_tree["children"], [])
-        
 
     def test_two_callers_serializing(self):
 
@@ -323,7 +322,7 @@ class CallProfilerTC(unittest.TestCase):
 
         # There are 3 keys in the serialization_dict
         self.assertEqual(serialization_dict["id_map"], {'bar': 0, 'foo': 1})
-        self.assertEqual(serialization_dict["unique_id"], 3)       
+        self.assertEqual(serialization_dict["unique_id"], 3)
         self.assertIn("radix_tree", serialization_dict)
 
         radix_tree = serialization_dict["radix_tree"]
@@ -332,7 +331,7 @@ class CallProfilerTC(unittest.TestCase):
         self.assertEqual(radix_tree["call_count"], 0)
         self.assertEqual(radix_tree["total_time"], 0)
         self.assertIn("children", radix_tree)
-        
+
         children = radix_tree["children"]
         self.assertEqual(len(children), 2)
 
@@ -358,15 +357,15 @@ class CallProfilerTC(unittest.TestCase):
         self.assertEqual(foo_bar_child["children"], [])
 
     def test_serialize_during_profiling(self):
-            
+
         @profile_function
         def bar():
             busy_loop(0.5)
-    
+
         @profile_function
         def foo():
             busy_loop(0.1)
-            serialization_string = modmesh.call_profiler.serialize()
+            modmesh.call_profiler.serialize()
             bar()
 
         modmesh.call_profiler.reset()
