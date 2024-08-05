@@ -192,8 +192,8 @@ protected:
                     return ss.str();
                 })
             .def("result", &result)
-            .def("reset", &wrapped_type::reset);
-        ;
+            .def("reset", &wrapped_type::reset)
+            .def("serialize", &CallProfilerSerializer::serialize);
 
         mod.attr("call_profiler") = mod.attr("CallProfiler").attr("instance");
     }

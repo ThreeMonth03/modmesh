@@ -121,7 +121,7 @@ namespace detail
 class CallProfilerTest; // for gtest
 } /* end namespace detail */
 
-class SerializableRadixTree; // for declaration
+class SerializableRadixTree; // forward declaration
 template <typename T>
 class RadixTree
 {

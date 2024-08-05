@@ -34,39 +34,6 @@
 namespace modmesh
 {
 
-class SerializableCallerProfile : SerializableItem
-{
-
-public:
-
-    SerializableCallerProfile() = default;
-    SerializableCallerProfile(SerializableCallerProfile const &) = default;
-    SerializableCallerProfile(SerializableCallerProfile &&) = default;
-    SerializableCallerProfile & operator=(SerializableCallerProfile const &) = default;
-    SerializableCallerProfile & operator=(SerializableCallerProfile &&) = default;
-    ~SerializableCallerProfile() = default;
-    SerializableCallerProfile(const CallerProfile & profile)
-        : m_caller_name(profile.caller_name)
-        , m_total_time(profile.total_time)
-        , m_call_count(profile.call_count)
-        , m_is_running(profile.is_running)
-    {
-    }
-
-    MM_DECL_SERIALIZABLE(
-        register_member("caller_name", m_caller_name);
-        register_member("total_time", static_cast<double>(m_total_time.count() / 1e9));
-        register_member("call_count", m_call_count);
-        register_member("is_running", m_is_running);)
-
-private:
-
-    std::string m_caller_name;
-    std::chrono::nanoseconds m_total_time;
-    int m_call_count;
-    bool m_is_running;
-};
-
 class SerializableRadixTreeNode : SerializableItem
 {
 
@@ -84,7 +51,8 @@ public:
     SerializableRadixTreeNode(const RadixTreeNode<CallerProfile> * node)
         : m_key(node->key())
         , m_name(node->name())
-        , m_data(node->data())
+        , m_total_time(node->data().total_time)
+        , m_call_count(node->data().call_count)
     {
         for (const auto & child : node->children())
         {
@@ -95,16 +63,23 @@ public:
     MM_DECL_SERIALIZABLE(
         register_member("key", m_key);
         register_member("name", m_name);
-        register_member("data", m_data);
+        register_member("total_time", static_cast<double>(m_total_time.count()));
+        register_member("call_count", m_call_count);
         register_member("children", m_children);)
 
 private:
 
+    /*
+     * In T data, 'bool is_running' and
+     * 'std::chrono::high_resolution_clock::time_point start_time' are not serialized
+     * because they are useless when deserialize the object.
+     */
     key_type m_key;
     std::string m_name;
-    SerializableCallerProfile m_data;
+    std::chrono::nanoseconds m_total_time;
+    int m_call_count;
     child_list_type m_children;
-};
+}; /* end class SerializableRadixTreeNode */
 
 class SerializableRadixTree : SerializableItem
 {
@@ -135,7 +110,7 @@ private:
     SerializableRadixTreeNode m_root;
     std::unordered_map<std::string, key_type> m_id_map;
     key_type m_unique_id;
-};
+}; /* end class SerializableRadixTree */
 
 /// Utility to serialize and deserialize CallProfiler.
 class CallProfilerSerializer
@@ -146,16 +121,17 @@ public:
     // It returns the json format of the CallProfiler.
     static std::string serialize(const CallProfiler & profiler)
     {
-        if (profiler.radix_tree().get_root()->empty_children())
+        auto radix_tree_curent_node = profiler.radix_tree().get_current_node();
+        auto radix_tree_root = profiler.radix_tree().get_root();
+        if (radix_tree_curent_node != radix_tree_root)
         {
-            return "{}";
+            throw std::runtime_error("The callprofiler cannot be serialized because it is measuring some functions.");
         }
-
         SerializableRadixTree serializable_radix_tree(profiler.radix_tree());
         return serializable_radix_tree.to_json();
     }
 
-}; /* end struct CallProfilerSerializer */
+}; /* end class CallProfilerSerializer */
 
 } /* end namespace modmesh */
 
