@@ -307,6 +307,20 @@ public:
         }
     }
 
+    explicit SimpleArray(small_vector<size_t> const & shape, small_vector<size_t> const & stride, std::shared_ptr<buffer_type> const & buffer)
+        : SimpleArray(buffer)
+    {
+        if (buffer)
+        {
+            m_shape = shape;
+            m_stride = stride;
+            for (auto & m_stride_it : m_stride)
+            {
+                m_stride_it /= ITEMSIZE;
+            }
+        }
+    }
+
     SimpleArray(std::initializer_list<T> init)
         : SimpleArray(init.size())
     {
