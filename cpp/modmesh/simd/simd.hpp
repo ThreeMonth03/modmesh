@@ -116,6 +116,21 @@ void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 }
 
 template <typename T>
+T sum(T const * start, T const * end)
+{
+    using namespace detail;
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::sum<T>(start, end);
+        break;
+
+    default:
+        return generic::sum<T>(start, end);
+    }
+}
+
+template <typename T>
 T max(T const * start, T const * end)
 {
     return generic::max<T>(start, end);

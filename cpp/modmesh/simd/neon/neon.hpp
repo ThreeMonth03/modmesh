@@ -222,6 +222,49 @@ void div(T * dest, T const * dest_end, T const * src1, T const * src2)
     }
 }
 
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    if constexpr (!(type::has_vectype<T>))
+    {
+        return generic::sum<T>(start, end);
+    }
+    else
+    {
+        using vec_t = type::vector_t<T>;
+        constexpr size_t N_lane = type::vector_lane<T>;
+        vec_t sum_vec = vdupq(static_cast<T>(0));
+        vec_t data_vec;
+        
+        T const * ptr = start;
+        for (; ptr <= end - N_lane; ptr += N_lane)
+        {
+            data_vec = vld1q(ptr);
+            sum_vec = vaddq(sum_vec, data_vec);
+        }
+        
+        // 處理剩餘元素
+        T result = 0;
+        if (ptr != end)
+        {
+            result = generic::sum<T>(ptr, end);
+        }
+        
+        // 將向量中的元素相加得到最終結果
+        T sum_array[N_lane];
+        vst1q(sum_array, sum_vec);
+        
+        for (size_t i = 0; i < N_lane; ++i)
+        {
+            result += sum_array[i];
+        }
+        
+        return result;
+    }
+}
+
+
+
 #else
 template <typename T>
 const T * check_between(T const * start, T const * end, T const & min_val, T const & max_val)
@@ -251,6 +294,12 @@ template <typename T>
 void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
     generic::div<T>(dest, dest_end, src1, src2);
+}
+
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    return generic::sum<T>(start, end);
 }
 
 #endif /* defined(__aarch64__) */

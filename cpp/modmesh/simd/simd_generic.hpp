@@ -106,6 +106,17 @@ void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 }
 
 template <typename T>
+T sum(T const * start, T const * end)
+{
+    T sum = 0;
+    for (T const * ptr = start; ptr < end; ++ptr)
+    {
+        sum += *ptr;
+    }
+    return sum;
+}
+
+template <typename T>
 T max(T const * start, T const * end)
 {
     T max_val = *start;

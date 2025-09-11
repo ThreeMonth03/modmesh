@@ -325,12 +325,13 @@ public:
 
     value_type mean_op(small_vector<value_type> & sv) const
     {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::mean_op()");
         const size_t n = sv.size();
-        value_type sum = 0;
-        for (const auto & v : sv)
-        {
-            sum += v;
-        }
+        value_type sum = simd::sum(sv.data(), sv.data() + n);
+        //for (const auto & v : sv)
+        //{
+        //    sum += v;
+        //}
         return sum / static_cast<value_type>(n);
     }
 
@@ -341,16 +342,18 @@ public:
 
     value_type mean() const
     {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::mean()");
         auto athis = static_cast<A const *>(this);
+        const size_t n = athis->size();
+        small_vector<T> acopy(n);
         auto sidx = athis->first_sidx();
-        value_type sum = 0;
-        int64_t total = 0;
+        size_t i = 0;
         do
         {
-            sum += athis->at(sidx);
-            ++total;
+            acopy[i] = athis->at(sidx);
+            ++i;
         } while (athis->next_sidx(sidx));
-        return sum / static_cast<value_type>(total);
+        return mean_op(acopy);
     }
 
     real_type var_op(small_vector<value_type> & sv, size_t ddof) const
@@ -386,38 +389,18 @@ public:
 
     real_type var(size_t ddof) const
     {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::var()");
         auto athis = static_cast<A const *>(this);
         const size_t n = athis->size();
-        if (n <= ddof)
-        {
-            throw std::runtime_error("SimpleArray::var(): ddof must be less than the number of elements");
-        }
-
+        small_vector<T> acopy(n);
         auto sidx = athis->first_sidx();
-        value_type mu = athis->mean();
-        real_type acc = 0;
-        if constexpr (is_complex_v<value_type>)
+        size_t i = 0;
+        do
         {
-            do
-            {
-                acc += athis->at(sidx).norm();
-            } while (athis->next_sidx(sidx));
-        }
-        else
-        {
-            do {
-                acc += athis->at(sidx) * athis->at(sidx);
-            } while (athis->next_sidx(sidx));
-        }
-        if constexpr (is_complex_v<value_type>)
-        {
-            acc -= n * mu.norm();
-        }
-        else
-        {
-            acc -= n * mu * mu;
-        }
-        return acc / static_cast<real_type>(n - ddof);
+            acopy[i] = athis->at(sidx);
+            ++i;
+        } while (athis->next_sidx(sidx));
+        return var_op(acopy, ddof);
     }
 
     real_type std_op(small_vector<value_type> & sv, size_t ddof) const

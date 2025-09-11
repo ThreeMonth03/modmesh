@@ -41,15 +41,22 @@ def make_container(data):
         return modmesh.SimpleArrayUint64(array=data)
 
 
-def main():
+def median_profiling():
     modmesh.call_profiler.reset()
     simple_array = make_container(numpy.arange(0, 1e6, dtype="uint8"))
     simple_array.median()
 
     print(json.dumps(modmesh.call_profiler.result().get("children"), indent=4))
 
+def mean_profiling():
+    modmesh.call_profiler.reset()
+    simple_array = make_container(numpy.arange(0, 1e6, dtype="uint8"))
+    simple_array.mean()
+
+    print(json.dumps(modmesh.call_profiler.result().get("children"), indent=4))
 
 if __name__ == "__main__":
-    main()
-
+    numpy.random.seed(0)
+    median_profiling()
+    mean_profiling()
 # vim: set ff=unix fenc=utf8 et sw=4 ts=4 sts=4:
