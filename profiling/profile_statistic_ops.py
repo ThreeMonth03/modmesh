@@ -140,6 +140,8 @@ def profile_stat_op(op, prof_func_np, prof_func_sa, dtype, sizes, it=10,
                     src = np.random.randint(-1000, 1000, N, dtype=dtype)
                 else:
                     src = np.random.randint(-1000, 1000, N, dtype=dtype)
+            #暫時故意讓src不是連續內存
+            src = src[::2]
             src_sa = make_container(src, dtype)
         modmesh.call_profiler.reset()
         for _ in range(it):

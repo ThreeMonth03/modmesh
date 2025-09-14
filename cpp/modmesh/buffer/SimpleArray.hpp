@@ -42,6 +42,9 @@
 #include <functional>
 #include <numeric>
 #include <algorithm>
+#include <thread>
+#include <future>
+#include <vector>
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
@@ -345,15 +348,13 @@ public:
         USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::mean()");
         auto athis = static_cast<A const *>(this);
         const size_t n = athis->size();
-        small_vector<T> acopy(n);
-        auto sidx = athis->first_sidx();
-        size_t i = 0;
-        do
-        {
-            acopy[i] = athis->at(sidx);
-            ++i;
-        } while (athis->next_sidx(sidx));
-        return mean_op(acopy);
+        
+        if (n == 0) {
+            return value_type{0};
+        }
+        
+        const value_type sum = compute_sum_optimized_(athis);
+        return sum / static_cast<value_type>(n);
     }
 
     real_type var_op(small_vector<value_type> & sv, size_t ddof) const
@@ -710,6 +711,616 @@ public:
 
 private:
     static void find_two_bins(const uint32_t * freq, size_t n, int & bin1, int & bin2);
+    
+    // ============================================================================
+    // Optimized sum computation for mean() function
+    // ============================================================================
+    
+    /**
+     * @brief Compute sum of array elements with optimized memory access patterns
+     * @param athis Pointer to the array instance
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_optimized_(A const* athis)
+    {
+        if (is_contiguous_array_(athis)) {
+            return compute_sum_contiguous_(athis);
+        } else {
+            return compute_sum_strided_(athis);
+        }
+    }
+    
+    /**
+     * @brief Check if array is contiguous in memory (C-style)
+     * @param athis Pointer to the array instance
+     * @return true if contiguous, false otherwise
+     */
+    static bool is_contiguous_array_(A const* athis)
+    {
+        const auto& shape = athis->shape();
+        const auto& stride = athis->stride();
+        
+        if (shape.empty()) return true;
+        
+        // Check C-contiguous layout: stride[i] = stride[i+1] * shape[i+1]
+        size_t expected_stride = 1;
+        for (size_t i = shape.size(); i > 0; --i) {
+            if (stride[i-1] != expected_stride) {
+                return false;
+            }
+            expected_stride *= shape[i-1];
+        }
+        return true;
+    }
+    
+    /**
+     * @brief Compute sum for contiguous arrays using vectorized operations
+     * @param athis Pointer to the array instance
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_contiguous_(A const* athis)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_contiguous_");
+        const value_type* ptr = athis->body();
+        const size_t n = athis->size();
+        
+        // Temporarily disable multithreading to debug segmentation fault
+        // if (n >= 1000000) {
+        //     return compute_sum_contiguous_multithreaded_(ptr, n);
+        // }
+        
+        return vectorized_sum_(ptr, n);
+    }
+    
+    /**
+     * @brief Compute sum for strided arrays using optimized iteration
+     * @param athis Pointer to the array instance
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_strided_(A const* athis)
+    {
+        const size_t ndim = athis->ndim();
+        if (ndim == 0) return value_type{0};
+        
+        const auto& shape = athis->shape();
+        const auto& stride = athis->stride();
+        const value_type* base_ptr = athis->body();
+        
+        // For 1D arrays, use direct strided iteration
+        if (ndim == 1) {
+            return compute_sum_strided_1d_(base_ptr, shape[0], stride[0]);
+        }
+        
+        // For multi-dimensional arrays, use optimized multi-dimensional iteration
+        return compute_sum_strided_nd_(base_ptr, shape, stride, ndim);
+    }
+    
+    /**
+     * @brief Vectorized sum for contiguous memory using loop unrolling
+     * @param ptr Pointer to data
+     * @param n Number of elements
+     * @return Sum of elements
+     */
+    static value_type vectorized_sum_(const value_type* ptr, size_t n)
+    {
+        if (n == 0) return value_type{0};
+        
+        value_type sum = value_type{0};
+        size_t i = 0;
+        
+        // Loop unrolling for better performance
+        const size_t unroll_factor = 8;
+        for (; i + unroll_factor <= n; i += unroll_factor) {
+            sum += ptr[i+0] + ptr[i+1] + ptr[i+2] + ptr[i+3] + 
+                   ptr[i+4] + ptr[i+5] + ptr[i+6] + ptr[i+7];
+        }
+        
+        // Handle remaining elements
+        for (; i < n; ++i) {
+            sum += ptr[i];
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * @brief Compute sum for 1D strided arrays
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements
+     * @return Sum of elements
+     */
+    static value_type compute_sum_strided_1d_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_strided_1d_");
+        if (n == 0) return value_type{0};
+        
+        // Optimize for common stride patterns
+        if (stride == 1) {
+            // Contiguous case - use vectorized sum
+            return vectorized_sum_(base_ptr, n);
+        }
+        
+        // Temporarily disable multithreading to debug segmentation fault
+        // if (n >= 1000000) {
+        //     return compute_sum_strided_multithreaded_(base_ptr, n, stride);
+        // }
+        
+        // Use unified stride processing function
+        return compute_sum_unified_stride_(base_ptr, n, stride);
+    }
+    
+    /**
+     * @brief Compute sum for multi-dimensional strided arrays
+     * @param base_ptr Base pointer to data
+     * @param shape Array shape
+     * @param stride Array strides
+     * @param ndim Number of dimensions
+     * @return Sum of elements
+     */
+    static value_type compute_sum_strided_nd_(
+        const value_type* base_ptr,
+        const small_vector<size_t>& shape,
+        const small_vector<size_t>& stride,
+        size_t ndim)
+    {
+        // Use recursive approach for multi-dimensional arrays
+        return compute_sum_strided_nd_recursive_(base_ptr, shape, stride, 0, ndim);
+    }
+    
+    /**
+     * @brief Recursive helper for multi-dimensional strided sum
+     * @param base_ptr Base pointer to data
+     * @param shape Array shape
+     * @param stride Array strides
+     * @param dim Current dimension
+     * @param ndim Total number of dimensions
+     * @return Sum of elements
+     */
+    static value_type compute_sum_strided_nd_recursive_(
+        const value_type* base_ptr,
+        const small_vector<size_t>& shape,
+        const small_vector<size_t>& stride,
+        size_t dim,
+        size_t ndim)
+    {
+        if (dim == ndim - 1) {
+            // Last dimension: use 1D strided sum
+            return compute_sum_strided_1d_(base_ptr, shape[dim], stride[dim]);
+        }
+        
+        value_type sum = value_type{0};
+        const size_t current_stride = stride[dim];
+        const size_t current_shape = shape[dim];
+        
+        for (size_t i = 0; i < current_shape; ++i) {
+            sum += compute_sum_strided_nd_recursive_(
+                base_ptr + i * current_stride,
+                shape, stride, dim + 1, ndim);
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * @brief Multithreaded sum for contiguous arrays
+     * @param ptr Pointer to data
+     * @param n Number of elements
+     * @return Sum of elements
+     */
+    static value_type compute_sum_contiguous_multithreaded_(const value_type* ptr, size_t n)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_contiguous_multithreaded_");
+        
+        // Determine optimal number of threads
+        const size_t num_threads = std::min(static_cast<size_t>(std::thread::hardware_concurrency()), 8UL);
+        const size_t chunk_size = n / num_threads;
+        
+        if (chunk_size < 10000) {
+            // For small chunks, use single-threaded version
+            return vectorized_sum_(ptr, n);
+        }
+        
+        // Use safer thread pool approach with proper memory management
+        std::vector<std::thread> threads;
+        std::vector<value_type> results(num_threads, value_type{0});
+        
+        // Launch threads with safer lambda capture
+        for (size_t t = 0; t < num_threads; ++t) {
+            size_t start = t * chunk_size;
+            size_t end = (t == num_threads - 1) ? n : (t + 1) * chunk_size;
+            
+            threads.emplace_back([ptr, start, end, &results, t]() {
+                // Ensure we don't access out of bounds
+                if (start < end && ptr != nullptr) {
+                    results[t] = vectorized_sum_(ptr + start, end - start);
+                } else {
+                    results[t] = value_type{0};
+                }
+            });
+        }
+        
+        // Wait for all threads to complete
+        for (auto& thread : threads) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+        
+        // Combine results
+        value_type total_sum = value_type{0};
+        for (const auto& result : results) {
+            total_sum += result;
+        }
+        
+        return total_sum;
+    }
+    
+    /**
+     * @brief Multithreaded sum for strided arrays
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements
+     * @return Sum of elements
+     */
+    static value_type compute_sum_strided_multithreaded_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_strided_multithreaded_");
+        
+        // Determine optimal number of threads
+        const size_t num_threads = std::min(static_cast<size_t>(std::thread::hardware_concurrency()), 8UL);
+        const size_t chunk_size = n / num_threads;
+        
+        if (chunk_size < 10000) {
+            // For small chunks, use single-threaded version
+            return compute_sum_small_stride_optimized_(base_ptr, n, stride);
+        }
+        
+        // Use safer thread pool approach with proper memory management
+        std::vector<std::thread> threads;
+        std::vector<value_type> results(num_threads, value_type{0});
+        
+        // Launch threads with safer lambda capture
+        for (size_t t = 0; t < num_threads; ++t) {
+            size_t start = t * chunk_size;
+            size_t end = (t == num_threads - 1) ? n : (t + 1) * chunk_size;
+            
+            threads.emplace_back([base_ptr, start, end, stride, &results, t]() {
+                // Ensure we don't access out of bounds
+                if (start < end && base_ptr != nullptr) {
+                    results[t] = compute_sum_small_stride_optimized_(base_ptr + start * stride, end - start, stride);
+                } else {
+                    results[t] = value_type{0};
+                }
+            });
+        }
+        
+        // Wait for all threads to complete
+        for (auto& thread : threads) {
+            if (thread.joinable()) {
+                thread.join();
+            }
+        }
+        
+        // Combine results
+        value_type total_sum = value_type{0};
+        for (const auto& result : results) {
+            total_sum += result;
+        }
+        
+        return total_sum;
+    }
+    
+    /**
+     * @brief Unified stride processing function that handles all stride values
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements (can be any positive value)
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_unified_stride_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_unified_stride_");
+        
+        // Use specialized functions for common strides for maximum performance
+        if (stride == 2) {
+            return compute_sum_stride_2_optimized_(base_ptr, n);
+        } else if (stride == 3) {
+            return compute_sum_stride_3_optimized_(base_ptr, n);
+        } else if (stride <= 5) {
+            return compute_sum_small_stride_optimized_(base_ptr, n, stride);
+        } else {
+            // For larger strides, use simple loop
+            return compute_sum_simple_strided_(base_ptr, n, stride);
+        }
+    }
+    
+    /**
+     * @brief Simple strided sum for large strides
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_simple_strided_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_simple_strided_");
+        
+        if constexpr (std::is_same_v<value_type, bool>) {
+            // Special handling for bool arrays - count true values
+            size_t count = 0;
+            const value_type* ptr = base_ptr;
+            
+            for (size_t i = 0; i < n; ++i) {
+                if (*ptr) {
+                    count++;
+                }
+                ptr += stride;
+            }
+            
+            return count >= (n + 1) / 2;  // Return true if majority are true
+        } else {
+            value_type sum = value_type{0};
+            const value_type* ptr = base_ptr;
+            
+            for (size_t i = 0; i < n; ++i) {
+                sum += *ptr;
+                ptr += stride;
+            }
+            
+            return sum;
+        }
+    }
+    
+    /**
+     * @brief Optimized sum for stride 2 with aggressive unrolling and SIMD hints
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_stride_2_optimized_(const value_type* base_ptr, size_t n)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_stride_2_optimized_");
+        
+        // Aggressive unrolling for stride 2 (very common pattern)
+        const size_t unroll_factor = 16;  // Aggressive unrolling for stride 2
+        
+        value_type sum0 = value_type{0};
+        value_type sum1 = value_type{0};
+        value_type sum2 = value_type{0};
+        value_type sum3 = value_type{0};
+        value_type sum4 = value_type{0};
+        value_type sum5 = value_type{0};
+        value_type sum6 = value_type{0};
+        value_type sum7 = value_type{0};
+        value_type sum8 = value_type{0};
+        value_type sum9 = value_type{0};
+        value_type sum10 = value_type{0};
+        value_type sum11 = value_type{0};
+        value_type sum12 = value_type{0};
+        value_type sum13 = value_type{0};
+        value_type sum14 = value_type{0};
+        value_type sum15 = value_type{0};
+        
+        const value_type* ptr = base_ptr;
+        size_t i = 0;
+        
+        // Process 16 elements at a time with aggressive unrolling for stride 2
+        for (; i + unroll_factor <= n; i += unroll_factor) {
+            // Unrolled loop for maximum performance on stride 2
+            sum0 += ptr[0*2];
+            sum1 += ptr[1*2];
+            sum2 += ptr[2*2];
+            sum3 += ptr[3*2];
+            sum4 += ptr[4*2];
+            sum5 += ptr[5*2];
+            sum6 += ptr[6*2];
+            sum7 += ptr[7*2];
+            sum8 += ptr[8*2];
+            sum9 += ptr[9*2];
+            sum10 += ptr[10*2];
+            sum11 += ptr[11*2];
+            sum12 += ptr[12*2];
+            sum13 += ptr[13*2];
+            sum14 += ptr[14*2];
+            sum15 += ptr[15*2];
+            ptr += unroll_factor * 2;
+        }
+        
+        // Combine all partial sums
+        value_type sum = (sum0 + sum1) + (sum2 + sum3) + (sum4 + sum5) + (sum6 + sum7) +
+                        (sum8 + sum9) + (sum10 + sum11) + (sum12 + sum13) + (sum14 + sum15);
+        
+        // Handle remaining elements
+        for (; i < n; ++i) {
+            sum += *ptr;
+            ptr += 2;
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * @brief Optimized sum for stride 3 with aggressive unrolling
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @return Sum of all elements
+     */
+    static value_type compute_sum_stride_3_optimized_(const value_type* base_ptr, size_t n)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_stride_3_optimized_");
+        
+        // Aggressive unrolling for stride 3 (common pattern)
+        const size_t unroll_factor = 12;  // 12-way unrolling for stride 3
+        
+        value_type sum0 = value_type{0};
+        value_type sum1 = value_type{0};
+        value_type sum2 = value_type{0};
+        value_type sum3 = value_type{0};
+        value_type sum4 = value_type{0};
+        value_type sum5 = value_type{0};
+        value_type sum6 = value_type{0};
+        value_type sum7 = value_type{0};
+        value_type sum8 = value_type{0};
+        value_type sum9 = value_type{0};
+        value_type sum10 = value_type{0};
+        value_type sum11 = value_type{0};
+        
+        const value_type* ptr = base_ptr;
+        size_t i = 0;
+        
+        // Process 12 elements at a time with aggressive unrolling for stride 3
+        for (; i + unroll_factor <= n; i += unroll_factor) {
+            // Unrolled loop for maximum performance on stride 3
+            sum0 += ptr[0*3];
+            sum1 += ptr[1*3];
+            sum2 += ptr[2*3];
+            sum3 += ptr[3*3];
+            sum4 += ptr[4*3];
+            sum5 += ptr[5*3];
+            sum6 += ptr[6*3];
+            sum7 += ptr[7*3];
+            sum8 += ptr[8*3];
+            sum9 += ptr[9*3];
+            sum10 += ptr[10*3];
+            sum11 += ptr[11*3];
+            ptr += unroll_factor * 3;
+        }
+        
+        // Combine all partial sums
+        value_type sum = (sum0 + sum1) + (sum2 + sum3) + (sum4 + sum5) + (sum6 + sum7) +
+                        (sum8 + sum9) + (sum10 + sum11);
+        
+        // Handle remaining elements
+        for (; i < n; ++i) {
+            sum += *ptr;
+            ptr += 3;
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * @brief Optimized sum for small strides (4-5)
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements (4-5)
+     * @return Sum of elements
+     */
+    static value_type compute_sum_small_stride_optimized_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_small_stride_optimized_");
+        
+        // Optimized version with conservative unrolling
+        const size_t unroll_factor = 8;  // Conservative unrolling for stability
+        
+        value_type sum0 = value_type{0};
+        value_type sum1 = value_type{0};
+        value_type sum2 = value_type{0};
+        value_type sum3 = value_type{0};
+        value_type sum4 = value_type{0};
+        value_type sum5 = value_type{0};
+        value_type sum6 = value_type{0};
+        value_type sum7 = value_type{0};
+        
+        const value_type* ptr = base_ptr;
+        size_t i = 0;
+        
+        // Process 8 elements at a time with conservative unrolling
+        for (; i + unroll_factor <= n; i += unroll_factor) {
+            // Unrolled loop for performance
+            sum0 += ptr[0*stride];
+            sum1 += ptr[1*stride];
+            sum2 += ptr[2*stride];
+            sum3 += ptr[3*stride];
+            sum4 += ptr[4*stride];
+            sum5 += ptr[5*stride];
+            sum6 += ptr[6*stride];
+            sum7 += ptr[7*stride];
+            ptr += unroll_factor * stride;
+        }
+        
+        // Combine all partial sums
+        value_type sum = (sum0 + sum1) + (sum2 + sum3) + (sum4 + sum5) + (sum6 + sum7);
+        
+        // Handle remaining elements
+        for (; i < n; ++i) {
+            sum += *ptr;
+            ptr += stride;
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * @brief Optimized sum for large strides using block processing
+     * @param base_ptr Base pointer to data
+     * @param n Number of elements
+     * @param stride Stride between elements
+     * @return Sum of elements
+     */
+    static value_type compute_sum_large_stride_optimized_(const value_type* base_ptr, size_t n, size_t stride)
+    {
+        USE_CALLPROFILER_PROFILE_THIS_SCOPE("SimpleArray::compute_sum_large_stride_optimized_");
+        
+        // For large strides, use block processing to improve cache efficiency
+        const size_t block_size = 1024;  // Process in blocks of 1024 elements
+        const size_t unroll_factor = 8;  // 8-way unrolling
+        
+        value_type total_sum = value_type{0};
+        size_t processed = 0;
+        
+        // Process in blocks for better cache efficiency
+        while (processed < n) {
+            size_t block_end = std::min(processed + block_size, n);
+            size_t block_size_actual = block_end - processed;
+            
+            // Use 8-way unrolling with multiple accumulators
+            value_type sum0 = value_type{0};
+            value_type sum1 = value_type{0};
+            value_type sum2 = value_type{0};
+            value_type sum3 = value_type{0};
+            value_type sum4 = value_type{0};
+            value_type sum5 = value_type{0};
+            value_type sum6 = value_type{0};
+            value_type sum7 = value_type{0};
+            
+            const value_type* ptr = base_ptr + processed * stride;
+            size_t i = 0;
+            
+            // Process 8 elements at a time
+            for (; i + unroll_factor <= block_size_actual; i += unroll_factor) {
+                // Prefetch next cache line for better performance
+                if (i + unroll_factor < block_size_actual) {
+                    __builtin_prefetch(ptr + unroll_factor * stride, 0, 3);
+                }
+                
+                sum0 += ptr[0*stride];
+                sum1 += ptr[1*stride];
+                sum2 += ptr[2*stride];
+                sum3 += ptr[3*stride];
+                sum4 += ptr[4*stride];
+                sum5 += ptr[5*stride];
+                sum6 += ptr[6*stride];
+                sum7 += ptr[7*stride];
+                ptr += unroll_factor * stride;
+            }
+            
+            // Combine partial sums
+            value_type block_sum = sum0 + sum1 + sum2 + sum3 + sum4 + sum5 + sum6 + sum7;
+            
+            // Handle remaining elements in this block
+            for (; i < block_size_actual; ++i) {
+                block_sum += *ptr;
+                ptr += stride;
+            }
+            
+            total_sum += block_sum;
+            processed = block_end;
+        }
+        
+        return total_sum;
+    }
 }; /* end class SimpleArrayMixinCalculators */
 
 template <typename A, typename T>
