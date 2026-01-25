@@ -102,6 +102,19 @@ jobs:
         #       libgl1-mesa-dev
         # fi
 
+    # The latest CMake version from apt-get is 3.28.3, so we install CMake>=4.0.1 from source build.
+    # Reference: https://askubuntu.com/a/865294
+    - name: install CMake=4.0.1
+      run: |
+        wget https://cmake.org/files/v4.0/cmake-4.0.1.tar.gz
+        tar -xzf cmake-4.0.1.tar.gz
+        cd cmake-4.0.1/
+        ./bootstrap
+        make -j$(nproc)
+        sudo make install
+        cd ..
+        rm -rf cmake-4.0.1/
+
     - name: install and configure gcc-14
       run: |
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
