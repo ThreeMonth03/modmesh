@@ -70,6 +70,15 @@ class QuantityLine(object):
         - :meth:`update_ana(x, y)`: Update the line data and redraw the plot.
         - :meth:`update_num(x, y)`: Update the line data and redraw the plot.
 
+    Attributes:
+        :cvar ana: Line2D for analytical data.
+        :cvar num: Line2D for numerical data.
+        :cvar axis: Axis for the plot.
+        :cvar name: Name of the quantity.
+        :cvar unit: Unit of measurement.
+        :cvar color: Color of line or symbol.
+        :cvar y_upper_lim: y axis upper limit.
+        :cvar y_bottom_lim: y axis bottom limit.
     """
     ana: matplotlib.lines.Line2D = None
     num: matplotlib.lines.Line2D = None
