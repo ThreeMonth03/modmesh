@@ -1443,6 +1443,50 @@ class SimpleArrayCalculatorsTC(unittest.TestCase):
         self.assertEqual(sarr.min(), -2.3)
         self.assertEqual(sarr.max(), 9.2)
 
+    def test_sum_contiguous(self):
+        # 1D contiguous: exercises the straight pointer loop in
+        # sum_contiguous() with no shape/stride arithmetic involved.
+        nparr = np.arange(1, 101, dtype='float64')
+        sarr = modmesh.SimpleArrayFloat64(array=nparr)
+        self.assertEqual(sarr.sum(), np.sum(nparr))
+
+        # Multi-dim C-contiguous: still a single dense block, so sum()
+        # takes the contiguous path even though shape is multi-dim.
+        nparr = np.arange(60, dtype='float64').reshape((3, 4, 5))
+        sarr = modmesh.SimpleArrayFloat64(array=nparr)
+        self.assertEqual(sarr.sum(), np.sum(nparr))
+
+        # Multi-dim F-contiguous: dense block but with column-major
+        # strides; sum_contiguous() walks the buffer in F order, which
+        # still hits every element exactly once.
+        nparr = np.asfortranarray(
+            np.arange(60, dtype='float64').reshape((3, 4, 5)))
+        sarr = modmesh.SimpleArrayFloat64(array=nparr)
+        self.assertEqual(sarr.sum(), np.sum(nparr))
+
+    def test_sum_non_contiguous(self):
+        # Strided slice that fails both C- and F-contiguity checks, so
+        # sum() must take the sum_strided path. Distinct integer values
+        # mean any indexing bug shifts the result.
+        nparr = np.arange(625, dtype='float64').reshape((5, 5, 5, 5))
+        nparr = nparr[:3:2, 1:4:2, :3:3, 3:4:2]
+        sarr = modmesh.SimpleArrayFloat64(array=nparr)
+        self.assertEqual(sarr.sum(), np.sum(nparr))
+
+    def test_sum_empty_non_contiguous(self):
+        # Empty and non-contiguous: shape (3, 0, 4) with strides
+        # (0, 1, 0) is neither C- nor F-contiguous, so sum() must
+        # short-circuit on n == 0 instead of falling into the strided
+        # path and reading from an empty buffer.
+        sarr = modmesh.SimpleArrayFloat64(shape=(3, 4, 0), value=0.0)
+        sarr = sarr.transpose(axis=[0, 2, 1])
+        self.assertEqual(sarr.sum(), 0.0)
+
+    def test_mean_empty_raises(self):
+        sarr = modmesh.SimpleArrayFloat64(shape=(0, 3), value=0.0)
+        with self.assertRaisesRegex(RuntimeError, "empty array"):
+            sarr.mean()
+
     def test_abs(self):
         sarr = modmesh.SimpleArrayInt64(shape=(3, 2), value=-2)
         self.assertEqual(sarr.sum(), -2 * 3 * 2)
