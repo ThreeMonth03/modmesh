@@ -73,8 +73,8 @@ private:
         return blk > 0 ? m_blk_sizes(blk - 1) : 0 + x + y * m_x_shape(blk) + z * m_x_shape(blk) * m_y_shape(blk);
     }
 
-    void parseCoordinates(const uint_type nblocks);
-    void buildHexahedronElements(const uint_type nblocks);
+    void parseCoordinates(uint_type nblocks);
+    void buildHexahedronElements(uint_type nblocks);
 
     std::stringstream stream;
 

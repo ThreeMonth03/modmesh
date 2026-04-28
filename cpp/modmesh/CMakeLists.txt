@@ -175,6 +175,7 @@ else () # MSVC
         ${COMMON_COMPILER_OPTIONS}
         -Wno-unused-value # for PYBIND11_EXPAND_SIDE_EFFECTS in pybind11.h
         -Wno-noexcept-type # GCC
+        -Wno-elaborated-enum-base # for apple accelerate/veclib
     )
 endif () # MSVC
 

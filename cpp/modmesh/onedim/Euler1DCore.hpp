@@ -282,7 +282,7 @@ inline void Euler1DCore::march_half_so1_alpha(bool odd_plane)
     MODMESH_PROFILE_SCOPE("Euler1DKernel::march_half_so1_alpha");
 
     const int_type start = BOUND_COUNT - (odd_plane ? 1 : 0);
-    const int_type stop = static_cast<int_type>(ncoord() - BOUND_COUNT - (odd_plane ? 0 : 1));
+    const auto stop = static_cast<int_type>(ncoord() - BOUND_COUNT - (odd_plane ? 0 : 1));
     // Kernal at xneg solution element.
     Euler1DKernel kernxn{};
     kernxn

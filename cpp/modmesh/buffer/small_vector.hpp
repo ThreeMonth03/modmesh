@@ -388,7 +388,7 @@ small_vector<T, N>::partition(iterator left, iterator right, iterator pivot)
     {
         for (int u = 0; u < unroll; ++u)
         {
-            bool is_lt = (*it < gap_val);
+            bool const is_lt = (*it < gap_val);
             iterator dst = left + lt_count;
             *gap_pos = std::move(*dst);
             *dst = std::move(*it);
@@ -400,7 +400,7 @@ small_vector<T, N>::partition(iterator left, iterator right, iterator pivot)
 
     for (; it < right; ++it)
     {
-        bool is_lt = (*it < gap_val);
+        bool const is_lt = (*it < gap_val);
         iterator dst = left + lt_count;
         *gap_pos = std::move(*dst);
         *dst = std::move(*it);
@@ -420,7 +420,7 @@ typename small_vector<T, N>::iterator
 small_vector<T, N>::quick_select(iterator first, iterator last, size_t k)
 {
     MODMESH_PROFILE_SCOPE("small_vector::quick_select()");
-    size_t len = last - first;
+    size_t const len = last - first;
     if (k >= len)
     {
         throw std::out_of_range("quick_select: k out of range");
@@ -431,7 +431,7 @@ small_vector<T, N>::quick_select(iterator first, iterator last, size_t k)
         iterator pivot_it = choose_pivot(first, last);
         iterator store = partition(first, last, pivot_it);
 
-        size_t pivot_rank = store - first;
+        size_t const pivot_rank = store - first;
         if (pivot_rank == k)
         {
             return store;

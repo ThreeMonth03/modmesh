@@ -212,10 +212,10 @@ std::vector<std::string> Interpreter::get_completions(std::string const & text)
     std::vector<std::string> result;
     try
     {
-        pybind11::gil_scoped_acquire gil;
+        pybind11::gil_scoped_acquire const gil;
         // NOLINTNEXTLINE(misc-const-correctness)
         pybind11::object mod_sys = pybind11::module_::import("modmesh.system");
-        pybind11::object py_result = mod_sys.attr("get_completions")(text);
+        pybind11::object const py_result = mod_sys.attr("get_completions")(text);
         result = py_result.cast<std::vector<std::string>>();
     }
     catch (const pybind11::error_already_set & e)
@@ -235,11 +235,11 @@ PythonStreamRedirect & PythonStreamRedirect::activate()
     {
         auto sys_module = pybind11::module::import("sys");
         // Back up old streams.
-        if (!bool(m_stdout_backup))
+        if (!static_cast<bool>(m_stdout_backup))
         {
             m_stdout_backup = sys_module.attr("stdout");
         }
-        if (!bool(m_stderr_backup))
+        if (!static_cast<bool>(m_stderr_backup))
         {
             m_stderr_backup = sys_module.attr("stderr");
         }
@@ -261,12 +261,12 @@ PythonStreamRedirect & PythonStreamRedirect::activate()
 PythonStreamRedirect & PythonStreamRedirect::deactivate()
 {
     auto sys_module = pybind11::module::import("sys");
-    if (bool(m_stdout_backup))
+    if (static_cast<bool>(m_stdout_backup))
     {
         sys_module.attr("stdout") = m_stdout_backup;
         m_stdout_backup.release().dec_ref();
     }
-    if (bool(m_stderr_backup))
+    if (static_cast<bool>(m_stderr_backup))
     {
         sys_module.attr("stderr") = m_stderr_backup;
         m_stderr_backup.release().dec_ref();

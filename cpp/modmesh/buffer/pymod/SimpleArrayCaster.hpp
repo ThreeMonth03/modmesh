@@ -66,7 +66,7 @@ namespace detail
             }                                                                                                                                                 \
                                                                                                                                                               \
             /* Get the SimpleArrayPlex object from the source handle */                                                                                       \
-            modmesh::SimpleArrayPlex arrayplex = src.cast<modmesh::SimpleArrayPlex>();                                                                        \
+            modmesh::SimpleArrayPlex arrayplex = src.cast<modmesh::SimpleArrayPlex>(); /* NOLINT(misc-const-correctness) */                                   \
                                                                                                                                                               \
             /* Check if the data type is matched */                                                                                                           \
             if (arrayplex.data_type() != modmesh::DataType::DATATYPE)                                                                                         \
@@ -74,13 +74,13 @@ namespace detail
                 return false;                                                                                                                                 \
             }                                                                                                                                                 \
                                                                                                                                                               \
-            /* construct the new array from the arrayplex */                                                                                                  \
+            /* construct the new array from the arrayplex NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast) */                                      \
             const modmesh::SimpleArray##DATATYPE * array_from_arrayplex = reinterpret_cast<const modmesh::SimpleArray##DATATYPE *>(arrayplex.instance_ptr()); \
-            value = const_cast<modmesh::SimpleArray##DATATYPE *>(array_from_arrayplex);                                                                       \
+            value = const_cast<modmesh::SimpleArray##DATATYPE *>(array_from_arrayplex); /* NOLINT(cppcoreguidelines-pro-type-const-cast) */                   \
             return true;                                                                                                                                      \
         }                                                                                                                                                     \
                                                                                                                                                               \
-        /* Conversion from C++ to Python object */                                                                                                            \
+        /* Conversion from C++ to Python object FIXME: NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved) */                                  \
         static pybind11::handle cast(modmesh::SimpleArray##DATATYPE && src, pybind11::return_value_policy policy, pybind11::handle parent)                    \
         {                                                                                                                                                     \
             return base::cast(src, policy, parent);                                                                                                           \

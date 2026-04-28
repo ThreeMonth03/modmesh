@@ -95,7 +95,7 @@ template <typename T>
 void add_simple_array_lu_methods(pybind11::module & mod, char const * pyname)
 {
     namespace py = pybind11;
-    py::object cls = mod.attr(pyname);
+    py::object cls = mod.attr(pyname); // NOLINT(misc-const-correctness)
     cls.attr("solve") = py::cpp_function(
         [](SimpleArray<T> const & self, SimpleArray<T> const & b)
         { return lu_solve(self, b); },

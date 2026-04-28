@@ -498,7 +498,7 @@ public:
     value_type tn(size_t iv) const { return field().kernel().calc_tn(*this, iv); }
     value_type tp(size_t iv) const { return field().kernel().calc_tp(*this, iv); }
     value_type so0p(size_t iv) const { return field().kernel().calc_so0p(*this, iv); }
-    void update_cfl() { return field().kernel().update_cfl(*this); }
+    void update_cfl() { field().kernel().update_cfl(*this); }
 
 }; /* end class Selm */
 
@@ -947,7 +947,7 @@ template <typename ST, typename CE, typename SE>
 inline void SolverBase<ST, CE, SE>::march_half_so0(bool odd_plane)
 {
     const int_type start = odd_plane ? -1 : 0;
-    const int_type stop = static_cast<int_type>(grid().ncelm());
+    const auto stop = static_cast<int_type>(grid().ncelm());
     for (int_type ic = start; ic < stop; ++ic)
     {
         auto ce = celm(ic, odd_plane);
@@ -959,7 +959,7 @@ template <typename ST, typename CE, typename SE>
 inline void SolverBase<ST, CE, SE>::update_cfl(bool odd_plane)
 {
     const int_type start = odd_plane ? -1 : 0;
-    const int_type stop = static_cast<int_type>(grid().nselm());
+    const auto stop = static_cast<int_type>(grid().nselm());
     for (int_type ic = start; ic < stop; ++ic)
     {
         selm(ic, odd_plane).update_cfl();
@@ -971,7 +971,7 @@ template <size_t ALPHA>
 inline void SolverBase<ST, CE, SE>::march_half_so1_alpha(bool odd_plane)
 {
     const int_type start = odd_plane ? -1 : 0;
-    const int_type stop = static_cast<int_type>(grid().ncelm());
+    const auto stop = static_cast<int_type>(grid().ncelm());
     for (int_type ic = start; ic < stop; ++ic)
     {
         auto ce = celm(ic, odd_plane);

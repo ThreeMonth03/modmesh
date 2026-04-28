@@ -86,7 +86,7 @@ public:
      */
     static constexpr double resolution()
     {
-        return double(clock_type::period::num) / double(clock_type::period::den);
+        return static_cast<double>(clock_type::period::num) / static_cast<double>(clock_type::period::den);
     }
 
 private:

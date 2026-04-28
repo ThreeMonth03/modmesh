@@ -153,7 +153,7 @@ private:
 }; /* end class Lu */
 
 template <typename T>
-auto Lu<T>::format_shape(array_type const & arr) -> std::string
+std::string Lu<T>::format_shape(array_type const & arr)
 {
     std::string result = "(";
     for (size_t i = 0; i < arr.ndim(); ++i)
@@ -169,7 +169,7 @@ auto Lu<T>::format_shape(array_type const & arr) -> std::string
 }
 
 template <typename T>
-auto Lu<T>::factorize(array_type const & a) -> std::pair<array_type, std::vector<ssize_t>>
+std::pair<typename Lu<T>::array_type, std::vector<ssize_t>> Lu<T>::factorize(array_type const & a)
 {
     if (a.ndim() != 2 || a.shape(0) != a.shape(1))
     {
@@ -205,7 +205,7 @@ auto Lu<T>::factorize(array_type const & a) -> std::pair<array_type, std::vector
         ssize_t max_row = k;
         for (ssize_t i = k + 1; i < n; ++i)
         {
-            real_type val = abs(lu(i, k));
+            real_type const val = abs(lu(i, k));
             if (val > max_val)
             {
                 max_val = val;
@@ -254,7 +254,7 @@ auto Lu<T>::factorize(array_type const & a) -> std::pair<array_type, std::vector
 }
 
 template <typename T>
-auto Lu<T>::forward_substitution(array_type const & lu, std::vector<ssize_t> const & piv, array_type const & b) -> array_type
+Lu<T>::array_type Lu<T>::forward_substitution(array_type const & lu, std::vector<ssize_t> const & piv, array_type const & b)
 {
     if (lu.ndim() != 2 || lu.shape(0) != lu.shape(1))
     {
@@ -271,7 +271,7 @@ auto Lu<T>::forward_substitution(array_type const & lu, std::vector<ssize_t> con
 
     const auto m = static_cast<ssize_t>(lu.shape(0));
     const auto ncols = static_cast<ssize_t>(b.shape(1));
-    small_vector<size_t> y_shape{static_cast<size_t>(m), static_cast<size_t>(ncols)};
+    small_vector<size_t> const y_shape{static_cast<size_t>(m), static_cast<size_t>(ncols)};
 
     // Copy b into y so we can apply the permutation in-place.
     array_type y(y_shape);
@@ -310,7 +310,7 @@ auto Lu<T>::forward_substitution(array_type const & lu, std::vector<ssize_t> con
 }
 
 template <typename T>
-auto Lu<T>::backward_substitution(array_type const & lu, array_type const & y) -> array_type
+Lu<T>::array_type Lu<T>::backward_substitution(array_type const & lu, array_type const & y)
 {
     if (lu.ndim() != 2 || lu.shape(0) != lu.shape(1))
     {
@@ -327,7 +327,7 @@ auto Lu<T>::backward_substitution(array_type const & lu, array_type const & y) -
 
     const auto m = static_cast<ssize_t>(lu.shape(0));
     const auto ncols = static_cast<ssize_t>(y.shape(1));
-    small_vector<size_t> x_shape{static_cast<size_t>(m), static_cast<size_t>(ncols)};
+    small_vector<size_t> const x_shape{static_cast<size_t>(m), static_cast<size_t>(ncols)};
     array_type x(x_shape);
 
     // Solve Ux = y by backward substitution.  U occupies the upper triangle
@@ -350,7 +350,7 @@ auto Lu<T>::backward_substitution(array_type const & lu, array_type const & y) -
 }
 
 template <typename T>
-auto Lu<T>::solve(array_type const & a, array_type const & b) -> array_type
+Lu<T>::array_type Lu<T>::solve(array_type const & a, array_type const & b)
 {
     if (a.ndim() != 2 || a.shape(0) != a.shape(1))
     {
@@ -396,7 +396,7 @@ auto Lu<T>::solve(array_type const & a, array_type const & b) -> array_type
 }
 
 template <typename T>
-auto Lu<T>::inv(array_type const & a) -> array_type
+Lu<T>::array_type Lu<T>::inv(array_type const & a)
 {
     if (a.ndim() != 2 || a.shape(0) != a.shape(1))
     {

@@ -32,7 +32,6 @@
 #include <modmesh/buffer/buffer.hpp>
 #include <modmesh/toggle/profile.hpp>
 #include <modmesh/toggle/RadixTree.hpp>
-#include <modmesh/toggle/profile.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -59,7 +58,7 @@ struct DynamicToggleIndex
         TYPE_SUBKEY
     };
 
-    operator bool() const { return type != TYPE_NONE; }
+    explicit operator bool() const { return type != TYPE_NONE; }
     bool is_bool() const { return type == TYPE_BOOL; }
     bool is_int8() const { return type == TYPE_INT8; }
     bool is_int16() const { return type == TYPE_INT16; }
@@ -133,7 +132,7 @@ public:
 
     using keymap_type = std::unordered_map<std::string, DynamicToggleIndex>;
 
-    static std::string const sentinel_string;
+    static std::string const sentinel_string; // FIXME: NOLINT(readability-redundant-string-init)
 
     bool get_bool(std::string const & key) const;
     void set_bool(std::string const & key, bool value);
@@ -159,7 +158,7 @@ public:
     DynamicToggleIndex get_index(std::string const & key) const
     {
         auto it = m_key2index.find(key);
-        return (it != m_key2index.end()) ? it->second : DynamicToggleIndex{0, DynamicToggleIndex::TYPE_NONE};
+        return (it != m_key2index.end()) ? it->second : DynamicToggleIndex{.index = 0, .type = DynamicToggleIndex::TYPE_NONE};
     }
     std::vector<std::string> keys() const;
     void clear();
@@ -268,7 +267,7 @@ public:
 
     static Toggle & instance();
 
-    Toggle * clone() const { return new Toggle(*this); }
+    Toggle * clone() const { return new Toggle(*this); /* NOLINT(cppcoreguidelines-owning-memory) */ }
 
     ~Toggle() = default;
 

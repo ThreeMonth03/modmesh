@@ -58,13 +58,13 @@ public:
     }
 
     // Always (forcefully) clone the input array when it is a const reference
-    SimpleCollector(SimpleArray<T> const & arr, size_t alignment = 0)
+    explicit SimpleCollector(SimpleArray<T> const & arr, size_t alignment = 0)
         : m_expander(BufferExpander::construct(arr.buffer().clone(), /*clone*/ false, alignment))
     {
     }
 
     // Allow sharing the buffer when the input array is an lvalue reference
-    SimpleCollector(SimpleArray<T> & arr, bool clone, size_t alignment = 0)
+    explicit SimpleCollector(SimpleArray<T> & arr, bool clone, size_t alignment = 0)
         : m_expander(BufferExpander::construct(arr.buffer().shared_from_this(), clone, alignment))
     {
     }
@@ -83,12 +83,12 @@ public:
         return *this;
     }
 
-    SimpleCollector(SimpleCollector && other)
+    SimpleCollector(SimpleCollector && other) noexcept
         : m_expander(std::move(other.m_expander))
     {
     }
 
-    SimpleCollector & operator=(SimpleCollector && other)
+    SimpleCollector & operator=(SimpleCollector && other) noexcept
     {
         if (this != &other)
         {
@@ -96,6 +96,8 @@ public:
         }
         return *this;
     }
+
+    ~SimpleCollector() = default;
 
     size_t size() const { return expander().size() / ITEMSIZE; }
     size_t capacity() const { return expander().capacity() / ITEMSIZE; }
@@ -135,7 +137,7 @@ public:
     {
         size_t const it = size();
         push_size();
-        (*this)[it] = value;
+        (*this)[it] = std::move(value);
     }
 
     /* Backdoor */

@@ -69,7 +69,7 @@ public:
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-    explicit operator bool() const { return bool(m_begin); }
+    explicit operator bool() const { return static_cast<bool>(m_begin); }
     size_type size() const
     {
         return static_cast<size_type>(this->m_end - this->m_begin);
@@ -128,12 +128,14 @@ protected:
     {
     }
 
+public:
     BufferBase(BufferBase const &) = delete;
     BufferBase(BufferBase &&) = delete;
     BufferBase & operator=(BufferBase const &) = delete;
     BufferBase & operator=(BufferBase &&) = delete;
     ~BufferBase() = default;
 
+protected:
     void validate_range(size_t it) const
     {
         if (it >= size())

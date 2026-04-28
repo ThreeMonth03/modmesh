@@ -325,8 +325,8 @@ int32_t World<T>::register_shape(ShapeType type,
                                  size_t curve_offset,
                                  size_t curve_count)
 {
-    int32_t shape_id = static_cast<int32_t>(m_shape_registry.size());
-    m_shape_registry.push_back(ShapeRecord{type, segment_offset, segment_count, curve_offset, curve_count});
+    auto shape_id = static_cast<int32_t>(m_shape_registry.size());
+    m_shape_registry.push_back(ShapeRecord{type, segment_offset, segment_count, curve_offset, curve_count}); // NOLINT(modernize-use-designated-initializers)
     ++m_nshape;
     m_rtree->insert(ShapeEntry<T>{shape_id, compute_shape_bbox(m_shape_registry[shape_id])});
     return shape_id;
@@ -335,7 +335,7 @@ int32_t World<T>::register_shape(ShapeType type,
 template <typename T>
 int32_t World<T>::add_triangle(T x0, T y0, T x1, T y1, T x2, T y2)
 {
-    size_t offset = m_segments->size();
+    size_t const offset = m_segments->size();
     m_segments->append(point_type(x0, y0, 0), point_type(x1, y1, 0));
     m_segments->append(point_type(x1, y1, 0), point_type(x2, y2, 0));
     m_segments->append(point_type(x2, y2, 0), point_type(x0, y0, 0));
@@ -345,7 +345,7 @@ int32_t World<T>::add_triangle(T x0, T y0, T x1, T y1, T x2, T y2)
 template <typename T>
 int32_t World<T>::add_line(T x0, T y0, T x1, T y1)
 {
-    size_t offset = m_segments->size();
+    size_t const offset = m_segments->size();
     m_segments->append(point_type(x0, y0, 0), point_type(x1, y1, 0));
     return register_shape(ShapeType::LINE, offset, 1);
 }
@@ -353,11 +353,11 @@ int32_t World<T>::add_line(T x0, T y0, T x1, T y1)
 template <typename T>
 int32_t World<T>::add_rectangle(T x_min, T y_min, T x_max, T y_max)
 {
-    size_t offset = m_segments->size();
-    point_type p00(x_min, y_min, 0);
-    point_type p10(x_max, y_min, 0);
-    point_type p11(x_max, y_max, 0);
-    point_type p01(x_min, y_max, 0);
+    size_t const offset = m_segments->size();
+    point_type const p00(x_min, y_min, 0);
+    point_type const p10(x_max, y_min, 0);
+    point_type const p11(x_max, y_max, 0);
+    point_type const p01(x_min, y_max, 0);
     m_segments->append(p00, p10);
     m_segments->append(p10, p11);
     m_segments->append(p11, p01);
@@ -370,7 +370,7 @@ int32_t World<T>::add_square(T x_min, T y_min, T size)
 {
     // Delegate through the rectangle build path and retag so shape_type_of
     // distinguishes squares from rectangles.
-    int32_t sid = add_rectangle(x_min, y_min, x_min + size, y_min + size);
+    int32_t const sid = add_rectangle(x_min, y_min, x_min + size, y_min + size);
     m_shape_registry[sid].type = ShapeType::SQUARE;
     return sid;
 }
@@ -383,7 +383,7 @@ int32_t World<T>::add_ellipse(T cx, T cy, T rx, T ry)
     T const k = T(4) * (std::sqrt(T(2)) - T(1)) / T(3);
     T const kx = k * rx;
     T const ky = k * ry;
-    size_t offset = m_curves->size();
+    size_t const offset = m_curves->size();
     // Quadrant 1: (cx+rx, cy) -> (cx, cy+ry), sweeping counter-clockwise.
     m_curves->append(
         point_type(cx + rx, cy, 0),
@@ -414,7 +414,7 @@ int32_t World<T>::add_ellipse(T cx, T cy, T rx, T ry)
 template <typename T>
 int32_t World<T>::add_circle(T cx, T cy, T r)
 {
-    int32_t sid = add_ellipse(cx, cy, r, r);
+    int32_t const sid = add_ellipse(cx, cy, r, r);
     m_shape_registry[sid].type = ShapeType::CIRCLE;
     return sid;
 }
@@ -427,7 +427,7 @@ void World<T>::translate_shape(int32_t shape_id, value_type dx, value_type dy)
     m_rtree->remove(ShapeEntry<T>{shape_id, compute_shape_bbox(rec)});
     for (uint32_t i = 0; i < rec.segment_count; ++i)
     {
-        size_t idx = rec.segment_offset + i;
+        size_t const idx = rec.segment_offset + i;
         m_segments->x0(idx) += dx;
         m_segments->y0(idx) += dy;
         m_segments->x1(idx) += dx;
@@ -435,7 +435,7 @@ void World<T>::translate_shape(int32_t shape_id, value_type dx, value_type dy)
     }
     for (uint32_t i = 0; i < rec.curve_count; ++i)
     {
-        size_t idx = rec.curve_offset + i;
+        size_t const idx = rec.curve_offset + i;
         m_curves->x0(idx) += dx;
         m_curves->y0(idx) += dy;
         m_curves->x1(idx) += dx;
@@ -461,7 +461,7 @@ void World<T>::remove_shape(int32_t shape_id)
 template <typename T>
 std::vector<int32_t> World<T>::query_visible(T min_x, T min_y, T max_x, T max_y) const
 {
-    bbox_type viewport(min_x, min_y, T(0), max_x, max_y, T(0));
+    bbox_type const viewport(min_x, min_y, T(0), max_x, max_y, T(0));
     std::vector<ShapeEntry<T>> hits;
     m_rtree->search(viewport, hits);
     std::vector<int32_t> ids;
@@ -550,7 +550,7 @@ typename World<T>::bbox_type World<T>::compute_shape_bbox(ShapeRecord const & re
     T mx_y = std::numeric_limits<T>::lowest();
     for (uint32_t i = 0; i < rec.segment_count; ++i)
     {
-        size_t idx = rec.segment_offset + i;
+        size_t const idx = rec.segment_offset + i;
         mn_x = std::min({mn_x, m_segments->x0(idx), m_segments->x1(idx)});
         mn_y = std::min({mn_y, m_segments->y0(idx), m_segments->y1(idx)});
         mx_x = std::max({mx_x, m_segments->x0(idx), m_segments->x1(idx)});
@@ -560,7 +560,7 @@ typename World<T>::bbox_type World<T>::compute_shape_bbox(ShapeRecord const & re
     // 4-quadrant cubic-Bezier ellipses this is exactly the ellipse bbox.
     for (uint32_t i = 0; i < rec.curve_count; ++i)
     {
-        size_t idx = rec.curve_offset + i;
+        size_t const idx = rec.curve_offset + i;
         mn_x = std::min({mn_x, m_curves->x0(idx), m_curves->x1(idx), m_curves->x2(idx), m_curves->x3(idx)});
         mn_y = std::min({mn_y, m_curves->y0(idx), m_curves->y1(idx), m_curves->y2(idx), m_curves->y3(idx)});
         mx_x = std::max({mx_x, m_curves->x0(idx), m_curves->x1(idx), m_curves->x2(idx), m_curves->x3(idx)});

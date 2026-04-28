@@ -42,7 +42,7 @@ namespace inout
 {
 
 std::vector<std::string> tokenize(const std::string & str, const std::regex & regex_delim);
-std::vector<std::string> tokenize(const std::string & str, const char delim);
+std::vector<std::string> tokenize(const std::string & str, char delim);
 
 } // namespace inout
 

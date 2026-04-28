@@ -58,7 +58,15 @@ find_program(
 )
 if(USE_CLANG_TIDY)
     if(CLANG_TIDY_EXE)
-        set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-header-filter=/cpp/.\*/modmesh/.\*" "--extra-arg=-std=c++2b")
+        set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}"
+            "-header-filter=/cpp/.\*"
+            "--extra-arg=-std=c++23"
+            # FIXME: Remove --allow-no-checks in the future after figuring out
+            # why the error message "Error: no checks enabled." appears with
+            # some files, after upgrading to clang-tidy-22.
+            # Related information (but not what we see in modmesh):
+            # https://github.com/llvm/llvm-project/issues/192713
+            "--allow-no-checks")
         if(LINT_AS_ERRORS)
             set(DO_CLANG_TIDY "${DO_CLANG_TIDY}" "-warnings-as-errors=*")
         endif()

@@ -68,7 +68,7 @@ SolidToggle::SolidToggle()
 {
 }
 
-// NOLINTNEXTLINE(fuchsia-statically-constructed-objects,readability-redundant-string-init,cert-err58-cpp)
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization,fuchsia-statically-constructed-objects,readability-redundant-string-init,cert-err58-cpp)
 std::string const DynamicToggleTable::sentinel_string = "";
 
 /* The macro gives debuggers a hard time. Manually expand it if you need to
@@ -152,7 +152,7 @@ void DynamicToggleTable::add_subkey(std::string const & key)
     auto it = m_key2index.find(key);
     if (it == m_key2index.end())
     {
-        DynamicToggleIndex const index{0, DynamicToggleIndex::TYPE_SUBKEY};
+        DynamicToggleIndex const index{.index = 0, .type = DynamicToggleIndex::TYPE_SUBKEY};
         m_key2index.insert({key, index});
     }
 }

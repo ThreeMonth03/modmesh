@@ -78,7 +78,7 @@ public:
     {
         m_begin = m_concrete_buffer->data();
         m_end = m_begin + m_concrete_buffer->size();
-        m_end_cap = m_begin + m_concrete_buffer->size();
+        m_end_cap = m_begin + m_concrete_buffer->size(); // NOLINT(cppcoreguidelines-prefer-member-initializer)
     }
 
     BufferExpander(std::shared_ptr<ConcreteBuffer> const & buf, bool clone, ctor_passkey const &)
@@ -98,9 +98,9 @@ public:
     {
     }
 
-    BufferExpander(ctor_passkey const &)
+    explicit BufferExpander(ctor_passkey const &)
         : BufferBase<BufferExpander>(nullptr, nullptr)
-        , m_alignment(0)
+        , m_alignment(0) // NOLINT(cppcoreguidelines-use-default-member-init,modernize-use-default-member-init)
     {
     }
 
@@ -151,7 +151,7 @@ public:
 
     std::shared_ptr<ConcreteBuffer> copy_concrete(size_type cap = 0) const;
     std::shared_ptr<ConcreteBuffer> const & as_concrete(size_type cap = 0);
-    bool is_concrete() const { return bool(m_concrete_buffer); }
+    bool is_concrete() const { return static_cast<bool>(m_concrete_buffer); }
 
     size_type alignment() const noexcept { return m_alignment; }
 
@@ -178,7 +178,7 @@ private:
                 std::free(ptr);
             }
 #else
-            std::free(ptr);
+            std::free(ptr); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #endif
         }
     };
@@ -197,13 +197,13 @@ private:
 #ifdef _WIN32
                 ptr = _aligned_malloc(nbytes, alignment);
 #else
-                ptr = std::aligned_alloc(alignment, nbytes);
+                ptr = std::aligned_alloc(alignment, nbytes); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #endif
             }
             else
             {
                 // Use malloc instead of new[] so we can consistently use free in the deleter
-                ptr = std::malloc(nbytes);
+                ptr = std::malloc(nbytes); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
             }
             if (!ptr)
             {

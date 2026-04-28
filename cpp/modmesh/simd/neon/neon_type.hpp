@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__aarch64__)
+#ifdef __aarch64__
 
 #include <cstddef>
 #include <arm_neon.h>

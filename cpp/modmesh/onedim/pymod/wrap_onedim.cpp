@@ -72,7 +72,7 @@ protected:
             .def_property_readonly_static(
                 "nvar",
                 [](py::handle const &)
-                { return size_t(wrapped_type::NVAR); })
+                { return static_cast<size_t>(wrapped_type::NVAR); })
             .def_property_readonly("time_increment", &wrapped_type::time_increment)
             .def_property_readonly("ncoord", &wrapped_type::ncoord);
 
