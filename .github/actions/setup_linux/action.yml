@@ -76,12 +76,12 @@ runs:
       if: ${{ inputs.workflow == 'lint' }}
       shell: bash
       run: |
-        # Install clang-tidy-21 from LLVM repository for full C++23 support
+        # Install clang-tidy-22 from LLVM repository for full C++23 support
         wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-        echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+        echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-22 main" | sudo tee /etc/apt/sources.list.d/llvm.list
         sudo apt-get -qqy update
-        sudo apt-get -qy install clang-tidy-21
-        sudo ln -fs "$(which clang-tidy-21)" "/usr/local/bin/clang-tidy"
+        sudo apt-get -qy install clang-tidy-22
+        sudo ln -fs "$(which clang-tidy-22)" "/usr/local/bin/clang-tidy"
 
     - name: Install and configure gcc-14
       shell: bash
