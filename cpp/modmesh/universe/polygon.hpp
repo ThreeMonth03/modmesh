@@ -60,7 +60,7 @@ struct Triangle3dNamed
 template <typename T>
 union Triangle3dData
 {
-    T v[9];
+    T v[9]; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     Triangle3dNamed<T> f;
 }; /* end union Triangle3dData */
 
@@ -73,7 +73,7 @@ struct Trapezoid3dNamed
 template <typename T>
 union Trapezoid3dData
 {
-    T v[12];
+    T v[12]; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     Trapezoid3dNamed<T> f;
 }; /* end union Trapezoid3dData */
 
@@ -971,7 +971,7 @@ private:
 
 public:
 
-    TrapezoidalDecomposer(uint8_t ndim)
+    explicit TrapezoidalDecomposer(uint8_t ndim)
         : m_trapezoids(trapezoid_pad_type::construct(ndim))
     {
     }
@@ -1042,7 +1042,7 @@ void TrapezoidalDecomposer<T>::build_edges_and_events(std::vector<point_type> co
             continue;
         }
 
-        Edge edge;
+        Edge edge; // FIXME: NOLINT(cppcoreguidelines-pro-type-member-init)
         if (p1.y() < p2.y())
         {
             edge.lower_y = p1.y();
@@ -1122,8 +1122,8 @@ std::pair<size_t, size_t> TrapezoidalDecomposer<T>::decompose(size_t polygon_id,
     // Sweep from bottom to top
     for (size_t i = 0; i < y_values.size() - 1; ++i)
     {
-        value_type y_current = y_values[i];
-        value_type y_next = y_values[i + 1];
+        value_type const y_current = y_values[i];
+        value_type const y_next = y_values[i + 1];
 
         // Remove ending edges from the active list
         // TODO: be aware of O(n^2) complexity
@@ -1145,8 +1145,8 @@ std::pair<size_t, size_t> TrapezoidalDecomposer<T>::decompose(size_t polygon_id,
         // Sort active edges by x at current y
         std::sort(active_edges.begin(), active_edges.end(), [y_current](const Edge & a, const Edge & b)
                   {
-                      value_type ax = a.x_at_lower_y + a.dxdy * (y_current - a.lower_y);
-                      value_type bx = b.x_at_lower_y + b.dxdy * (y_current - b.lower_y);
+                      value_type const ax = a.x_at_lower_y + a.dxdy * (y_current - a.lower_y);
+                      value_type const bx = b.x_at_lower_y + b.dxdy * (y_current - b.lower_y);
                       if (ax != bx)
                       {
                           return ax < bx;
@@ -1160,10 +1160,10 @@ std::pair<size_t, size_t> TrapezoidalDecomposer<T>::decompose(size_t polygon_id,
             const Edge & left_edge = active_edges[j];
             const Edge & right_edge = active_edges[j + 1];
 
-            value_type lower_x0 = left_edge.x_at_lower_y + left_edge.dxdy * (y_current - left_edge.lower_y);
-            value_type lower_x1 = right_edge.x_at_lower_y + right_edge.dxdy * (y_current - right_edge.lower_y);
-            value_type upper_x0 = left_edge.x_at_lower_y + left_edge.dxdy * (y_next - left_edge.lower_y);
-            value_type upper_x1 = right_edge.x_at_lower_y + right_edge.dxdy * (y_next - right_edge.lower_y);
+            value_type const lower_x0 = left_edge.x_at_lower_y + left_edge.dxdy * (y_current - left_edge.lower_y);
+            value_type const lower_x1 = right_edge.x_at_lower_y + right_edge.dxdy * (y_current - right_edge.lower_y);
+            value_type const upper_x0 = left_edge.x_at_lower_y + left_edge.dxdy * (y_next - left_edge.lower_y);
+            value_type const upper_x1 = right_edge.x_at_lower_y + right_edge.dxdy * (y_next - right_edge.lower_y);
 
             if (m_trapezoids->ndim() == 3)
             {
@@ -2259,7 +2259,7 @@ public:
      * @param segments SegmentPad containing connected line segments
      * @return Polygon3d handle to the newly added polygon
      */
-    polygon_type add_polygon_from_segments(std::shared_ptr<segment_pad_type> segments);
+    polygon_type add_polygon_from_segments(std::shared_ptr<segment_pad_type> const & segments);
 
     /**
      * Add a polygon from a CurvePad by sampling.
@@ -2268,7 +2268,7 @@ public:
      * @param sample_length Sampling interval
      * @return Polygon3d handle to the newly added polygon
      */
-    polygon_type add_polygon_from_curves(std::shared_ptr<curve_pad_type> curves, value_type sample_length);
+    polygon_type add_polygon_from_curves(std::shared_ptr<curve_pad_type> const & curves, value_type sample_length);
 
     /**
      * Add a polygon from both segments and curves.
@@ -2279,8 +2279,8 @@ public:
      * @return Polygon3d handle to the newly added polygon
      */
     polygon_type add_polygon_from_segments_and_curves(
-        std::shared_ptr<segment_pad_type> segments,
-        std::shared_ptr<curve_pad_type> curves,
+        std::shared_ptr<segment_pad_type> const & segments,
+        std::shared_ptr<curve_pad_type> const & curves,
         value_type sample_length);
 
     /**
@@ -2491,7 +2491,7 @@ Polygon3d<T> PolygonPad<T>::add_polygon(std::vector<point_type> const & nodes)
         throw std::invalid_argument("PolygonPad::add_polygon: polygon must have at least 3 nodes");
     }
 
-    ssize_type const begin_index = static_cast<ssize_type>(m_points->size());
+    auto const begin_index = static_cast<ssize_type>(m_points->size());
 
     for (point_type const & node : nodes)
     {
@@ -2504,12 +2504,12 @@ Polygon3d<T> PolygonPad<T>::add_polygon(std::vector<point_type> const & nodes)
         m_points->append(node);
     }
 
-    ssize_type const end_index = static_cast<ssize_type>(m_points->size());
+    auto const end_index = static_cast<ssize_type>(m_points->size());
     size_t const polygon_id = m_begins.size();
     m_begins.push_back(begin_index);
     m_ends.push_back(end_index);
 
-    std::shared_ptr<PolygonPad<T> const> const_this = this->shared_from_this();
+    std::shared_ptr<PolygonPad<T> const> const & const_this = this->shared_from_this();
     polygon_type polygon(const_this, polygon_id, typename polygon_type::ctor_passkey());
     rebuild_polygon_rtree(polygon);
 
@@ -2517,7 +2517,7 @@ Polygon3d<T> PolygonPad<T>::add_polygon(std::vector<point_type> const & nodes)
 }
 
 template <typename T>
-Polygon3d<T> PolygonPad<T>::add_polygon_from_segments(std::shared_ptr<segment_pad_type> segments)
+Polygon3d<T> PolygonPad<T>::add_polygon_from_segments(std::shared_ptr<segment_pad_type> const & segments)
 {
     if (!segments)
     {
@@ -2547,7 +2547,7 @@ Polygon3d<T> PolygonPad<T>::add_polygon_from_segments(std::shared_ptr<segment_pa
 }
 
 template <typename T>
-Polygon3d<T> PolygonPad<T>::add_polygon_from_curves(std::shared_ptr<curve_pad_type> curves, value_type sample_length)
+Polygon3d<T> PolygonPad<T>::add_polygon_from_curves(std::shared_ptr<curve_pad_type> const & curves, value_type sample_length)
 {
     if (!curves)
     {
@@ -2566,14 +2566,14 @@ Polygon3d<T> PolygonPad<T>::add_polygon_from_curves(std::shared_ptr<curve_pad_ty
                         int(curves->ndim()),
                         int(ndim())));
     }
-    std::shared_ptr<segment_pad_type> segments = curves->sample(sample_length);
+    std::shared_ptr<segment_pad_type> const & segments = curves->sample(sample_length);
     return add_polygon_from_segments(segments);
 }
 
 template <typename T>
 Polygon3d<T> PolygonPad<T>::add_polygon_from_segments_and_curves(
-    std::shared_ptr<segment_pad_type> segments,
-    std::shared_ptr<curve_pad_type> curves,
+    std::shared_ptr<segment_pad_type> const & segments,
+    std::shared_ptr<curve_pad_type> const & curves,
     value_type sample_length)
 {
     if (!segments)
@@ -2603,10 +2603,10 @@ Polygon3d<T> PolygonPad<T>::add_polygon_from_segments_and_curves(
 
     for (size_t i = 0; i < segments->size(); ++i)
     {
-        nodes.push_back(segments->p0(i));
+        nodes.push_back(segments->p0(i)); // FIXME: NOLINT(performance-inefficient-vector-operation)
     }
 
-    std::shared_ptr<segment_pad_type> curve_segments = curves->sample(sample_length);
+    std::shared_ptr<segment_pad_type> const & curve_segments = curves->sample(sample_length);
     for (size_t i = 0; i < curve_segments->size(); ++i)
     {
         nodes.push_back(curve_segments->p0(i));
@@ -2642,7 +2642,7 @@ Point3d<T> PolygonPad<T>::get_node(size_t polygon_id, size_t node_index) const
     }
     ssize_type const begin_index = m_begins[polygon_id];
     ssize_type const end_index = m_ends[polygon_id];
-    size_t const count = static_cast<size_t>(end_index - begin_index);
+    auto const count = static_cast<size_t>(end_index - begin_index);
     if (node_index >= count)
     {
         throw std::out_of_range(
@@ -2650,6 +2650,7 @@ Point3d<T> PolygonPad<T>::get_node(size_t polygon_id, size_t node_index) const
                         node_index,
                         count));
     }
+    // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
     return m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>(node_index)));
 }
 
@@ -2665,7 +2666,7 @@ Segment3d<T> PolygonPad<T>::get_edge(size_t polygon_id, size_t edge_index) const
     }
     ssize_type const begin_index = m_begins[polygon_id];
     ssize_type const end_index = m_ends[polygon_id];
-    size_t const count = static_cast<size_t>(end_index - begin_index);
+    auto const count = static_cast<size_t>(end_index - begin_index);
     if (edge_index >= count)
     {
         throw std::out_of_range(
@@ -2673,7 +2674,9 @@ Segment3d<T> PolygonPad<T>::get_edge(size_t polygon_id, size_t edge_index) const
                         edge_index,
                         count));
     }
+    // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
     point_type const p0 = m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>(edge_index)));
+    // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
     point_type const p1 = m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>((edge_index + 1) % count)));
     return segment_type(p0, p1);
 }
@@ -2690,7 +2693,7 @@ T PolygonPad<T>::compute_signed_area(size_t polygon_id) const
     }
     auto const begin_index = m_begins[polygon_id];
     auto const end_index = m_ends[polygon_id];
-    size_t const count = static_cast<size_t>(end_index - begin_index);
+    auto const count = static_cast<size_t>(end_index - begin_index);
     if (count < 3)
     {
         return 0;
@@ -2699,7 +2702,9 @@ T PolygonPad<T>::compute_signed_area(size_t polygon_id) const
     value_type area = 0;
     for (size_t i = 0; i < count; ++i)
     {
+        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
         point_type const p0 = m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>(i)));
+        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
         point_type const p1 = m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>((i + 1) % count)));
         area += p0.x() * p1.y() - p1.x() * p0.y();
     }
@@ -2719,7 +2724,7 @@ BoundBox3d<T> PolygonPad<T>::calc_bound_box(size_t polygon_id) const
     }
     auto const begin_index = m_begins[polygon_id];
     auto const end_index = m_ends[polygon_id];
-    size_t const count = static_cast<size_t>(end_index - begin_index);
+    auto const count = static_cast<size_t>(end_index - begin_index);
 
     if (count == 0)
     {
@@ -2735,6 +2740,7 @@ BoundBox3d<T> PolygonPad<T>::calc_bound_box(size_t polygon_id) const
 
     for (size_t i = 0; i < count; ++i)
     {
+        // NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
         point_type const node = m_points->get(static_cast<size_t>(begin_index + static_cast<ssize_type>(i)));
         min_x = std::min(min_x, node.x());
         min_y = std::min(min_y, node.y());
@@ -2753,7 +2759,7 @@ void PolygonPad<T>::rebuild_rtree()
     m_rtree = std::make_unique<rtree_type>();
     for (size_t i = 0; i < m_begins.size(); ++i)
     {
-        polygon_type polygon = get_polygon(i);
+        polygon_type const polygon = get_polygon(i);
         rebuild_polygon_rtree(polygon);
     }
 }
@@ -2781,7 +2787,7 @@ std::pair<size_t, size_t> PolygonPad<T>::decompose_to_trapezoid(size_t polygon_i
                         num_polygons()));
     }
 
-    polygon_type polygon = get_polygon(polygon_id);
+    polygon_type const polygon = get_polygon(polygon_id);
     std::vector<point_type> points;
     points.reserve(polygon.nnode());
     for (size_t i = 0; i < polygon.nnode(); ++i)
@@ -2795,7 +2801,7 @@ std::pair<size_t, size_t> PolygonPad<T>::decompose_to_trapezoid(size_t polygon_i
 namespace detail
 {
 
-enum class BooleanOperation
+enum class BooleanOperation : uint8_t
 {
     Union,
     Intersection,

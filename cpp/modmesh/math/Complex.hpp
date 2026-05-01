@@ -53,12 +53,14 @@ struct ComplexImpl
     {
     }
 
+    // FIXME: NOLINTNEXTLINE(google-explicit-constructor)
     ComplexImpl(T t)
         : real_v(t)
         , imag_v(0.0)
     {
     }
 
+    // FIXME: NOLINTNEXTLINE(google-explicit-constructor)
     ComplexImpl(std::complex<T> const & c)
         : real_v(c.real())
         , imag_v(c.imag())

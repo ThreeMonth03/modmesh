@@ -54,9 +54,9 @@ public:
 
     static_assert(std::is_integral_v<key_type> && std::is_signed_v<key_type>, "signed integral required");
 
-    RadixTreeNode(std::string const & name, key_type key)
+    RadixTreeNode(std::string name, key_type key)
         : m_key(key)
-        , m_name(name)
+        , m_name(std::move(name))
         , m_prev(nullptr)
     {
     }
@@ -136,7 +136,7 @@ public:
 
     T & entry(const std::string & name)
     {
-        key_type id = get_id(name);
+        key_type const id = get_id(name);
 
         RadixTreeNode<T> * child = m_current_node->get_child(id);
 
@@ -183,8 +183,8 @@ public:
 
     RadixTreeNode<T> * get_root() const { return m_root.get(); }
     RadixTreeNode<T> * get_current_node() const { return m_current_node; }
-    const key_type get_unique_node() const { return m_unique_id; }
-    const key_type get_stable_unique_node() const { return m_stable_unique_id; }
+    key_type get_unique_node() const { return m_unique_id; }
+    key_type get_stable_unique_node() const { return m_stable_unique_id; }
     const std::unordered_map<std::string, key_type> & get_stable_id_map() const { return m_stable_id_map; }
     const std::unordered_map<std::string, key_type> & get_id_map() const { return m_id_map; }
 
@@ -289,12 +289,12 @@ public:
     const RadixTree<CallerProfile> & radix_tree() const { return m_radix_tree; }
 
 private:
-    void print_profiling_result(const RadixTreeNode<CallerProfile> & node, const int depth, std::ostream & outstream) const;
+    void print_profiling_result(const RadixTreeNode<CallerProfile> & node, int depth, std::ostream & outstream) const;
     static void print_statistics(const RadixTreeNode<CallerProfile> & node, std::ostream & outstream);
 
     void update_pending_nodes()
     {
-        for (auto & node : m_pending_nodes)
+        for (auto const & node : m_pending_nodes)
         {
             node->data().update_stable_items();
         }

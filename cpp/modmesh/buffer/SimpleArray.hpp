@@ -45,7 +45,7 @@
 #include <numeric>
 #include <stdexcept>
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
@@ -192,7 +192,7 @@ public:
         const size_t ndim = athis->ndim();
 
         small_vector<bool> reduce_mask(ndim, false);
-        for (size_t ax : axis)
+        for (size_t const ax : axis)
         {
             if (ax >= ndim || ax < 0)
             {
@@ -201,7 +201,7 @@ public:
             reduce_mask[ax] = true;
         }
 
-        size_t red_count = reduce_mask.count(true);
+        size_t const red_count = reduce_mask.count(true);
         if (red_count == 0 || red_count == ndim)
         {
             throw std::runtime_error("reduce: no axis to reduce or all axes are reduced");
@@ -253,7 +253,8 @@ public:
 
             } while (red_idx.next_cartesian_product(red_shape));
 
-            element_type mv = std::invoke(red_fn, this, slice, std::forward<RedArgs>(red_args)...);
+            // FIXME: NOLINTNEXTLINE(bugprone-use-after-move)
+            element_type const mv = std::invoke(red_fn, this, slice, std::forward<RedArgs>(red_args)...);
             result.at(out_idx) = mv;
         } while (result.next_sidx(out_idx));
 
@@ -383,7 +384,7 @@ public:
         {
             throw std::runtime_error("SimpleArray::var_op(): ddof must be less than the number of elements");
         }
-        value_type mu = mean_op(sv);
+        value_type const mu = mean_op(sv);
         real_type acc = 0;
         if constexpr (is_complex_v<value_type>)
         {
@@ -417,7 +418,7 @@ public:
         }
 
         auto sidx = athis->first_sidx();
-        value_type mu = athis->mean();
+        value_type const mu = athis->mean();
         real_type acc = 0;
         if constexpr (is_complex_v<value_type>)
         {
@@ -590,7 +591,7 @@ public:
         }
         else
         {
-            size_t size = athis->size();
+            size_t const size = athis->size();
             for (size_t i = 0; i < size; ++i)
             {
                 athis->data(i) = athis->data(i) || other.data(i);
@@ -688,7 +689,7 @@ public:
         }
         else
         {
-            size_t size = athis->size();
+            size_t const size = athis->size();
             for (size_t i = 0; i < size; ++i)
             {
                 athis->data(i) = athis->data(i) && other.data(i);
@@ -715,7 +716,7 @@ public:
         {
             if (!scalar)
             {
-                size_t size = athis->size();
+                size_t const size = athis->size();
                 for (size_t i = 0; i < size; ++i)
                 {
                     athis->data(i) = false;
@@ -890,13 +891,13 @@ detail::SimpleArrayMixinCalculators<A, T>::median_op(small_vector<value_type> & 
     }
     else
     {
-        value_type v1 = sv.select_kth(n / 2);
+        value_type const v1 = sv.select_kth(n / 2);
         if (n % 2 != 0)
         {
             return v1;
         }
-        value_type v2 = simd::max(sv.begin(), sv.begin() + n / 2);
-        value_type result = static_cast<value_type>(v1 + v2) / static_cast<value_type>(2.0);
+        value_type const v2 = simd::max(sv.begin(), sv.begin() + n / 2);
+        value_type const result = static_cast<value_type>(v1 + v2) / static_cast<value_type>(2.0);
         return result;
     }
 }
@@ -927,19 +928,19 @@ detail::SimpleArrayMixinCalculators<A, T>::median_freq(small_vector<value_type> 
         throw std::runtime_error("median_freq(): empty container");
     }
 
-    uint32_t freq[256] = {};
+    uint32_t freq[256] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 
     if constexpr (std::is_same_v<value_type, uint8_t>)
     {
-        for (uint8_t v : sv) { ++freq[v]; }
+        for (uint8_t const v : sv) { ++freq[v]; }
     }
     else if constexpr (std::is_same_v<value_type, int8_t>)
     {
-        for (int8_t v : sv) { ++freq[static_cast<unsigned>(static_cast<int>(v) + 128)]; }
+        for (int8_t const v : sv) { ++freq[static_cast<unsigned>(static_cast<int>(v) + 128)]; }
     }
     else
     {
-        for (bool v : sv) { ++freq[v ? 1 : 0]; }
+        for (bool const v : sv) { ++freq[v ? 1 : 0]; }
     }
 
     int b1, b2;
@@ -968,7 +969,7 @@ detail::SimpleArrayMixinCalculators<A, T>::median_freq(small_vector<value_type> 
  * This implementation supports 1D x 1D, 1D x 2D, 2D x 1D, and 2D x 2D matrix multiplication.
  */
 template <typename A, typename T>
-A SimpleArrayMixinCalculators<A, T>::matmul(A const & other) const
+A SimpleArrayMixinCalculators<A, T>::matmul(A const & other) const // NOLINT(readability-function-cognitive-complexity)
 {
     auto athis = static_cast<A const *>(this);
     const size_t this_ndim = athis->ndim();
@@ -1016,8 +1017,8 @@ A SimpleArrayMixinCalculators<A, T>::matmul(A const & other) const
         throw std::out_of_range(err);
     }
 
-    bool this_is_1d = (this_ndim == 1);
-    bool other_is_1d = (other_ndim == 1);
+    bool const this_is_1d = (this_ndim == 1);
+    bool const other_is_1d = (other_ndim == 1);
 
     // 1D x 1D
     if (this_is_1d && other_is_1d)
@@ -1079,7 +1080,7 @@ A SimpleArrayMixinCalculators<A, T>::matmul(A const & other) const
         const size_t n = other.shape(1);
         check_product_shape(athis, &other, 1, 0);
 
-        shape_type result_shape{m, n};
+        shape_type const result_shape{m, n};
         A result(result_shape);
 
         for (size_t i = 0; i < m; ++i)
@@ -1164,8 +1165,8 @@ public:
 
     using value_type = typename internal_types::value_type;
 
-    void sort(void);
-    SimpleArray<uint64_t> argsort(void);
+    void sort();
+    SimpleArray<uint64_t> argsort();
     template <IntegralType I>
     A take_along_axis(SimpleArray<I> const & indices);
     template <IntegralType I>
@@ -1174,7 +1175,7 @@ public:
 }; /* end class SimpleArrayMixinSort */
 
 template <typename A, typename T>
-void SimpleArrayMixinSort<A, T>::sort(void)
+void SimpleArrayMixinSort<A, T>::sort()
 {
     auto athis = static_cast<A *>(this);
     if (athis->ndim() != 1)
@@ -1188,7 +1189,7 @@ void SimpleArrayMixinSort<A, T>::sort(void)
 }
 
 template <typename T, IntegralType I>
-void indexed_copy(T * dest, T const * data, I const * begin, I const * const end);
+void indexed_copy(T * dest, T const * data, I const * begin, I const * const end); // NOLINT(readability-avoid-const-params-in-decls)
 
 template <IntegralType T>
 T const * check_index_range(SimpleArray<T> const & indices, size_t max_idx);
@@ -1255,7 +1256,7 @@ public:
     static A eye(ssize_t n)
     {
         validate_positive("eye", n);
-        shape_type shape{static_cast<size_t>(n), static_cast<size_t>(n)};
+        shape_type const shape{static_cast<size_t>(n), static_cast<size_t>(n)};
         A result(shape, static_cast<value_type>(0));
 
         for (ssize_t i = 0; i < n; ++i)
@@ -1269,7 +1270,7 @@ public:
     static A scaled_eye(ssize_t n, value_type scale)
     {
         validate_positive("scaled_eye", n);
-        shape_type shape{static_cast<size_t>(n), static_cast<size_t>(n)};
+        shape_type const shape{static_cast<size_t>(n), static_cast<size_t>(n)};
         A result(shape, static_cast<value_type>(0));
 
         for (ssize_t i = 0; i < n; ++i)
@@ -1623,7 +1624,7 @@ public:
     template <typename... Args>
     SimpleArray & remake(Args &&... args)
     {
-        SimpleArray(args...).swap(*this);
+        SimpleArray(std::forward<Args>(args)...).swap(*this);
         return *this;
     }
 
@@ -2025,7 +2026,7 @@ private:
 }; /* end class SimpleArray */
 
 template <typename A, typename T>
-SimpleArray<uint64_t> detail::SimpleArrayMixinSort<A, T>::argsort(void)
+SimpleArray<uint64_t> detail::SimpleArrayMixinSort<A, T>::argsort()
 {
     auto athis = static_cast<A *>(this);
     if (athis->ndim() != 1)
@@ -2096,11 +2097,11 @@ A detail::SimpleArrayMixinSort<A, T>::take_along_axis(SimpleArray<I> const & ind
 
     src = indices.begin();
     A ret(indices.shape());
-    T * data = athis->begin();
+    T const * data = athis->begin();
     T * dst = ret.begin();
     while (src < end)
     {
-        T * valp = data + static_cast<size_t>(*src);
+        T const * valp = data + static_cast<size_t>(*src);
         *dst = *valp;
         ++dst;
         ++src;
@@ -2181,7 +2182,7 @@ A detail::SimpleArrayMixinSort<A, T>::take_along_axis_simd(SimpleArray<I> const 
     I const * src = indices.begin();
     I const * const end = indices.end();
     A ret(indices.shape());
-    T * data = athis->begin();
+    T const * data = athis->begin();
     T * dest = ret.begin();
     detail::indexed_copy(dest, data, src, end);
     return ret;
@@ -2193,7 +2194,7 @@ using is_simple_array = std::is_same<
     SimpleArray<typename std::remove_reference_t<S>::value_type>>;
 
 template <typename S>
-inline constexpr bool is_simple_array_v = is_simple_array<S>::value;
+inline constexpr bool is_simple_array_v = is_simple_array<S>::value; // NOLINT(modernize-type-traits)
 
 using SimpleArrayBool = SimpleArray<bool>;
 using SimpleArrayInt8 = SimpleArray<int8_t>;
@@ -2212,7 +2213,7 @@ using SimpleArrayComplex128 = SimpleArray<Complex<double>>;
 class DataType
 {
 public:
-    enum enum_type
+    enum enum_type : std::uint8_t
     {
         Undefined,
         Bool,
@@ -2232,16 +2233,16 @@ public:
 
     DataType() = default;
 
-    constexpr DataType(const enum_type datatype)
+    constexpr DataType(const enum_type datatype) // NOLINT(google-explicit-constructor)
         : m_data_type(datatype)
     {
     }
 
-    DataType(const std::string & data_type_string);
+    DataType(const std::string & data_type_string); // NOLINT(google-explicit-constructor)
 
     enum_type type() const { return m_data_type; }
 
-    constexpr operator enum_type() const { return m_data_type; } // Allow implicit switch and comparisons.
+    constexpr operator enum_type() const { return m_data_type; } // Allow implicit switch and comparisons. // NOLINT(google-explicit-constructor)
     explicit operator bool() const = delete; // Prevent usage: if(datatype)
 
     template <typename T>
@@ -2269,16 +2270,18 @@ public:
     {
     }
 
-    explicit SimpleArrayPlex(const shape_type & shape, const DataType data_type);
-    explicit SimpleArrayPlex(const shape_type & shape, const std::shared_ptr<ConcreteBuffer> & buffer, const DataType data_type);
-    explicit SimpleArrayPlex(const shape_type & shape, const DataType data_type, size_t alignment);
+    explicit SimpleArrayPlex(const shape_type & shape, DataType data_type);
+    explicit SimpleArrayPlex(const shape_type & shape, const std::shared_ptr<ConcreteBuffer> & buffer, DataType data_type);
+    explicit SimpleArrayPlex(const shape_type & shape, DataType data_type, size_t alignment);
 
     template <typename T>
+    // FIXME: NOLINTNEXTLINE(google-explicit-constructor)
     SimpleArrayPlex(const SimpleArray<T> & array)
+        : m_has_instance_ownership(true)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        , m_instance_ptr(reinterpret_cast<void *>(new SimpleArray<T>(array)))
+        , m_data_type(DataType::from<T>())
     {
-        m_data_type = DataType::from<T>();
-        m_has_instance_ownership = true;
-        m_instance_ptr = reinterpret_cast<void *>(new SimpleArray<T>(array));
     }
 
     SimpleArrayPlex(SimpleArrayPlex const & other);

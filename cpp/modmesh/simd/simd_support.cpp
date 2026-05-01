@@ -33,10 +33,10 @@
 #if defined(__aarch64__) || defined(__arm__)
 #include <asm/hwcap.h>
 #endif
-#elif defined(_WIN32)
+#elifdef _WIN32
 #include <windows.h>
 #include <intrin.h>
-#elif defined(__APPLE__)
+#elifdef __APPLE__
 #include <sys/sysctl.h>
 #endif
 
@@ -68,14 +68,14 @@ SimdFeature detect_simd()
         CurrentFeature = SIMD_NEON;
     }
 #endif /* HWCAP_NEON */
-#elif defined(__APPLE__)
+#elifdef __APPLE__
     int neon_supported = 0;
     size_t size = sizeof(neon_supported);
     if (sysctlbyname("hw.optional.neon", &neon_supported, &size, nullptr, 0) == 0 && neon_supported)
     {
         CurrentFeature = SIMD_NEON;
     }
-#elif defined(_WIN32)
+#elifdef _WIN32
     if (IsProcessorFeaturePresent(PF_ARM_NEON_INSTRUCTIONS_AVAILABLE))
     {
         CurrentFeature = SIMD_NEON;

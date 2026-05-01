@@ -32,7 +32,7 @@
 #include <modmesh/simd/neon/neon_type.hpp>
 #include <modmesh/simd/neon/neon_alias.hpp>
 
-#if defined(__aarch64__)
+#ifdef __aarch64__
 #include <arm_neon.h>
 #endif /* defined(__aarch64__) */
 
@@ -52,7 +52,7 @@ namespace detail
 template <typename T>
 bool is_aligned(T const * pointer, size_t alignment)
 {
-    return (reinterpret_cast<std::uintptr_t>(pointer) % alignment) == 0;
+    return (reinterpret_cast<std::uintptr_t>(pointer) % alignment) == 0; // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 }
 
 template <typename T>
@@ -60,6 +60,7 @@ void check_alignment(T const * pointer, size_t required_alignment, const char * 
 {
     if (!is_aligned(pointer, required_alignment))
     {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,modernize-use-std-print,cert-err33-c)
         std::fprintf(stderr,
                      "Warning: %s pointer %p is not aligned to %zu bytes. "
                      "SIMD performance may be degraded.\n",
@@ -76,7 +77,7 @@ inline constexpr size_t get_recommended_alignment()
 #if defined(__aarch64__) || defined(__arm__)
     return 16;
 // TODO: The non-NEON conditional should be factored out elsewhere in the future.
-#elif defined(__AVX512F__)
+#elifdef __AVX512F__
     return 64;
 #elif defined(__AVX__) || defined(__AVX2__)
     return 32;
@@ -89,7 +90,7 @@ inline constexpr size_t get_recommended_alignment()
 
 } /* end namespace detail */
 
-#if defined(__aarch64__)
+#ifdef __aarch64__
 template <typename T, typename std::enable_if_t<!type::has_vectype<T>> * = nullptr>
 const T * check_between(T const * start, T const * end, T const & min_val, T const & max_val)
 {
@@ -108,24 +109,24 @@ const T * check_between(T const * start, T const * end, T const & min_val, T con
     detail::check_alignment(start, alignment, "check_between start");
 #endif
 
-    vec_t max_vec = vdupq(max_val);
-    vec_t min_vec = vdupq(min_val);
+    vec_t const max_vec = vdupq(max_val);
+    vec_t const min_vec = vdupq(min_val);
     vec_t data_vec = {};
     cmpvec_t cmp_vec = {};
-    T const * ret = NULL;
+    T const * ret = nullptr;
 
     T const * ptr = start;
     for (; ptr <= end - N_lane; ptr += N_lane)
     {
         data_vec = vld1q(ptr);
-        cmp_vec = (cmpvec_t)vcgeq(data_vec, max_vec);
+        cmp_vec = (cmpvec_t)vcgeq(data_vec, max_vec); // NOLINT(modernize-avoid-c-style-cast)
         if (vgetq<0>(cmp_vec) ||
             vgetq<1>(cmp_vec))
         {
             goto OUT_OF_RANGE;
         }
 
-        cmp_vec = (cmpvec_t)vcltq(data_vec, min_vec);
+        cmp_vec = (cmpvec_t)vcltq(data_vec, min_vec); // NOLINT(modernize-avoid-c-style-cast)
         if (vgetq<0>(cmp_vec) ||
             vgetq<1>(cmp_vec))
         {
@@ -141,8 +142,8 @@ const T * check_between(T const * start, T const * end, T const & min_val, T con
     return ret;
 
 OUT_OF_RANGE:
-    T cmp_val[N_lane] = {};
-    T * cmp = cmp_val;
+    T cmp_val[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+    T const * cmp = cmp_val;
     vst1q(cmp_val, cmp_vec);
 
     for (size_t i = 0; i < N_lane; ++i, ++cmp)
@@ -158,7 +159,7 @@ OUT_OF_RANGE:
 template <typename T>
 void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    if constexpr (!(type::has_vectype<T>))
+    if constexpr (!type::has_vectype<T>)
     {
         return generic::add<T>(dest, dest_end, src1, src2);
     }
@@ -195,7 +196,7 @@ void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    if constexpr (!(type::has_vectype<T>))
+    if constexpr (!type::has_vectype<T>)
     {
         return generic::sub<T>(dest, dest_end, src1, src2);
     }
@@ -232,7 +233,7 @@ void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    if constexpr (!((type::vector_lane<T> > 2)))
+    if constexpr (!(type::vector_lane<T> > 2))
     {
         return generic::mul<T>(dest, dest_end, src1, src2);
     }
@@ -269,7 +270,7 @@ void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    if constexpr (!(std::is_floating_point_v<T>))
+    if constexpr (!std::is_floating_point_v<T>)
     {
         return generic::div<T>(dest, dest_end, src1, src2);
     }

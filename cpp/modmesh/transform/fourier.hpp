@@ -9,7 +9,7 @@ namespace modmesh
 namespace detail
 {
 
-size_t bit_reverse(size_t n, const size_t bits);
+size_t bit_reverse(size_t n, size_t bits);
 size_t next_power_of_two(size_t n);
 template <template <typename> class T1, typename T2>
 void fft_bluestein(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out);
@@ -17,8 +17,8 @@ void fft_bluestein(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out);
 template <template <typename> class T1, typename T2>
 void fft_radix_2(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
 {
-    size_t N = in.size();
-    const unsigned int bits = static_cast<unsigned int>(std::log2(N));
+    size_t const N = in.size();
+    const auto bits = static_cast<unsigned int>(std::log2(N));
 
     // bit reversed reordering
     for (size_t i = 0; i < N; ++i)
@@ -29,7 +29,7 @@ void fft_radix_2(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
     // Cooly-Tukey FFT algorithm, radix-2
     for (size_t size = 2; size <= N; size *= 2)
     {
-        size_t half_size = size / 2;
+        size_t const half_size = size / 2;
         T2 angle_inc = -2.0 * pi<T2> / static_cast<T2>(size);
 
         for (size_t i = 0; i < N; i += size)
@@ -38,10 +38,10 @@ void fft_radix_2(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
             {
                 // Twiddle factor = exp(-2 * pi * i * k / N)
                 T2 angle = angle_inc * k;
-                T1<T2> twiddle_factor{std::cos(angle), std::sin(angle)};
+                T1<T2> const twiddle_factor{std::cos(angle), std::sin(angle)};
 
-                T1<T2> even(out[i + k]);
-                T1<T2> odd(out[i + k + half_size] * twiddle_factor);
+                T1<T2> const even(out[i + k]);
+                T1<T2> const odd(out[i + k + half_size] * twiddle_factor);
 
                 out[i + k] = even + odd;
                 out[i + k + half_size] = even - odd;
@@ -63,6 +63,7 @@ public:
     FourierTransform & operator=(FourierTransform && other) = delete;
 
     template <template <typename> class T1, typename T2>
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     static void fft(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
     {
         const size_t N = in.size();
@@ -78,9 +79,10 @@ public:
     }
 
     template <template <typename> class T1, typename T2>
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     static void ifft(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
     {
-        size_t N = in.size();
+        size_t const N = in.size();
         SimpleArray<T1<T2>> in_conj{modmesh::small_vector<size_t>{N}, T1<T2>{0.0, 0.0}};
 
         for (size_t i = 0; i < N; ++i)
@@ -100,14 +102,14 @@ public:
     template <template <typename> typename T1, typename T2>
     static void dft(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
     {
-        size_t N = in.size();
+        size_t const N = in.size();
         for (size_t i = 0; i < N; ++i)
         {
             out[i] = 0;
             for (size_t j = 0; j < N; ++j)
             {
                 T2 tmp = -2.0 * pi<T2> * i * j / static_cast<T2>(N);
-                T1<T2> twiddle_factor{std::cos(tmp), std::sin(tmp)};
+                T1<T2> const twiddle_factor{std::cos(tmp), std::sin(tmp)};
                 out[i] += in[j] * twiddle_factor;
             }
         }
@@ -118,6 +120,7 @@ namespace detail
 {
 
 template <template <typename> class T1, typename T2>
+// FIXME: NOLINTNEXTLINE(misc-no-recursion)
 void fft_bluestein(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
 {
     const size_t N = in.size();
@@ -136,8 +139,8 @@ void fft_bluestein(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
 
     for (size_t i = 1; i < N; ++i)
     {
-        T2 tmp = -pi<T2> * i * i / static_cast<T2>(N);
-        T1<T2> twiddle_factor{std::cos(tmp), std::sin(tmp)};
+        T2 const tmp = -pi<T2> * i * i / static_cast<T2>(N);
+        T1<T2> const twiddle_factor{std::cos(tmp), std::sin(tmp)};
 
         a[i] = in[i] * twiddle_factor;
         b[i] = twiddle_factor.conj();
@@ -157,8 +160,8 @@ void fft_bluestein(SimpleArray<T1<T2>> const & in, SimpleArray<T1<T2>> & out)
 
     for (size_t i = 0; i < N; ++i)
     {
-        T2 tmp = -pi<T2> * i * i / static_cast<T2>(N);
-        T1<T2> twiddle_factor{std::cos(tmp), std::sin(tmp)};
+        T2 const tmp = -pi<T2> * i * i / static_cast<T2>(N);
+        T1<T2> const twiddle_factor{std::cos(tmp), std::sin(tmp)};
         out[i] = a[i] * twiddle_factor;
     }
 }

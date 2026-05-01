@@ -153,7 +153,7 @@ struct RTreeNode
     using RTreeNodeType = RTreeNode<E, B, ValueOpsType>;
     std::vector<std::unique_ptr<RTreeNodeType>> nodes;
 
-    RTreeNode(B const & bbox_in)
+    explicit RTreeNode(B const & bbox_in)
         : bbox(bbox_in)
     {
     }
@@ -320,6 +320,8 @@ public:
     }
 
 private:
+
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     void search_internal(const node_type & node, const B & box, std::vector<E> & output) const
     {
         assert(!(node->nodes.size() > 0 && node->items.size() > 0));
@@ -344,6 +346,7 @@ private:
         }
     }
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     node_type & choose_leaf_for_new_entry(node_type & node, const B & box)
     {
         if (node->nodes.empty())
@@ -358,7 +361,7 @@ private:
 
         for (auto & child : node->nodes)
         {
-            value_type enlargement = B(child->bbox, box).calc_area() - child->bbox.calc_area();
+            value_type const enlargement = B(child->bbox, box).calc_area() - child->bbox.calc_area();
 
             if (enlargement < min_enlargement)
             {
@@ -370,6 +373,7 @@ private:
         return choose_leaf_for_new_entry(*best_child, box); // recurse down to leaf
     }
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     node_type * get_parent(node_type & current, RTreeNodeType const * child)
     {
         for (auto & c : current->nodes)
@@ -378,7 +382,7 @@ private:
             {
                 return &current;
             }
-            node_type * result = get_parent(c, child);
+            node_type * result = get_parent(c, child); // NOLINT(misc-const-correctness)
             if (result != nullptr)
             {
                 return result;
@@ -387,6 +391,7 @@ private:
         return nullptr;
     }
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     node_type * find_leaf_with_item(node_type & current, E const & item)
     {
         for (auto const & it : current->items)
@@ -401,7 +406,7 @@ private:
         {
             if (child->bbox.contain(ValueOps::calc_bound_box(item)))
             {
-                node_type * result = find_leaf_with_item(child, item);
+                node_type * result = find_leaf_with_item(child, item); // NOLINT(misc-const-correctness)
                 if (result != nullptr)
                 {
                     return result;
@@ -427,7 +432,7 @@ private:
             }
 
             // Check if node is underfull
-            size_t entry_count = current->items.empty() ? current->nodes.size() : current->items.size();
+            size_t const entry_count = current->items.empty() ? current->nodes.size() : current->items.size();
 
             if (entry_count < MIN_ITEMS_PER_NODE && entry_count > 0)
             {
@@ -467,6 +472,7 @@ private:
         }
     }
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     void reinsert_subtree(node_type & node)
     {
         for (auto & item : node->items)
@@ -533,7 +539,7 @@ private:
             }
 
             // if one group has so few entries that all the rest must go there
-            size_t remaining = entries.size() - i;
+            size_t const remaining = entries.size() - i;
             if (node1_entries.size() + remaining <= MIN_ITEMS_PER_NODE)
             {
                 // assign all the remaining to group1
@@ -550,8 +556,8 @@ private:
             }
 
             B box = calc_bound_box_from_entry(entries[i]);
-            value_type enlargement1 = B(box1, box).calc_area() - box1.calc_area();
-            value_type enlargement2 = B(box2, box).calc_area() - box2.calc_area();
+            value_type const enlargement1 = B(box1, box).calc_area() - box1.calc_area();
+            value_type const enlargement2 = B(box2, box).calc_area() - box2.calc_area();
 
             if (enlargement1 < enlargement2 ||
                 (enlargement1 == enlargement2 && box1.calc_area() < box2.calc_area()))
@@ -605,7 +611,7 @@ private:
                 B box_i = calc_bound_box_from_entry(entries[i]);
                 B box_j = calc_bound_box_from_entry(entries[j]);
                 B combined_box = B(box_i, box_j);
-                value_type waste = combined_box.calc_area() - box_i.calc_area() - box_j.calc_area();
+                value_type const waste = combined_box.calc_area() - box_i.calc_area() - box_j.calc_area();
                 if (waste > max_waste)
                 {
                     max_waste = waste;
@@ -619,7 +625,7 @@ private:
 
     void adjust_tree(node_type & leaf, node_type new_node)
     {
-        RTreeNodeType * current = leaf.get();
+        RTreeNodeType const * current = leaf.get();
         node_type split_result = std::move(new_node);
 
         while (current != root.get())

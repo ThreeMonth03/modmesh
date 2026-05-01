@@ -28,7 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__aarch64__)
+#ifdef __aarch64__
 
 #include <type_traits>
 #include <arm_neon.h>
@@ -158,12 +158,12 @@ DECL_MM_IMPL_VST1Q(64)
 
 inline static void vst1q(float * ptr, type::vector_t<float> vec)
 {
-    return vst1q_f32(ptr, vec);
+    vst1q_f32(ptr, vec);
 }
 
 inline static void vst1q(double * ptr, type::vector_t<double> vec)
 {
-    return vst1q_f64(ptr, vec);
+    vst1q_f64(ptr, vec);
 }
 
 #define DECL_MM_IMPL_VCGEQ(N)                                                                                          \

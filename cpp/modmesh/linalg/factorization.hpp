@@ -64,7 +64,7 @@ private:
 }; /* end class Llt */
 
 template <typename T>
-auto Llt<T>::forward_substitution(array_type const & l, array_type const & b) -> array_type
+Llt<T>::array_type Llt<T>::forward_substitution(array_type const & l, array_type const & b)
 {
     if (l.ndim() != 2 || l.shape(0) != l.shape(1))
     {
@@ -97,9 +97,9 @@ auto Llt<T>::forward_substitution(array_type const & l, array_type const & b) ->
         throw std::invalid_argument(oss.str());
     }
 
-    const ssize_t m = static_cast<ssize_t>(l.shape(0));
-    const ssize_t n = static_cast<ssize_t>(b.shape(1));
-    small_vector<size_t> y_shape{static_cast<size_t>(m), static_cast<size_t>(n)};
+    const auto m = static_cast<ssize_t>(l.shape(0));
+    const auto n = static_cast<ssize_t>(b.shape(1));
+    small_vector<size_t> const y_shape{static_cast<size_t>(m), static_cast<size_t>(n)};
     array_type y(y_shape);
     for (ssize_t k = 0; k < n; ++k)
     {
@@ -117,7 +117,7 @@ auto Llt<T>::forward_substitution(array_type const & l, array_type const & b) ->
 }
 
 template <typename T>
-auto Llt<T>::backward_substitution(array_type const & l, array_type const & y) -> array_type
+Llt<T>::array_type Llt<T>::backward_substitution(array_type const & l, array_type const & y)
 {
     if (l.ndim() != 2 || l.shape(0) != l.shape(1))
     {
@@ -150,9 +150,9 @@ auto Llt<T>::backward_substitution(array_type const & l, array_type const & y) -
         throw std::invalid_argument(oss.str());
     }
 
-    const ssize_t m = static_cast<ssize_t>(l.shape(0));
-    const ssize_t n = static_cast<ssize_t>(y.shape(1));
-    small_vector<size_t> x_shape{static_cast<size_t>(m), static_cast<size_t>(n)};
+    const auto m = static_cast<ssize_t>(l.shape(0));
+    const auto n = static_cast<ssize_t>(y.shape(1));
+    small_vector<size_t> const x_shape{static_cast<size_t>(m), static_cast<size_t>(n)};
     array_type x(x_shape);
     for (ssize_t k = 0; k < n; ++k)
     {
@@ -170,7 +170,7 @@ auto Llt<T>::backward_substitution(array_type const & l, array_type const & y) -
 }
 
 template <typename T>
-auto Llt<T>::factorize(array_type const & a) -> array_type
+Llt<T>::array_type Llt<T>::factorize(array_type const & a)
 {
     if (a.ndim() != 2 || a.shape(0) != a.shape(1))
     {
@@ -188,8 +188,8 @@ auto Llt<T>::factorize(array_type const & a) -> array_type
         throw std::invalid_argument(oss.str());
     }
 
-    const ssize_t m = static_cast<ssize_t>(a.shape(0));
-    small_vector<size_t> shape = {static_cast<size_t>(m), static_cast<size_t>(m)};
+    const auto m = static_cast<ssize_t>(a.shape(0));
+    small_vector<size_t> const shape = {static_cast<size_t>(m), static_cast<size_t>(m)};
     array_type l(shape, value_type(0));
     const real_type eps = std::numeric_limits<real_type>::epsilon();
     for (ssize_t i = 0; i < m; ++i)
@@ -203,8 +203,8 @@ auto Llt<T>::factorize(array_type const & a) -> array_type
             }
             if (i == j)
             {
-                real_type dr = real(a(j, j) - sum);
-                real_type tol = std::max<real_type>(1, abs(a(j, j))) * 100 * eps;
+                real_type const dr = real(a(j, j) - sum);
+                real_type const tol = std::max<real_type>(1, abs(a(j, j))) * 100 * eps;
                 if (dr <= tol)
                 {
                     throw std::runtime_error("Llt::factorize: Cholesky failed: SimpleArray not (numerically) SPD.");
@@ -221,7 +221,7 @@ auto Llt<T>::factorize(array_type const & a) -> array_type
 }
 
 template <typename T>
-auto Llt<T>::solve(array_type const & a, array_type const & b) -> array_type
+Llt<T>::array_type Llt<T>::solve(array_type const & a, array_type const & b)
 {
     if (a.ndim() != 2 || a.shape(0) != a.shape(1))
     {
@@ -251,19 +251,19 @@ auto Llt<T>::solve(array_type const & a, array_type const & b) -> array_type
         throw std::invalid_argument(oss.str());
     }
 
-    array_type l = factorize(a);
+    array_type const l = factorize(a);
 
-    bool was_1d = (b.ndim() == 1);
+    bool const was_1d = (b.ndim() == 1);
     if (was_1d)
     {
-        array_type b_2d = b.reshape(small_vector<size_t>{b.shape(0), 1});
-        array_type y = forward_substitution(l, b_2d);
-        array_type x = backward_substitution(l, y);
+        array_type const b_2d = b.reshape(small_vector<size_t>{b.shape(0), 1});
+        array_type const y = forward_substitution(l, b_2d);
+        array_type const x = backward_substitution(l, y);
         return x.reshape(small_vector<size_t>{x.shape(0)});
     }
     else
     {
-        array_type y = forward_substitution(l, b);
+        array_type const y = forward_substitution(l, b);
         array_type x = backward_substitution(l, y);
         return x;
     }

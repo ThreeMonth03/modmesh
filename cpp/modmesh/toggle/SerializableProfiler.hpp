@@ -34,7 +34,8 @@
 namespace modmesh
 {
 
-class SerializableRadixTreeNode : SerializableItem
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+class SerializableRadixTreeNode : public SerializableItem
 {
 
 public:
@@ -42,13 +43,16 @@ public:
     using child_list_type = std::vector<SerializableRadixTreeNode>;
     using key_type = typename RadixTree<CallerProfile>::key_type;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     SerializableRadixTreeNode() = default;
     SerializableRadixTreeNode(SerializableRadixTreeNode const &) = default;
     SerializableRadixTreeNode(SerializableRadixTreeNode &&) = default;
     SerializableRadixTreeNode & operator=(SerializableRadixTreeNode const &) = default;
     SerializableRadixTreeNode & operator=(SerializableRadixTreeNode &&) = default;
-    ~SerializableRadixTreeNode() = default;
-    SerializableRadixTreeNode(const RadixTreeNode<CallerProfile> * node)
+    ~SerializableRadixTreeNode() override = default;
+
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
+    explicit SerializableRadixTreeNode(const RadixTreeNode<CallerProfile> * node)
         : m_key(node->key())
         , m_name(node->name())
         , m_total_time(node->data().stable_total_time)
@@ -58,11 +62,12 @@ public:
         {
             if (child->data().stable_call_count > 0)
             {
-                m_children.push_back(SerializableRadixTreeNode(child.get()));
+                m_children.push_back(SerializableRadixTreeNode(child.get())); // FIXME: NOLINT(modernize-use-emplace)
             }
         }
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     MM_DECL_SERIALIZABLE(
         register_member("key", m_key);
         register_member("name", m_name);
@@ -84,7 +89,8 @@ private:
     child_list_type m_children;
 }; /* end class SerializableRadixTreeNode */
 
-class SerializableRadixTree : SerializableItem
+// FIXME: NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+class SerializableRadixTree : public SerializableItem
 {
 
 public:
@@ -95,8 +101,9 @@ public:
     SerializableRadixTree(SerializableRadixTree &&) = default;
     SerializableRadixTree & operator=(SerializableRadixTree const &) = default;
     SerializableRadixTree & operator=(SerializableRadixTree &&) = default;
-    ~SerializableRadixTree() = default;
-    SerializableRadixTree(const RadixTree<CallerProfile> & radix_tree)
+    ~SerializableRadixTree() override = default;
+
+    explicit SerializableRadixTree(const RadixTree<CallerProfile> & radix_tree)
         : m_root(radix_tree.get_root())
         , m_id_map(radix_tree.get_stable_id_map())
         , m_unique_id(radix_tree.get_stable_unique_node())
@@ -124,9 +131,9 @@ public:
     // It returns the json format of the CallProfiler.
     static std::string serialize(const CallProfiler & profiler)
     {
-        auto radix_tree_curent_node = profiler.radix_tree().get_current_node();
-        auto radix_tree_root = profiler.radix_tree().get_root();
-        SerializableRadixTree serializable_radix_tree(profiler.radix_tree());
+        auto * radix_tree_curent_node = profiler.radix_tree().get_current_node();
+        auto * radix_tree_root = profiler.radix_tree().get_root();
+        SerializableRadixTree const serializable_radix_tree(profiler.radix_tree());
         return serializable_radix_tree.to_json();
     }
 

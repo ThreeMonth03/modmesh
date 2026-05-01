@@ -115,7 +115,7 @@ private:
 
     uint8_t m_id : 6;
     uint8_t m_ndim : 2;
-    uint8_t m_attrs[3] = {0, 0, 0};
+    uint8_t m_attrs[3] = {0, 0, 0}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 
 }; /* end struct CellType */
 
@@ -204,7 +204,7 @@ public:
         }
     }
 
-    StaticMeshBC(StaticMeshBC && other)
+    StaticMeshBC(StaticMeshBC && other) // FIXME: NOLINT(bugprone-exception-escape,cppcoreguidelines-noexcept-move-operations)
     {
         if (this != &other)
         {
@@ -221,7 +221,7 @@ public:
         return *this;
     }
 
-    StaticMeshBC & operator=(StaticMeshBC && other)
+    StaticMeshBC & operator=(StaticMeshBC && other) // FIXME: NOLINT(bugprone-exception-escape,cppcoreguidelines-noexcept-move-operations)
     {
         if (this != &other)
         {

@@ -71,7 +71,7 @@ public:
     AscendantGrid1d & operator=(AscendantGrid1d &&) = default;
     ~AscendantGrid1d() = default;
 
-    explicit operator bool() const { return bool(m_coord); }
+    explicit operator bool() const { return static_cast<bool>(m_coord); }
 
     size_t ncoord() const { return m_idmax - m_idmin + 1; }
 

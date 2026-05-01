@@ -62,8 +62,8 @@ struct KalmanStateInfo
 
     KalmanStateInfo(size_t observation_size, size_t state_size)
     {
-        small_vector<size_t> xs_shape{observation_size, state_size};
-        small_vector<size_t> ps_shape{observation_size, state_size, state_size};
+        small_vector<size_t> const xs_shape{observation_size, state_size};
+        small_vector<size_t> const ps_shape{observation_size, state_size, state_size};
         prior_states = SimpleArray<T>(xs_shape);
         prior_states_covariance = SimpleArray<T>(ps_shape);
         posterior_states = SimpleArray<T>(xs_shape);
@@ -132,10 +132,10 @@ public:
      * @param jitter Numerical stability jitter.
      */
     KalmanFilter(
-        array_type const & x,
-        array_type const & f,
-        array_type const & b,
-        array_type const & h,
+        array_type const & x, // FIXME: NOLINT(modernize-pass-by-value)
+        array_type const & f, // FIXME: NOLINT(modernize-pass-by-value)
+        array_type const & b, // FIXME: NOLINT(modernize-pass-by-value)
+        array_type const & h, // FIXME: NOLINT(modernize-pass-by-value)
         real_type process_noise,
         real_type measurement_noise,
         real_type jitter)
@@ -226,13 +226,13 @@ public:
         check_measurement(z);
 
         // y <- z - H x  (y <- z - m_h @ m_x)
-        array_type y = innovation(z);
+        array_type const y = innovation(z);
 
         // S <- H P H^H + R + jitter I  (s <- m_h @ m_p @ m_h^H + m_r + m_jitter @ I)
-        array_type s = innovation_covariance();
+        array_type const s = innovation_covariance();
 
         // K <- P H^H S^{-1} via LLT solve  (k <- m_p @ m_h^H @ s^{-1})
-        array_type k = kalman_gain(s);
+        array_type const k = kalman_gain(s);
 
         // x <- x + K y  (m_x <- m_x + k @ y)
         update_state(k, y);
@@ -301,6 +301,7 @@ private:
 }; /* end class KalmanFilter */
 
 template <typename T>
+// FIXME: NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void KalmanFilter<T>::check_dimensions()
 {
     if (m_f.ndim() != 2 || m_f.shape(0) != m_state_size || m_f.shape(1) != m_state_size)
@@ -456,7 +457,7 @@ template <typename T>
 void KalmanFilter<T>::predict_covariance()
 {
     // P <- F P F^H + Q  (m_p <- m_f @ m_p @ m_f^H + m_q)
-    array_type f_h = m_f.hermitian();
+    array_type const f_h = m_f.hermitian();
     m_p = m_f.matmul(m_p).matmul(f_h).add(m_q);
 }
 
@@ -517,9 +518,9 @@ template <typename T>
 typename KalmanFilter<T>::array_type KalmanFilter<T>::innovation_covariance()
 {
     // S <- H P H^H + R + jitter I  (s <- m_h @ m_p @ m_h^H + m_r + m_jitter @ I)
-    array_type h_h = m_h.hermitian();
-    array_type hph_h = m_h.matmul(m_p).matmul(h_h);
-    array_type s = hph_h.add(m_r).add(array_type::scaled_eye(m_measurement_size, static_cast<T>(m_jitter)));
+    array_type const h_h = m_h.hermitian();
+    array_type const hph_h = m_h.matmul(m_p).matmul(h_h);
+    array_type const s = hph_h.add(m_r).add(array_type::scaled_eye(m_measurement_size, static_cast<T>(m_jitter)));
 
     // S <- 0.5(S + S^H)  (s <- 0.5(s + s^H))
     return s.symmetrize();
@@ -529,8 +530,8 @@ template <typename T>
 typename KalmanFilter<T>::array_type KalmanFilter<T>::kalman_gain(array_type const & s)
 {
     // K <- P H^H S^{-1} via LLT solve
-    array_type B = m_h.matmul(m_p); // H@P = B
-    array_type X = llt_solve(s, B); // S@X = B
+    array_type const B = m_h.matmul(m_p); // H@P = B
+    array_type const X = llt_solve(s, B); // S@X = B
     return X.hermitian(); // K = X^H
 }
 
@@ -545,12 +546,12 @@ template <typename T>
 void KalmanFilter<T>::update_covariance(array_type const & k)
 {
     // P <- (I-K H) P (I-K H)^H + K R K^H  (m_p <- (I-k@m_h)@m_p@(I-k@m_h)^H + k@m_r@k^H)
-    array_type kh = k.matmul(m_h);
-    array_type i_minus_kh = m_i.sub(kh);
-    array_type i_minus_kh_h = i_minus_kh.hermitian();
-    array_type k_h = k.hermitian();
-    array_type term1 = i_minus_kh.matmul(m_p).matmul(i_minus_kh_h);
-    array_type term2 = k.matmul(m_r).matmul(k_h);
+    array_type const kh = k.matmul(m_h);
+    array_type const i_minus_kh = m_i.sub(kh);
+    array_type const i_minus_kh_h = i_minus_kh.hermitian();
+    array_type const k_h = k.hermitian();
+    array_type const term1 = i_minus_kh.matmul(m_p).matmul(i_minus_kh_h);
+    array_type const term2 = k.matmul(m_r).matmul(k_h);
     m_p = term1.add(term2);
 
     // P <- 0.5(P + P^H)  (m_p <- 0.5(m_p + m_p^H))
@@ -560,8 +561,8 @@ void KalmanFilter<T>::update_covariance(array_type const & k)
 template <typename T>
 KalmanStateInfo<T> KalmanFilter<T>::batch_filter(array_type const & zs)
 {
-    size_t z_m = zs.shape(0);
-    size_t z_n = zs.shape(1);
+    size_t const z_m = zs.shape(0);
+    size_t const z_n = zs.shape(1);
     array_type z(small_vector<size_t>{z_n});
     KalmanStateInfo<T> bfs(z_m, m_state_size);
 
@@ -608,15 +609,15 @@ void KalmanFilter<T>::predict_and_update(array_type const & z, KalmanStateInfo<T
 template <typename T>
 KalmanStateInfo<T> KalmanFilter<T>::batch_filter(array_type const & zs, array_type const & us)
 {
-    size_t z_m = zs.shape(0);
-    size_t z_n = zs.shape(1);
+    size_t const z_m = zs.shape(0);
+    size_t const z_n = zs.shape(1);
     array_type z(small_vector<size_t>{z_n});
     KalmanStateInfo<T> bfs(z_m, m_state_size);
 
     array_type u;
     size_t u_n = 0;
 
-    size_t u_m = us.shape(0);
+    size_t const u_m = us.shape(0);
     if (u_m != z_m)
     {
         throw std::invalid_argument("KalmanFilter::batch_filter: The number of control inputs must match the number of measurements.");

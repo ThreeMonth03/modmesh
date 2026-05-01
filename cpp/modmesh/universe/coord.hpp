@@ -42,7 +42,7 @@ namespace modmesh
 /**
  * Axis enumeration for 3D space.
  */
-enum class Axis
+enum class Axis : uint8_t
 {
     X = 0,
     Y = 1,
@@ -242,7 +242,7 @@ private:
         }
     }
 
-    T m_coord[3];
+    T m_coord[3]; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 
 }; /* end class Point3d */
 
@@ -313,12 +313,12 @@ public:
         if (ndim > 3)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} > 3", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} > 3", static_cast<int>(ndim)));
         }
         else if (ndim < 2)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} < 2", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} < 2", static_cast<int>(ndim)));
         }
     }
 
@@ -336,12 +336,12 @@ public:
         else if (ndim > 3)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} > 3", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} > 3", static_cast<int>(ndim)));
         }
         else if (ndim < 2)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} < 2", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} < 2", static_cast<int>(ndim)));
         }
     }
 
@@ -359,12 +359,12 @@ public:
         else if (ndim > 3)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} > 3", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} > 3", static_cast<int>(ndim)));
         }
         else if (ndim < 2)
         {
             throw std::invalid_argument(
-                std::format("PointPad::PointPad: ndim = {} < 2", int(ndim)));
+                std::format("PointPad::PointPad: ndim = {} < 2", static_cast<int>(ndim)));
         }
     }
 
@@ -516,7 +516,7 @@ public:
     {
         if (m_ndim != 2)
         {
-            throw std::out_of_range(std::format("PointPad::append: ndim must be 2 but is {}", int(m_ndim)));
+            throw std::out_of_range(std::format("PointPad::append: ndim must be 2 but is {}", static_cast<int>(m_ndim)));
         }
         m_x.push_back(x);
         m_y.push_back(y);
@@ -526,7 +526,7 @@ public:
     {
         if (m_ndim != 3)
         {
-            throw std::out_of_range(std::format("PointPad::append: ndim must be 3 but is {}", int(m_ndim)));
+            throw std::out_of_range(std::format("PointPad::append: ndim must be 3 but is {}", static_cast<int>(m_ndim)));
         }
         m_x.push_back(x);
         m_y.push_back(y);
@@ -696,7 +696,7 @@ public:
     {
         if (m_ndim != 3)
         {
-            throw std::out_of_range(std::format("PointPad::mirror_z: ndim must be 3 but is {}", int(m_ndim)));
+            throw std::out_of_range(std::format("PointPad::mirror_z: ndim must be 3 but is {}", static_cast<int>(m_ndim)));
         }
         for (size_t i = 0; i < m_x.size(); ++i)
         {
@@ -745,7 +745,7 @@ struct Segment3dNamed
 template <typename T>
 union Segment3dData
 {
-    T v[6];
+    T v[6]; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     Segment3dNamed<T> f;
 }; /* end union Segment3dData */
 
@@ -1311,7 +1311,7 @@ public:
         if (ndim() != 3)
         {
             throw std::out_of_range(
-                std::format("SegmentPad::mirror_z: cannot mirror Z axis for ndim {}", int(ndim())));
+                std::format("SegmentPad::mirror_z: cannot mirror Z axis for ndim {}", static_cast<int>(ndim())));
         }
         size_t const nseg = size();
         for (size_t i = 0; i < nseg; ++i)

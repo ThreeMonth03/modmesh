@@ -28,6 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdint>
+
 namespace modmesh
 {
 
@@ -37,7 +39,7 @@ namespace simd
 namespace detail
 {
 
-enum SimdFeature
+enum SimdFeature : std::uint8_t
 {
     SIMD_NONE = 0,
     SIMD_NEON,
@@ -53,7 +55,7 @@ enum SimdFeature
     SIMD_UNKNOWN
 };
 
-SimdFeature detect_simd(void);
+SimdFeature detect_simd();
 
 } /* namespace detail */
 

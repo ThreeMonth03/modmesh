@@ -69,7 +69,7 @@ struct npy_format_descriptor<modmesh::Complex<double>>
     static void register_dtype(any_container<field_descriptor> fields)
     {
         register_structured_dtype(std::move(fields),
-                                  typeid(typename std::remove_cv<modmesh::Complex<double>>::type),
+                                  typeid(std::remove_cv_t<modmesh::Complex<double>>),
                                   sizeof(modmesh::Complex<double>),
                                   &direct_converter);
     }
@@ -77,6 +77,7 @@ struct npy_format_descriptor<modmesh::Complex<double>>
 private:
     static PyObject * dtype_ptr()
     {
+        // NOLINTNEXTLINE(misc-const-correctness)
         static PyObject * ptr = get_numpy_internals().get_type_info<modmesh::Complex<double>>(true)->dtype_ptr;
         return ptr;
     }
@@ -92,7 +93,7 @@ private:
         {
             if (api.PyArray_EquivTypes_(dtype_ptr(), descr.ptr()))
             {
-                value = (reinterpret_cast<PyVoidScalarObject_Proxy *>(obj))->obval;
+                value = (reinterpret_cast<PyVoidScalarObject_Proxy *>(obj))->obval; // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
                 return true;
             }
         }
@@ -119,7 +120,7 @@ struct npy_format_descriptor<modmesh::Complex<float>>
     static void register_dtype(any_container<field_descriptor> fields)
     {
         register_structured_dtype(std::move(fields),
-                                  typeid(typename std::remove_cv<modmesh::Complex<float>>::type),
+                                  typeid(std::remove_cv_t<modmesh::Complex<float>>),
                                   sizeof(modmesh::Complex<float>),
                                   &direct_converter);
     }
@@ -127,6 +128,7 @@ struct npy_format_descriptor<modmesh::Complex<float>>
 private:
     static PyObject * dtype_ptr()
     {
+        // NOLINTNEXTLINE(misc-const-correctness)
         static PyObject * ptr = get_numpy_internals().get_type_info<modmesh::Complex<double>>(true)->dtype_ptr;
         return ptr;
     }
@@ -142,6 +144,7 @@ private:
         {
             if (api.PyArray_EquivTypes_(dtype_ptr(), descr.ptr()))
             {
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
                 value = (reinterpret_cast<PyVoidScalarObject_Proxy *>(obj))->obval;
                 return true;
             }
@@ -217,6 +220,7 @@ public:
         }
     }
 
+    // FIXME: NOLINTNEXTLINE(readability-function-cognitive-complexity)
     static void setitem_parser(SimpleArray<T> & arr_out, pybind11::args const & args)
     {
         namespace py = pybind11;
@@ -228,8 +232,8 @@ public:
 
             // Determine if py_value is a numpy complexx
             // Reference: https://stackoverflow.com/a/79673025
-            py::object builtins = py::module_::import("builtins");
-            py::object complex_class = builtins.attr("complex");
+            py::object builtins = py::module_::import("builtins"); // NOLINT(misc-const-correctness)
+            py::object complex_class = builtins.attr("complex"); // NOLINT(misc-const-correctness)
             const bool is_number = py::isinstance<py::bool_>(py_value) || py::isinstance<py::int_>(py_value) || py::isinstance<py::float_>(py_value) || is_complex_v<T> || py::isinstance(py_value, complex_class);
 
             // sarr[K] = V

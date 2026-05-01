@@ -24,17 +24,17 @@ runs:
         # This has been replaced by the 'install qt' section below to manage
         # qt6 versioning independently from the OS.
         # brew install llvm@21 qt6
-        brew install llvm@21
+        brew install llvm@22
         # The macos-26 runner ships with Homebrew llvm@20 linked into
         # /usr/local/bin/ (clang, clang++, clang-format, clang-tidy, etc.).
-        # Use -sf to overwrite the existing clang-tidy with our llvm@21
+        # Use -sf to overwrite the existing clang-tidy with our llvm@22
         # version, and remove clang/clang++ so that ccache-action
         # (create-symlink: true) can create its own symlinks.
         # clang-format is installed separately via pip (see below) so that
         # both CI platforms use the version pinned by
         # CLANG_FORMAT_CI_VERSION in the Makefile.
         # Ref: https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md
-        ln -sf "$(brew --prefix llvm@21)/bin/clang-tidy" "/usr/local/bin/clang-tidy"
+        ln -sf "$(brew --prefix llvm@22)/bin/clang-tidy" "/usr/local/bin/clang-tidy"
         rm -f /usr/local/bin/clang /usr/local/bin/clang++ /usr/local/bin/clang-format
 
     - name: install qt

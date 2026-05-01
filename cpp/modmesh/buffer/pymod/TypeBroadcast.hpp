@@ -76,6 +76,7 @@ struct TypeBroadcastImpl
 
             if constexpr (valid_conversion)
             {
+                // FIXME: NOLINTNEXTLINE(bugprone-signed-char-misuse,cert-str34-c)
                 arr_out.at(offset_out) = static_cast<out_type>(*ptr_in);
             }
             else

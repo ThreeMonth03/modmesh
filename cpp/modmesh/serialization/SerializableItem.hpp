@@ -41,11 +41,13 @@
 namespace modmesh
 {
 
+// FIXME: NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class SerializableItem
 {
 public:
     virtual std::string to_json() const = 0;
     virtual void from_json(const std::string & json) = 0;
+    virtual ~SerializableItem() = default;
 
     // TODO: Add more serialization methods, e.g., to/from binary, to/from YAML.
 }; /* end class SerializableItem */
@@ -60,7 +62,7 @@ std::string escape_string(std::string_view str_view);
 std::string trim_string(const std::string & str);
 
 /// State of the JSON parser.
-enum class JsonState
+enum class JsonState : uint8_t
 {
     Start,
     ObjectKey,
@@ -71,7 +73,7 @@ enum class JsonState
 }; /* end enum class JsonState */
 
 /// Type of JSON token.
-enum class JsonType
+enum class JsonType : uint8_t
 {
     Object,
     Array,
@@ -93,14 +95,17 @@ struct JsonNode
     JsonType type;
     JsonValue value;
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     JsonNode(JsonType type, const std::string & expression)
         : type(type)
     {
+        // FIXME: NOLINTNEXTLINE(misc-no-recursion)
         parse(expression);
     }
 
 private:
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     void parse(const std::string & expression)
     {
         if (type == JsonType::Object)
@@ -117,8 +122,10 @@ private:
         }
     }
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     static JsonMap parse_object(const std::string & json);
 
+    // FIXME: NOLINTNEXTLINE(misc-no-recursion)
     static JsonArray parse_array(const std::string & json);
 
 }; /* end struct JsonNode */
@@ -141,7 +148,7 @@ public:
 }; /* end class JsonHelper */
 
 template <typename T>
-std::string JsonHelper::to_json_string(const T & value)
+std::string JsonHelper::to_json_string(const T & value) // FIXME: NOLINT(misc-no-recursion)
 {
     if constexpr (std::is_base_of_v<SerializableItem, T>)
     {
@@ -177,7 +184,7 @@ std::string JsonHelper::to_json_string(const T & value)
         std::vector<std::string> keys;
         for (const auto & kv : value)
         {
-            keys.push_back(kv.first);
+            keys.push_back(kv.first); // FIXME: NOLINT(performance-inefficient-vector-operation)
         }
         std::sort(keys.begin(), keys.end()); // TODO: the sorting may not be necessary. This is more for the testing purpose.
 
@@ -200,6 +207,7 @@ std::string JsonHelper::to_json_string(const T & value)
 }
 
 template <typename T>
+// FIXME: NOLINTNEXTLINE(readability-function-cognitive-complexity,misc-no-recursion)
 void JsonHelper::from_json_string(const std::unique_ptr<JsonNode> & node, T & value)
 {
     if (node->type == detail::JsonType::Null)
@@ -240,7 +248,7 @@ void JsonHelper::from_json_string(const std::unique_ptr<JsonNode> & node, T & va
         }
         if (std::get<std::string>(node->value) == "false")
         {
-            value = false;
+            value = false; // NOLINT(readability-simplify-boolean-expr)
         }
         else
         {
@@ -285,6 +293,7 @@ void JsonHelper::from_json_string(const std::unique_ptr<JsonNode> & node, T & va
 }
 
 template <typename T>
+// NOLINTNEXTLINE(misc-no-recursion)
 void JsonHelper::from_json_string(const std::unique_ptr<JsonNode> & node, std::vector<T> & vec)
 {
     if (node->type == JsonType::Null)
@@ -318,6 +327,7 @@ void JsonHelper::from_json_string(const std::unique_ptr<JsonNode> & node, std::v
 /// The access modifier will be changed to private after the macro.
 #define MM_DECL_SERIALIZABLE(...)                                                                   \
 public:                                                                                             \
+    /* FIXME: NOLINTNEXTLINE(misc-no-recursion) */                                                  \
     std::string to_json() const override                                                            \
     {                                                                                               \
         std::ostringstream oss;                                                                     \
@@ -355,6 +365,7 @@ private:                                                                        
     friend class detail::JsonHelper;                                                                \
                                                                                                     \
     /* for the nested object, we already parsed the json */                                         \
+    /* FIXME: NOLINTNEXTLINE(misc-no-recursion) */                                                  \
     void from_json(const detail::JsonMap & json_map)                                                \
     {                                                                                               \
         auto register_member = [&](const char * name, auto && value)                                \

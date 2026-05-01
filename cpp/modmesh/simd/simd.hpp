@@ -57,7 +57,7 @@ const T * check_between(T const * start, T const * end, T const & min_val, T con
 template <typename T>
 void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    using namespace detail;
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
     switch (detect_simd())
     {
     case SIMD_NEON:
@@ -72,7 +72,7 @@ void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    using namespace detail;
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
     switch (detect_simd())
     {
     case SIMD_NEON:
@@ -87,7 +87,7 @@ void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    using namespace detail;
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
     switch (detect_simd())
     {
     case SIMD_NEON:
@@ -102,7 +102,7 @@ void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
 template <typename T>
 void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
-    using namespace detail;
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
     switch (detect_simd())
     {
     case SIMD_NEON:

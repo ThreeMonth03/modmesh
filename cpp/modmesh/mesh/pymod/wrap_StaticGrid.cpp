@@ -52,7 +52,6 @@ public:
 
 protected:
 
-    // NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
     WrapStaticGridBase(pybind11::module & mod, char const * pyname, char const * pydoc)
         : base_type(mod, pyname, pydoc)
     {

@@ -159,7 +159,7 @@ namespace modmesh
 namespace python
 {
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4251) // needs to have dll-interface to be used by clients of class
 #pragma warning(disable : 4275) // non dll-interface struct used as base for dll-interface struct
@@ -189,11 +189,12 @@ ConcreteBufferNdarrayRemover : ConcreteBuffer::remover_type
     pybind11::array ndarray;
 
 }; /* end struct ConcreteBufferNdarrayRemover */
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
 template <typename S>
+// FIXME: NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
 std::enable_if_t<is_simple_array_v<S>, pybind11::array> to_ndarray(S && sarr)
 {
     namespace py = pybind11;
@@ -226,7 +227,7 @@ static SimpleArray<T> makeSimpleArray(pybind11::array_t<T> & ndarr)
     return SimpleArray<T>(shape, buffer);
 }
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4251) // needs to have dll-interface to be used by clients of class
 #endif
@@ -266,7 +267,7 @@ public:
     >;
     using class_ = typename std::conditional_t
     <
-        std::is_same< Wrapped, WrappedBase >::value
+        std::is_same_v< Wrapped, WrappedBase >
       , pybind11::class_< wrapped_type, holder_type >
       , pybind11::class_< wrapped_type, wrapped_base_type, holder_type >
     >;
@@ -331,13 +332,14 @@ public:
     }
 
     template <typename Func>
+    // FIXME: NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
     wrapper_type & expose_SimpleArray(char const * name, Func && f)
     {
         namespace py = pybind11;
 
         using array_reference = typename std::invoke_result_t<Func, wrapped_type &>;
-        static_assert(std::is_reference<array_reference>::value, "this_array_reference is not a reference");
-        static_assert(!std::is_const<array_reference>::value, "this_array_reference cannot be const");
+        static_assert(std::is_reference_v<array_reference>, "this_array_reference is not a reference");
+        static_assert(!std::is_const_v<array_reference>, "this_array_reference cannot be const");
         using array_type = typename std::remove_reference_t<array_reference>;
 
         (*this)
@@ -364,13 +366,14 @@ public:
     }
 
     template <typename Func>
+    // FIXME: NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
     wrapper_type & expose_SimpleArrayAsNdarray(char const * name, Func && f)
     {
         namespace py = pybind11;
 
         using array_reference = typename std::invoke_result_t<Func, wrapped_type &>;
-        static_assert(std::is_reference<array_reference>::value, "this_array_reference is not a reference");
-        static_assert(!std::is_const<array_reference>::value, "this_array_reference cannot be const");
+        static_assert(std::is_reference_v<array_reference>, "this_array_reference is not a reference");
+        static_assert(!std::is_const_v<array_reference>, "this_array_reference cannot be const");
         using array_type = typename std::remove_reference_t<array_reference>;
 
         (*this)
@@ -411,7 +414,7 @@ private:
     class_ m_cls;
 
 }; /* end class WrapBase */
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
@@ -515,7 +518,7 @@ class PythonStreamRedirect
 
 public:
 
-    PythonStreamRedirect(bool enabled)
+    explicit PythonStreamRedirect(bool enabled)
     {
         set_enabled(enabled);
     }
@@ -529,13 +532,14 @@ public:
         return *this;
     }
 
+    // FIXME: NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     bool is_enabled() const { return Toggle::instance().fixed().get_python_redirect(); }
     bool is_disabled() const { return !is_enabled(); }
 
     PythonStreamRedirect & activate();
     PythonStreamRedirect & deactivate();
 
-    bool is_activated() const { return bool(m_stdout_backup) || bool(m_stderr_backup); }
+    bool is_activated() const { return static_cast<bool>(m_stdout_backup) || static_cast<bool>(m_stderr_backup); }
     bool is_deactivated() const { return !is_activated(); }
 
 private:

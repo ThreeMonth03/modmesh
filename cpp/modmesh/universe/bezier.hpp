@@ -52,7 +52,7 @@ struct Bezier3dNamed
 template <typename T>
 union Bezier3dData
 {
-    T v[12];
+    T v[12]; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     Bezier3dNamed<T> f;
 }; /* end union Segment3dData */
 
@@ -509,7 +509,7 @@ public:
 
     using value_type = typename bezier_type::value_type;
 
-    CubicBezierSampler(size_t ndim)
+    explicit CubicBezierSampler(size_t ndim)
         : m_segments(segment_pad_type::construct(ndim))
     {
     }
@@ -564,7 +564,7 @@ size_t CubicBezierSampler<T>::sample_to(bezier_type const & c, segment_pad_type 
         point_type thisp;
         for (size_t idim = 0; idim < 3; ++idim)
         {
-            std::vector<T> cvalues{tp0[idim], tp1[idim], tp2[idim], tp3[idim]};
+            std::vector<T> const cvalues{tp0[idim], tp1[idim], tp2[idim], tp3[idim]};
             thisp[idim] = detail::interpolate_bernstein_impl(t, cvalues, cvalues.size() - 1);
         }
         segments.append(lastp, thisp);

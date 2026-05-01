@@ -66,10 +66,10 @@ public:
     Gmsh & operator=(Gmsh const & other) = delete;
     Gmsh & operator=(Gmsh && other) = delete;
 
-    std::shared_ptr<StaticMesh> to_block(void);
+    std::shared_ptr<StaticMesh> to_block();
 
 private:
-    enum class FormatState
+    enum class FormatState : uint8_t
     {
         BEGIN,
         META_END,
@@ -79,7 +79,7 @@ private:
     };
 
     // Check the finite state machine state transition is valid or not to check msh file format is correct
-    bool is_valid_transition(const std::string s)
+    bool is_valid_transition(std::string const & s)
     {
         if (last_fmt_state == FormatState::BEGIN)
         {
@@ -97,7 +97,7 @@ private:
         return false;
     }
 
-    void load_meta(void)
+    void load_meta()
     {
         std::string line;
 
@@ -116,7 +116,7 @@ private:
             msh_data_size = std::stoi(tokens[2]);
         }
 
-        if (!line.compare("$EndMeshFormat"))
+        if (!line.compare("$EndMeshFormat")) // FIXME: NOLINT(readability-string-compare)
         {
             last_fmt_state = FormatState::META_END;
         }
@@ -124,19 +124,19 @@ private:
 
     // TODO: PhysicalNames section parsing logic not complete yet, but without PhysicalNames section
     //       modmesh mesh viewer still working, therefore we can finish this later.
-    void load_physical(void)
+    void load_physical()
     {
         std::string line;
 
         while (std::getline(stream, line) && line.find('$') == std::string::npos) {}
 
-        if (!line.compare("$EndPhysicalNames"))
+        if (!line.compare("$EndPhysicalNames")) // FIXME: NOLINT(readability-string-compare)
         {
             last_fmt_state = FormatState::PYHSICAL_NAME_END;
         }
     }
 
-    void load_nodes(void)
+    void load_nodes()
     {
         std::string line;
         std::getline(stream, line);
@@ -153,13 +153,13 @@ private:
             m_nds(std::stoul(tokens[0]) - 1, 2) = std::stod(tokens[3]);
         }
 
-        if (!line.compare("$EndNodes"))
+        if (!line.compare("$EndNodes")) // FIXME: NOLINT(readability-string-compare)
         {
             last_fmt_state = FormatState::NODE_END;
         }
     }
 
-    void load_elements(void)
+    void load_elements()
     {
         std::string line;
         std::getline(stream, line);
@@ -184,6 +184,7 @@ private:
             std::vector<uint_type> tag;
             for (size_t i = 0; i < std::stoul(tokens[2]); ++i)
             {
+                // FIXME: NOLINTNEXTLINE(performance-inefficient-vector-operation)
                 tag.push_back(std::stoul(tokens[3 + i]));
             }
 
@@ -212,7 +213,7 @@ private:
             idx++;
         }
 
-        if (!line.compare("$EndElements"))
+        if (!line.compare("$EndElements")) // FIXME: NOLINT(readability-string-compare)
         {
             last_fmt_state = FormatState::ELEMENT_END;
         }

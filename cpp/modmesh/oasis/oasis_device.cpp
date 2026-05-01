@@ -50,7 +50,7 @@ void OasisDevice::append_unsigned_integer(std::vector<uint8_t> & segment, int va
 
     while (payload >= 1)
     {
-        int first_bit = payload >= 128 ? 1 : 0;
+        int const first_bit = payload >= 128 ? 1 : 0;
         segment.push_back((first_bit << 7) | (payload % 128));
         payload /= 128;
     }
@@ -68,7 +68,7 @@ void OasisDevice::append_unsigned_integer(std::vector<uint8_t> & segment, int va
 void OasisDevice::append_signed_integer(std::vector<uint8_t> & segment, int value)
 {
     const int DIR_BIT = value < 0 ? 1 : 0;
-    int delta_codec = abs(value) << 1 | DIR_BIT;
+    int const delta_codec = abs(value) << 1 | DIR_BIT;
 
     int payload = delta_codec;
 
@@ -79,7 +79,7 @@ void OasisDevice::append_signed_integer(std::vector<uint8_t> & segment, int valu
 
     while (payload >= 1)
     {
-        int first_bit = payload >= 128 ? 1 : 0;
+        int const first_bit = payload >= 128 ? 1 : 0;
         segment.push_back((first_bit << 7) | (payload % 128));
         payload /= 128;
     }
@@ -165,8 +165,8 @@ std::vector<uint8_t> OasisRecordPoly::to_bytes() const
 
     for (int i = 0; i < m_vertices.size() - 1; i++)
     {
-        std::pair<int, int> curr_v = m_vertices[i];
-        std::pair<int, int> next_v = m_vertices[i + 1];
+        std::pair<int, int> const curr_v = m_vertices[i];
+        std::pair<int, int> const next_v = m_vertices[i + 1];
 
         // Convert delta value to OASIS signed interegr bytes.
         OasisDevice::append_signed_integer(
@@ -283,7 +283,7 @@ void OasisDevice::append_end_record_byte(std::vector<uint8_t> & segment)
     segment.push_back(0x02);
 
     // Write padding. The padding should be 256 bytes.
-    int padding_length = 254;
+    int const padding_length = 254;
     segment.insert(segment.end(), padding_length, 0x00);
 
     // Validation-scheme: No validation.

@@ -105,7 +105,7 @@ WrapWorld<T> & WrapWorld<T>::wrap_management()
             "shape_type_of",
             [](wrapped_type const & self, int32_t shape_id)
             {
-                ShapeType st = self.shape_type_of(shape_id);
+                ShapeType const st = self.shape_type_of(shape_id);
                 switch (st)
                 {
                 case ShapeType::DEAD: return std::string("DEAD");

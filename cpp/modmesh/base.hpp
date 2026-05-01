@@ -41,7 +41,7 @@
 #include <optional>
 #include <sstream>
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
@@ -156,7 +156,7 @@ public:
     // NOLINTNEXTLINE(google-explicit-constructor)
     operator std::string() const { return m_stream.str(); }
 
-    enum ConvertToString
+    enum ConvertToString : std::uint8_t
     {
         to_str
     };

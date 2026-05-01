@@ -63,17 +63,17 @@ struct ConcreteBufferRemover
 
     static void deallocate_memory(int8_t * p, size_t alignment)
     {
-        if (alignment > 0)
+        if (alignment > 0) // NOLINT(bugprone-branch-clone)
         {
 #ifdef _WIN32
-            _aligned_free(p);
+            _aligned_free(p); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #else
-            std::free(p);
+            std::free(p); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #endif
         }
         else
         {
-            std::free(p);
+            std::free(p); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
         }
     }
 
@@ -264,7 +264,7 @@ public:
         return *this;
     }
 
-    bool has_remover() const noexcept { return bool(m_data.get_deleter().remover); }
+    bool has_remover() const noexcept { return static_cast<bool>(m_data.get_deleter().remover); }
     remover_type const & get_remover() const { return *m_data.get_deleter().remover; }
     remover_type & get_remover() { return *m_data.get_deleter().remover; }
 
@@ -286,14 +286,14 @@ private:
             {
                 validate_size_alignment(nbytes, alignment, "ConcreteBuffer::allocate");
 #ifdef _WIN32
-                ptr = _aligned_malloc(nbytes, alignment);
+                ptr = _aligned_malloc(nbytes, alignment); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #else
-                ptr = std::aligned_alloc(alignment, nbytes);
+                ptr = std::aligned_alloc(alignment, nbytes); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
 #endif
             }
             else
             {
-                ptr = std::malloc(nbytes);
+                ptr = std::malloc(nbytes); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-no-malloc)
             }
             if (!ptr)
             {

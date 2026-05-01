@@ -176,13 +176,13 @@ private:
      */
     static value_type lerp_x(const point_type & bottom_point, const point_type & top_point, value_type y)
     {
-        value_type dy = top_point.y() - bottom_point.y();
-        value_type scale = std::max(std::abs(top_point.y()), std::abs(bottom_point.y()));
+        value_type const dy = top_point.y() - bottom_point.y();
+        value_type const scale = std::max(std::abs(top_point.y()), std::abs(bottom_point.y()));
         if (std::abs(dy) < eps * std::max(scale, value_type(1)))
         {
             return bottom_point.x();
         }
-        value_type t = (y - bottom_point.y()) / dy;
+        value_type const t = (y - bottom_point.y()) / dy;
         return bottom_point.x() + t * (top_point.x() - bottom_point.x());
     }
 
@@ -235,9 +235,9 @@ private:
     {
         std::sort(events.begin(), events.end(), [](const Event & a, const Event & b)
                   {
-                      value_type xa = a.x_lo + a.x_hi;
-                      value_type xb = b.x_lo + b.x_hi;
-                      value_type scale = std::max({std::abs(xa), std::abs(xb), value_type(1)});
+                      value_type const xa = a.x_lo + a.x_hi;
+                      value_type const xb = b.x_lo + b.x_hi;
+                      value_type const scale = std::max({std::abs(xa), std::abs(xb), value_type(1)});
                       if (std::abs(xa - xb) > eps * scale)
                       {
                           return xa < xb;
@@ -307,7 +307,7 @@ std::shared_ptr<PolygonPad<T>> BooleanDecompositionHelper<T>::compute()
             return result; // P - P = empty
         }
         // Union(P, P) = P, Intersection(P, P) = P: copy the polygon
-        Polygon3d<T> poly = m_pad->get_polygon(m_polygon_id1);
+        Polygon3d<T> const poly = m_pad->get_polygon(m_polygon_id1);
         std::vector<point_type> nodes;
         nodes.reserve(poly.nnode());
         for (size_t i = 0; i < poly.nnode(); ++i)
@@ -354,7 +354,7 @@ std::shared_ptr<PolygonPad<T>> BooleanDecompositionHelper<T>::compute()
     {
         auto merged_end = std::unique(y_values.begin(), y_values.end(), [](value_type a, value_type b)
                                       {
-                                          value_type scale = std::max(std::abs(a), std::abs(b));
+                                          value_type const scale = std::max(std::abs(a), std::abs(b));
                                           return std::abs(a - b) < eps * std::max(scale, value_type(1)); });
         y_values.erase(merged_end, y_values.end());
     }
@@ -374,8 +374,8 @@ std::shared_ptr<PolygonPad<T>> BooleanDecompositionHelper<T>::compute()
     std::vector<Event> events;
     for (size_t yi = 0; yi + 1 < y_values.size(); ++yi)
     {
-        value_type y_low = y_values[yi];
-        value_type y_high = y_values[yi + 1];
+        value_type const y_low = y_values[yi];
+        value_type const y_high = y_values[yi + 1];
 
         events.clear();
         gather_events(events, m_begin1, m_end1, y_low, y_high);
@@ -407,18 +407,18 @@ void BooleanDecompositionHelper<T>::find_crossing(
     //   edge_a(t) = edge_a_x_at_bottom + dx_a * t
     //   edge_b(t) = edge_b_x_at_bottom + dx_b * t
     // They cross when (edge_a_x_at_bottom - edge_b_x_at_bottom) + (dx_a - dx_b)*t = 0
-    value_type dx_a = edge_a_x_at_top - edge_a_x_at_bottom;
-    value_type dx_b = edge_b_x_at_top - edge_b_x_at_bottom;
-    value_type denom = dx_a - dx_b;
-    value_type scale = std::max({std::abs(dx_a), std::abs(dx_b), value_type(1)});
+    value_type const dx_a = edge_a_x_at_top - edge_a_x_at_bottom;
+    value_type const dx_b = edge_b_x_at_top - edge_b_x_at_bottom;
+    value_type const denom = dx_a - dx_b;
+    value_type const scale = std::max({std::abs(dx_a), std::abs(dx_b), value_type(1)});
     if (std::abs(denom) < eps * scale)
     {
         return; // edges are parallel, no crossing
     }
-    value_type t = (edge_b_x_at_bottom - edge_a_x_at_bottom) / denom;
+    value_type const t = (edge_b_x_at_bottom - edge_a_x_at_bottom) / denom;
     if (t > 0 && t < 1)
     {
-        value_type crossing_y = overlap_y_bottom + t * (overlap_y_top - overlap_y_bottom);
+        value_type const crossing_y = overlap_y_bottom + t * (overlap_y_top - overlap_y_bottom);
         y_set.insert(crossing_y);
     }
 }
@@ -432,17 +432,17 @@ void BooleanDecompositionHelper<T>::gather_events(std::vector<Event> & events, s
         {
             continue; // trapezoid doesn't vertically span this band
         }
-        int source = source_of(idx);
+        int const source = source_of(idx);
         // Left edge: p0 (bottom-left) -> p3 (top-left)
         // Right edge: p1 (bottom-right) -> p2 (top-right)
-        point_type left_bottom = m_trap_pad->p0(idx);
-        point_type left_top = m_trap_pad->p3(idx);
-        point_type right_bottom = m_trap_pad->p1(idx);
-        point_type right_top = m_trap_pad->p2(idx);
-        value_type left_x_at_band_bottom = lerp_x(left_bottom, left_top, y_low);
-        value_type left_x_at_band_top = lerp_x(left_bottom, left_top, y_high);
-        value_type right_x_at_band_bottom = lerp_x(right_bottom, right_top, y_low);
-        value_type right_x_at_band_top = lerp_x(right_bottom, right_top, y_high);
+        point_type const left_bottom = m_trap_pad->p0(idx);
+        point_type const left_top = m_trap_pad->p3(idx);
+        point_type const right_bottom = m_trap_pad->p1(idx);
+        point_type const right_top = m_trap_pad->p2(idx);
+        value_type const left_x_at_band_bottom = lerp_x(left_bottom, left_top, y_low);
+        value_type const left_x_at_band_top = lerp_x(left_bottom, left_top, y_high);
+        value_type const right_x_at_band_bottom = lerp_x(right_bottom, right_top, y_low);
+        value_type const right_x_at_band_top = lerp_x(right_bottom, right_top, y_high);
         events.push_back({left_x_at_band_bottom, left_x_at_band_top, source, true});
         events.push_back({right_x_at_band_bottom, right_x_at_band_top, source, false});
     }
@@ -456,8 +456,8 @@ void BooleanDecompositionHelper<T>::collect_crossing_y_values(std::set<value_typ
         for (size_t tj = m_begin2; tj < m_end2; ++tj)
         {
             // Y-range overlap between the two trapezoids
-            value_type y_lo = std::max(m_trap_pad->y0(ti), m_trap_pad->y0(tj));
-            value_type y_hi = std::min(m_trap_pad->y3(ti), m_trap_pad->y3(tj));
+            value_type const y_lo = std::max(m_trap_pad->y0(ti), m_trap_pad->y0(tj));
+            value_type const y_hi = std::min(m_trap_pad->y3(ti), m_trap_pad->y3(tj));
             if (y_lo >= y_hi)
             {
                 continue;
@@ -466,24 +466,24 @@ void BooleanDecompositionHelper<T>::collect_crossing_y_values(std::set<value_typ
             // Trapezoid edges (each edge is a pair of points: bottom -> top):
             //   Left edge:  p0 (bottom-left)  -> p3 (top-left)
             //   Right edge: p1 (bottom-right) -> p2 (top-right)
-            point_type trap_i_left_bottom = m_trap_pad->p0(ti);
-            point_type trap_i_left_top = m_trap_pad->p3(ti);
-            point_type trap_i_right_bottom = m_trap_pad->p1(ti);
-            point_type trap_i_right_top = m_trap_pad->p2(ti);
-            point_type trap_j_left_bottom = m_trap_pad->p0(tj);
-            point_type trap_j_left_top = m_trap_pad->p3(tj);
-            point_type trap_j_right_bottom = m_trap_pad->p1(tj);
-            point_type trap_j_right_top = m_trap_pad->p2(tj);
+            point_type const trap_i_left_bottom = m_trap_pad->p0(ti);
+            point_type const trap_i_left_top = m_trap_pad->p3(ti);
+            point_type const trap_i_right_bottom = m_trap_pad->p1(ti);
+            point_type const trap_i_right_top = m_trap_pad->p2(ti);
+            point_type const trap_j_left_bottom = m_trap_pad->p0(tj);
+            point_type const trap_j_left_top = m_trap_pad->p3(tj);
+            point_type const trap_j_right_bottom = m_trap_pad->p1(tj);
+            point_type const trap_j_right_top = m_trap_pad->p2(tj);
 
             // Interpolate each trapezoid's left/right edges within the Y-overlap range to get X-values at y_lo and y_hi.
-            value_type trap_i_left_at_bottom = lerp_x(trap_i_left_bottom, trap_i_left_top, y_lo);
-            value_type trap_i_left_at_top = lerp_x(trap_i_left_bottom, trap_i_left_top, y_hi);
-            value_type trap_i_right_at_bottom = lerp_x(trap_i_right_bottom, trap_i_right_top, y_lo);
-            value_type trap_i_right_at_top = lerp_x(trap_i_right_bottom, trap_i_right_top, y_hi);
-            value_type trap_j_left_at_bottom = lerp_x(trap_j_left_bottom, trap_j_left_top, y_lo);
-            value_type trap_j_left_at_top = lerp_x(trap_j_left_bottom, trap_j_left_top, y_hi);
-            value_type trap_j_right_at_bottom = lerp_x(trap_j_right_bottom, trap_j_right_top, y_lo);
-            value_type trap_j_right_at_top = lerp_x(trap_j_right_bottom, trap_j_right_top, y_hi);
+            value_type const trap_i_left_at_bottom = lerp_x(trap_i_left_bottom, trap_i_left_top, y_lo);
+            value_type const trap_i_left_at_top = lerp_x(trap_i_left_bottom, trap_i_left_top, y_hi);
+            value_type const trap_i_right_at_bottom = lerp_x(trap_i_right_bottom, trap_i_right_top, y_lo);
+            value_type const trap_i_right_at_top = lerp_x(trap_i_right_bottom, trap_i_right_top, y_hi);
+            value_type const trap_j_left_at_bottom = lerp_x(trap_j_left_bottom, trap_j_left_top, y_lo);
+            value_type const trap_j_left_at_top = lerp_x(trap_j_left_bottom, trap_j_left_top, y_hi);
+            value_type const trap_j_right_at_bottom = lerp_x(trap_j_right_bottom, trap_j_right_top, y_lo);
+            value_type const trap_j_right_at_top = lerp_x(trap_j_right_bottom, trap_j_right_top, y_hi);
 
             // Check all 4 edge-pair crossings between the two trapezoids:
             // left_i vs left_j, left_i vs right_j, right_i vs left_j, right_i vs right_j
@@ -511,7 +511,7 @@ void BooleanDecompositionHelper<T>::sweep_events(
 
     for (const auto & ev : events)
     {
-        bool was_included = currently_included;
+        const bool was_included = currently_included;
 
         if (ev.source == 0)
         {
@@ -533,12 +533,12 @@ void BooleanDecompositionHelper<T>::sweep_events(
         else if (was_included && !currently_included)
         {
             // Leaving an included region -- emit trapezoid as polygon (CCW)
-            value_type bottom_width = std::abs(ev.x_lo - left_x_low);
-            value_type top_width = std::abs(ev.x_hi - left_x_high);
+            value_type const bottom_width = std::abs(ev.x_lo - left_x_low);
+            value_type const top_width = std::abs(ev.x_hi - left_x_high);
             // Skip degenerate zero-area trapezoids (edges touching at a point/line)
             if (bottom_width > eps || top_width > eps)
             {
-                std::vector<point_type> nodes = {
+                std::vector<point_type> const nodes = {
                     point_type(left_x_low, y_low, 0),
                     point_type(ev.x_lo, y_low, 0),
                     point_type(ev.x_hi, y_high, 0),
