@@ -56,7 +56,7 @@ public:
 
     static RManager & instance();
 
-    QCoreApplication * core() { return &(*m_core); }
+    QCoreApplication * core() { return m_core.get(); }
 
     R3DWidget * add3DWidget();
 
