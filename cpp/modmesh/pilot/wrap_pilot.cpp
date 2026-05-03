@@ -575,8 +575,7 @@ void wrap_pilot(pybind11::module & mod)
     }
 
     // Register a Python atexit handler to destroy QApplication while Python
-    // is still fully alive.  If ~RManager() fires first (static destruction),
-    // reset() is a no-op because m_already_setup will already be false.
+    // is still fully alive.
     try
     {
         py::module_::import("atexit").attr("register")(
