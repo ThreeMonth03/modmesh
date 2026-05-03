@@ -26,9 +26,13 @@ option(USE_CLANG_TIDY "use clang-tidy" OFF)
 option(LINT_AS_ERRORS "clang-tidy warnings as errors" OFF)
 
 # Sanitizers
-# - Undefined Behavior Sanitization: Preventing the unpredictable outcomes of undefined behavior. See https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-# - Memory Leaks Sanitization: Prevententing memory leaks caused from inproper memory management. See https://clang.llvm.org/docs/MemorySanitizer.html
-# - Address Sanitization: Protecting against address-related vulnerabilities. See https://clang.llvm.org/docs/AddressSanitizer.html
+# - Undefined Behavior Sanitization: Preventing the unpredictable outcomes of
+#   undefined behavior. See
+#   https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+# - Memory Leaks Sanitization: Prevententing memory leaks caused from inproper
+#   memory management. See https://clang.llvm.org/docs/MemorySanitizer.html
+# - Address Sanitization: Protecting against address-related vulnerabilities.
+#   See https://clang.llvm.org/docs/AddressSanitizer.html
 option(USE_SANITIZER "use sanitizer (undefined, leak, address)" OFF)
 
 
@@ -143,12 +147,28 @@ execute_process(
     OUTPUT_VARIABLE PYSIDE6_PYTHON_PACKAGE_PATH
 )
 message(STATUS "PYSIDE6_PYTHON_PACKAGE_PATH: ${PYSIDE6_PYTHON_PACKAGE_PATH}")
+# Addressing an issue with the PySide6/Shiboken6 6.11 homebrew package:
+# homebrew exposes the PySide6 package as a tree of symlinks; the real
+# libpyside6.* dylibs live in the formula's lib/ directory (three levels
+# above the resolved package directory). Compute that fallback so the
+# homebrew layout can be supported in addition to the bundled PyPI layout.
+execute_process(
+    COMMAND python3 -c "import sys, os, PySide6; sys.stdout.write(os.path.join(os.path.dirname(os.path.realpath(PySide6.__file__)), '..', '..', '..'))"
+    OUTPUT_VARIABLE PYSIDE6_FALLBACK_LIBDIR
+)
+message(STATUS "PYSIDE6_FALLBACK_LIBDIR: ${PYSIDE6_FALLBACK_LIBDIR}")
 
 execute_process(
     COMMAND python3 -c "import sys, os, shiboken6; sys.stdout.write(os.path.dirname(shiboken6.__file__))"
     OUTPUT_VARIABLE SHIBOKEN6_PYTHON_PACKAGE_PATH
 )
 message(STATUS "SHIBOKEN6_PYTHON_PACKAGE_PATH: ${SHIBOKEN6_PYTHON_PACKAGE_PATH}")
+# For PySide6/Shiboken6 homebrew package.
+execute_process(
+    COMMAND python3 -c "import sys, os, shiboken6; sys.stdout.write(os.path.join(os.path.dirname(os.path.realpath(shiboken6.__file__)), '..', '..', '..'))"
+    OUTPUT_VARIABLE SHIBOKEN6_FALLBACK_LIBDIR
+)
+message(STATUS "SHIBOKEN6_FALLBACK_LIBDIR: ${SHIBOKEN6_FALLBACK_LIBDIR}")
 execute_process(
     COMMAND python3 -c "import sys, os, shiboken6_generator; sys.stdout.write(os.path.dirname(shiboken6_generator.__file__))"
     OUTPUT_VARIABLE SHIBOKEN6_GENERATOR_PYTHON_PACKAGE_PATH
@@ -159,11 +179,17 @@ if(NOT "${PYSIDE6_PYTHON_PACKAGE_PATH}" STREQUAL "")
     include_directories("${PYSIDE6_PYTHON_PACKAGE_PATH}/include")
     link_directories("${PYSIDE6_PYTHON_PACKAGE_PATH}")
 endif()
+if(NOT "${PYSIDE6_FALLBACK_LIBDIR}" STREQUAL "" AND IS_DIRECTORY "${PYSIDE6_FALLBACK_LIBDIR}")
+    link_directories("${PYSIDE6_FALLBACK_LIBDIR}")
+endif()
 if(NOT "${SHIBOKEN6_GENERATOR_PYTHON_PACKAGE_PATH}" STREQUAL "")
     include_directories("${SHIBOKEN6_GENERATOR_PYTHON_PACKAGE_PATH}/include")
 endif()
 if(NOT "${SHIBOKEN6_PYTHON_PACKAGE_PATH}" STREQUAL "")
     link_directories("${SHIBOKEN6_PYTHON_PACKAGE_PATH}")
+endif()
+if(NOT "${SHIBOKEN6_FALLBACK_LIBDIR}" STREQUAL "" AND IS_DIRECTORY "${SHIBOKEN6_FALLBACK_LIBDIR}")
+    link_directories("${SHIBOKEN6_FALLBACK_LIBDIR}")
 endif()
 
 # PySide6 and Shiboken6 library name are different in Windows and Unix-like OS
@@ -173,8 +199,16 @@ if(MSVC)
     file(GLOB SHIBOKEN6_LIBFILE LIST_DIRECTORIES false "${SHIBOKEN6_PYTHON_PACKAGE_PATH}/shiboken6.*.lib")
 else()
     file(GLOB PYSIDE6_LIBFILE LIST_DIRECTORIES false "${PYSIDE6_PYTHON_PACKAGE_PATH}/libpyside6.*")
+    if("${PYSIDE6_LIBFILE}" STREQUAL "" AND NOT "${PYSIDE6_FALLBACK_LIBDIR}" STREQUAL "")
+        file(GLOB PYSIDE6_LIBFILE LIST_DIRECTORIES false "${PYSIDE6_FALLBACK_LIBDIR}/libpyside6.*")
+    endif()
     file(GLOB SHIBOKEN6_LIBFILE LIST_DIRECTORIES false "${SHIBOKEN6_PYTHON_PACKAGE_PATH}/libshiboken6.*")
+    if("${SHIBOKEN6_LIBFILE}" STREQUAL "" AND NOT "${SHIBOKEN6_FALLBACK_LIBDIR}" STREQUAL "")
+        file(GLOB SHIBOKEN6_LIBFILE LIST_DIRECTORIES false "${SHIBOKEN6_FALLBACK_LIBDIR}/libshiboken6.*")
+    endif()
 endif()
+message(STATUS "PYSIDE6_LIBFILE: ${PYSIDE6_LIBFILE}")
+message(STATUS "SHIBOKEN6_LIBFILE: ${SHIBOKEN6_LIBFILE}")
 
 add_subdirectory(cpp/modmesh)
 
