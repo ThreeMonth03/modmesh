@@ -39,7 +39,7 @@ jobs:
           workflow: 'standalone_buffer'
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.23
         with:
           key: ${{ runner.os }}-standalone-buffer-${{ matrix.cmake_build_type }}
           restore-keys: ${{ runner.os }}-standalone-buffer-${{ matrix.cmake_build_type }}
@@ -96,7 +96,7 @@ jobs:
         workflow: 'build'
 
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action@v1.2.23
       with:
         key: ${{ runner.os }}-${{ matrix.cmake_build_type }}
         restore-keys: ${{ runner.os }}-${{ matrix.cmake_build_type }}
@@ -215,7 +215,9 @@ jobs:
         run: |
           echo "github.event_name: ${{ github.event_name }}"
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: 'x64'
 
       # CMake version in windows-2022 runner-image is 3.31.6, so we install CMake>=4.0.1 from github marketplace.
       # Reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
@@ -232,7 +234,7 @@ jobs:
           modules: 'qt3d'
           cache: true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -339,7 +341,7 @@ jobs:
 
       - name: archive portable artifacts
         if: ${{ matrix.cmake_build_type == 'Release' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: modmesh-pilot-win64
           path: modmesh-pilot-win64/
