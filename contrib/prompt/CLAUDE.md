@@ -187,7 +187,7 @@ Python interface in `modmesh/`:
 For complete description of the code style, use the file `STYLE.rst`.  Important
 styles are summarized here.
 
-### C++ Style
+### C++ Code Format
 - **Indentation**: 4 spaces (no tabs)
 - **Naming**:
   - Classes: `CamelCase`
@@ -195,10 +195,13 @@ styles are summarized here.
   - Member variables: `m_snake_case` (prefix with `m_`)
   - Constants: `UPPER_CASE` or `snake_case` (for foreign code interop)
   - Type aliases: `snake_case_t` or `snake_case_type`
-- **Format**: Use clang-format (`.clang-format` in repo root)
+- **Formatting tool**: Use clang-format (`.clang-format` in repo root)
 - **Line length**: No hard limit, prefer < 120 characters
 - **Includes**: Use angle brackets (`#include <...>`), not quotes
 - **Standard**: C++23
+
+### C++ Type Casting
+- Do not use `const_cast` unless it is absolutely necessary.
 
 ### C++ STL Containers
 - Replace `std::vector` with `SimpleCollector` when `value_type` is a
