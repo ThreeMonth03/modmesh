@@ -56,7 +56,7 @@ public:
 
     static RManager & instance();
 
-    QCoreApplication * core() { return m_core; }
+    QCoreApplication * core() { return m_core.get(); }
 
     R3DWidget * add3DWidget();
 
@@ -77,6 +77,9 @@ public:
 
     void quit() { m_core->quit(); }
 
+    /// Only call reset() when the program is to be stopped.
+    void reset();
+
     void toggleConsole();
 
 private:
@@ -94,7 +97,7 @@ private:
 
     bool m_already_setup = false;
 
-    QCoreApplication * m_core = nullptr;
+    std::unique_ptr<QCoreApplication> m_core = nullptr;
 
     QMainWindow * m_mainWindow = nullptr;
 
