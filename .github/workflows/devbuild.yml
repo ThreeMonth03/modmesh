@@ -16,7 +16,7 @@ jobs:
 
     if: |
       github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && vars.MMGH_PUSH_RUN_BRANCH != '' &&
+      (github.event_name == 'push' &&
        (vars.MMGH_PUSH_RUN_BRANCH == '*' ||
         contains(vars.MMGH_PUSH_RUN_BRANCH, github.ref_name))) ||
       (github.event_name == 'schedule' && vars.MMGH_NIGHTLY == 'enable')
@@ -64,9 +64,8 @@ jobs:
     if: |
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' &&
-      vars.MMGH_PUSH_RUN_BRANCH != '' &&
-      (vars.MMGH_PUSH_RUN_BRANCH == '*' ||
-      contains(vars.MMGH_PUSH_RUN_BRANCH, github.ref_name))) ||
+       (vars.MMGH_PUSH_RUN_BRANCH == '*' ||
+        contains(vars.MMGH_PUSH_RUN_BRANCH, github.ref_name))) ||
       (github.event_name == 'schedule' &&
       vars.MMGH_NIGHTLY == 'enable')
 
@@ -204,9 +203,8 @@ jobs:
     if: |
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' &&
-      vars.MMGH_PUSH_RUN_BRANCH != '' &&
-      (vars.MMGH_PUSH_RUN_BRANCH == '*' ||
-      contains(vars.MMGH_PUSH_RUN_BRANCH, github.ref_name))) ||
+       (vars.MMGH_PUSH_RUN_BRANCH == '*' ||
+        contains(vars.MMGH_PUSH_RUN_BRANCH, github.ref_name))) ||
       (github.event_name == 'schedule' &&
       vars.MMGH_NIGHTLY == 'enable')
 
