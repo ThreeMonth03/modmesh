@@ -28,9 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <modmesh/simd/simd_generic.hpp>
-#include <modmesh/simd/neon/neon_type.hpp>
+#include <concepts>
+#include <functional>
+
 #include <modmesh/simd/neon/neon_alias.hpp>
+#include <modmesh/simd/neon/neon_type.hpp>
+#include <modmesh/simd/simd_generic.hpp>
 
 #ifdef __aarch64__
 #include <arm_neon.h>
@@ -91,216 +94,170 @@ inline constexpr size_t get_recommended_alignment()
 } /* end namespace detail */
 
 #ifdef __aarch64__
-template <typename T, typename std::enable_if_t<!type::has_vectype<T>> * = nullptr>
-const T * check_between(T const * start, T const * end, T const & min_val, T const & max_val)
+// SFINAE helpers for vectorized operations.
+struct vec_add
 {
-    return generic::check_between<T>(start, end, min_val, max_val);
-}
-
-template <typename T, typename std::enable_if_t<type::has_vectype<T>> * = nullptr>
-const T * check_between(T const * start, T const * end, T const & min_val, T const & max_val)
+    template <typename V>
+    static auto operator()(V a, V b) -> decltype(vaddq(a, b)) { return vaddq(a, b); }
+};
+struct vec_sub
 {
-    using vec_t = type::vector_t<T>;
-    using cmpvec_t = type::vector_t<uint64_t>;
-    constexpr size_t N_lane = type::vector_lane<T>;
+    template <typename V>
+    static auto operator()(V a, V b) -> decltype(vsubq(a, b)) { return vsubq(a, b); }
+};
+struct vec_mul
+{
+    template <typename V>
+    static auto operator()(V a, V b) -> decltype(vmulq(a, b)) { return vmulq(a, b); }
+};
+struct vec_div
+{
+    template <typename V>
+    static auto operator()(V a, V b) -> decltype(vdivq(a, b)) { return vdivq(a, b); }
+};
 
-#ifndef NDEBUG
-    constexpr size_t alignment = detail::get_recommended_alignment();
-    detail::check_alignment(start, alignment, "check_between start");
-#endif
-
-    vec_t const max_vec = vdupq(max_val);
-    vec_t const min_vec = vdupq(min_val);
-    vec_t data_vec = {};
-    cmpvec_t cmp_vec = {};
-    T const * ret = nullptr;
-
-    T const * ptr = start;
-    for (; ptr <= end - N_lane; ptr += N_lane)
-    {
-        data_vec = vld1q(ptr);
-        cmp_vec = (cmpvec_t)vcgeq(data_vec, max_vec); // NOLINT(modernize-avoid-c-style-cast)
-        if (vgetq<0>(cmp_vec) ||
-            vgetq<1>(cmp_vec))
-        {
-            goto OUT_OF_RANGE;
-        }
-
-        cmp_vec = (cmpvec_t)vcltq(data_vec, min_vec); // NOLINT(modernize-avoid-c-style-cast)
-        if (vgetq<0>(cmp_vec) ||
-            vgetq<1>(cmp_vec))
-        {
-            goto OUT_OF_RANGE;
-        }
-    }
-
-    if (ptr != end)
-    {
-        ret = generic::check_between<T>(ptr, end, min_val, max_val);
-    }
-
-    return ret;
-
-OUT_OF_RANGE:
-    T cmp_val[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-    T const * cmp = cmp_val;
-    vst1q(cmp_val, cmp_vec);
-
-    for (size_t i = 0; i < N_lane; ++i, ++cmp)
-    {
-        if (*cmp)
-        {
-            return ptr + i;
-        }
-    }
-    return ptr;
-}
-
-template <typename T>
-void add(T * dest, T const * dest_end, T const * src1, T const * src2)
+template <typename T, std::invocable<T, T> ScalarOp, typename VecOp>
+void transform_binary(T * dest, T const * dest_end, T const * src1, T const * src2, ScalarOp scalar_op, VecOp vec_op)
 {
     if constexpr (!type::has_vectype<T>)
     {
-        return generic::add<T>(dest, dest_end, src1, src2);
+        generic::transform_binary<T>(dest, dest_end, src1, src2, scalar_op);
     }
     else
     {
         using vec_t = type::vector_t<T>;
-        constexpr size_t N_lane = type::vector_lane<T>;
+        if constexpr (!std::invocable<VecOp, vec_t, vec_t>)
+        {
+            generic::transform_binary<T>(dest, dest_end, src1, src2, scalar_op);
+        }
+        else
+        {
+            constexpr size_t N_lane = type::vector_lane<T>;
 
 #ifndef NDEBUG
-        constexpr size_t alignment = detail::get_recommended_alignment();
-        detail::check_alignment(dest, alignment, "add dest");
-        detail::check_alignment(src1, alignment, "add src1");
-        detail::check_alignment(src2, alignment, "add src2");
+            constexpr size_t alignment = detail::get_recommended_alignment();
+            detail::check_alignment(dest, alignment, "transform_binary dest");
+            detail::check_alignment(src1, alignment, "transform_binary src1");
+            detail::check_alignment(src2, alignment, "transform_binary src2");
 #endif
 
-        vec_t src1_vec;
-        vec_t src2_vec;
-        vec_t res_vec;
-        T * ptr = dest;
-        for (; ptr <= dest_end - N_lane; ptr += N_lane, src1 += N_lane, src2 += N_lane)
-        {
-            src1_vec = vld1q(src1);
-            src2_vec = vld1q(src2);
-            res_vec = vaddq(src1_vec, src2_vec);
-            vst1q(ptr, res_vec);
-        }
-        if (ptr != dest_end)
-        {
-            generic::add<T>(ptr, dest_end, src1, src2);
+            // Counted trip form. `ptr <= dest_end - N_lane` is UB on sub-lane
+            // inputs (forms a pointer before the buffer); `dest_end - ptr >=
+            // N_lane` is safe but adds a non-fusable `sub` per iteration
+            // (~20-25% hit on cache-resident NEON loops). Hoisting the block
+            // count keeps both safety and lets the loop fold to `subs/b.ne`.
+            size_t const blocks = static_cast<size_t>(dest_end - dest) / N_lane;
+            T * ptr = dest;
+            for (size_t i = 0; i < blocks; ++i)
+            {
+                vec_t const v1 = vld1q(src1);
+                vec_t const v2 = vld1q(src2);
+                vst1q(ptr, vec_op(v1, v2));
+                ptr += N_lane;
+                src1 += N_lane;
+                src2 += N_lane;
+            }
+            while (ptr < dest_end)
+            {
+                *ptr = scalar_op(*src1, *src2);
+                ++ptr;
+                ++src1;
+                ++src2;
+            }
         }
     }
 }
 
 template <typename T>
-void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
+inline void add(T * dest, T const * dest_end, T const * src1, T const * src2)
+{
+    transform_binary<T>(dest, dest_end, src1, src2, std::plus<T>{}, vec_add{});
+}
+
+template <typename T>
+inline void sub(T * dest, T const * dest_end, T const * src1, T const * src2)
+{
+    transform_binary<T>(dest, dest_end, src1, src2, std::minus<T>{}, vec_sub{});
+}
+
+template <typename T>
+inline void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
+{
+    transform_binary<T>(dest, dest_end, src1, src2, std::multiplies<T>{}, vec_mul{});
+}
+
+template <typename T>
+inline void div(T * dest, T const * dest_end, T const * src1, T const * src2)
+{
+    transform_binary<T>(dest, dest_end, src1, src2, std::divides<T>{}, vec_div{});
+}
+
+template <typename T>
+const T * check_between(T const * start, T const * end, T const & min_val, T const & max_val)
 {
     if constexpr (!type::has_vectype<T>)
     {
-        return generic::sub<T>(dest, dest_end, src1, src2);
+        return generic::check_between<T>(start, end, min_val, max_val);
     }
     else
     {
         using vec_t = type::vector_t<T>;
+        using cmpvec_t = type::vector_t<uint64_t>;
         constexpr size_t N_lane = type::vector_lane<T>;
 
 #ifndef NDEBUG
         constexpr size_t alignment = detail::get_recommended_alignment();
-        detail::check_alignment(dest, alignment, "sub dest");
-        detail::check_alignment(src1, alignment, "sub src1");
-        detail::check_alignment(src2, alignment, "sub src2");
+        detail::check_alignment(start, alignment, "check_between start");
 #endif
 
-        vec_t src1_vec;
-        vec_t src2_vec;
-        vec_t res_vec;
-        T * ptr = dest;
-        for (; ptr <= dest_end - N_lane; ptr += N_lane, src1 += N_lane, src2 += N_lane)
-        {
-            src1_vec = vld1q(src1);
-            src2_vec = vld1q(src2);
-            res_vec = vsubq(src1_vec, src2_vec);
-            vst1q(ptr, res_vec);
-        }
-        if (ptr != dest_end)
-        {
-            generic::sub<T>(ptr, dest_end, src1, src2);
-        }
-    }
-}
+        vec_t const max_vec = vdupq(max_val);
+        vec_t const min_vec = vdupq(min_val);
 
-template <typename T>
-void mul(T * dest, T const * dest_end, T const * src1, T const * src2)
-{
-    if constexpr (!(type::vector_lane<T> > 2))
-    {
-        return generic::mul<T>(dest, dest_end, src1, src2);
-    }
-    else
-    {
-        using vec_t = type::vector_t<T>;
-        constexpr size_t N_lane = type::vector_lane<T>;
-
-#ifndef NDEBUG
-        constexpr size_t alignment = detail::get_recommended_alignment();
-        detail::check_alignment(dest, alignment, "mul dest");
-        detail::check_alignment(src1, alignment, "mul src1");
-        detail::check_alignment(src2, alignment, "mul src2");
-#endif
-
-        vec_t src1_vec;
-        vec_t src2_vec;
-        vec_t res_vec;
-        T * ptr = dest;
-        for (; ptr <= dest_end - N_lane; ptr += N_lane, src1 += N_lane, src2 += N_lane)
+        // Vector loop runs while a full lane still fits. Counted trip form
+        // for the same reason as transform_binary above: avoids UB on
+        // sub-lane inputs and the per-iter `sub` overhead.
+        size_t const blocks = static_cast<size_t>(end - start) / N_lane;
+        T const * ptr = start;
+        for (size_t block = 0; block < blocks; ++block)
         {
-            src1_vec = vld1q(src1);
-            src2_vec = vld1q(src2);
-            res_vec = vmulq(src1_vec, src2_vec);
-            vst1q(ptr, res_vec);
-        }
-        if (ptr != dest_end)
-        {
-            generic::mul<T>(ptr, dest_end, src1, src2);
-        }
-    }
-}
+            vec_t const data_vec = vld1q(ptr);
 
-template <typename T>
-void div(T * dest, T const * dest_end, T const * src1, T const * src2)
-{
-    if constexpr (!std::is_floating_point_v<T>)
-    {
-        return generic::div<T>(dest, dest_end, src1, src2);
-    }
-    else
-    {
-        using vec_t = type::vector_t<T>;
-        constexpr size_t N_lane = type::vector_lane<T>;
+            // Inspect both bounds in one pass so the lowest-index failing lane
+            // wins; callers report this pointer as the first out-of-range
+            // element.
+            auto const ge_vec = (cmpvec_t)vcgeq(data_vec, max_vec); // NOLINT(modernize-avoid-c-style-cast)
+            auto const lt_vec = (cmpvec_t)vcltq(data_vec, min_vec); // NOLINT(modernize-avoid-c-style-cast)
+            bool const out_of_range = vgetq<0>(ge_vec) || vgetq<1>(ge_vec) || vgetq<0>(lt_vec) || vgetq<1>(lt_vec);
 
-#ifndef NDEBUG
-        constexpr size_t alignment = detail::get_recommended_alignment();
-        detail::check_alignment(dest, alignment, "div dest");
-        detail::check_alignment(src1, alignment, "div src1");
-        detail::check_alignment(src2, alignment, "div src2");
-#endif
+            if (out_of_range)
+            {
+                T ge_val[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+                T lt_val[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+                vst1q(ge_val, ge_vec);
+                vst1q(lt_val, lt_vec);
+                for (size_t i = 0; i < N_lane; ++i)
+                {
+                    if (ge_val[i] || lt_val[i])
+                    {
+                        return ptr + i;
+                    }
+                }
+                return ptr;
+            }
 
-        vec_t src1_vec;
-        vec_t src2_vec;
-        vec_t res_vec;
-        T * ptr = dest;
-        for (; ptr <= dest_end - N_lane; ptr += N_lane, src1 += N_lane, src2 += N_lane)
-        {
-            src1_vec = vld1q(src1);
-            src2_vec = vld1q(src2);
-            res_vec = vdivq(src1_vec, src2_vec);
-            vst1q(ptr, res_vec);
+            ptr += N_lane;
         }
-        if (ptr != dest_end)
+
+        // Tail scalar loop for remaining elements
+        while (ptr < end)
         {
-            generic::div<T>(ptr, dest_end, src1, src2);
+            if (*ptr < min_val || *ptr > max_val)
+            {
+                return ptr;
+            }
+            ++ptr;
         }
+        return nullptr;
     }
 }
 
