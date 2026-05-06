@@ -61,10 +61,12 @@ Checks: >
     -readability-redundant-access-specifiers,
     -readability-redundant-inline-specifier,
     -readability-redundant-typename,
+    -readability-static-definition-in-anonymous-namespace,
     -misc-non-private-member-variables-in-classes,
     -misc-confusable-identifiers,
     -misc-include-cleaner,
     -misc-unused-alias-decls,
+    -misc-use-anonymous-namespace,
     -misc-use-internal-linkage
 WarningsAsErrors: ''
 FormatStyle: google

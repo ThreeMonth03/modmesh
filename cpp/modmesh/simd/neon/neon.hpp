@@ -150,8 +150,8 @@ void transform_binary(T * dest, T const * dest_end, T const * src1, T const * sr
             T * ptr = dest;
             for (size_t i = 0; i < blocks; ++i)
             {
-                vec_t v1 = vld1q(src1);
-                vec_t v2 = vld1q(src2);
+                vec_t const v1 = vld1q(src1);
+                vec_t const v2 = vld1q(src2);
                 vst1q(ptr, vec_op(v1, v2));
                 ptr += N_lane;
                 src1 += N_lane;
@@ -210,8 +210,8 @@ const T * check_between(T const * start, T const * end, T const & min_val, T con
         detail::check_alignment(start, alignment, "check_between start");
 #endif
 
-        vec_t max_vec = vdupq(max_val);
-        vec_t min_vec = vdupq(min_val);
+        vec_t const max_vec = vdupq(max_val);
+        vec_t const min_vec = vdupq(min_val);
 
         // Vector loop runs while a full lane still fits. Counted trip form
         // for the same reason as transform_binary above: avoids UB on
@@ -220,14 +220,14 @@ const T * check_between(T const * start, T const * end, T const & min_val, T con
         T const * ptr = start;
         for (size_t block = 0; block < blocks; ++block)
         {
-            vec_t data_vec = vld1q(ptr);
+            vec_t const data_vec = vld1q(ptr);
 
             // Inspect both bounds in one pass so the lowest-index failing lane
             // wins; callers report this pointer as the first out-of-range
             // element.
-            cmpvec_t ge_vec = (cmpvec_t)vcgeq(data_vec, max_vec); // NOLINT(modernize-avoid-c-style-cast)
-            cmpvec_t lt_vec = (cmpvec_t)vcltq(data_vec, min_vec); // NOLINT(modernize-avoid-c-style-cast)
-            bool out_of_range = vgetq<0>(ge_vec) || vgetq<1>(ge_vec) || vgetq<0>(lt_vec) || vgetq<1>(lt_vec);
+            auto const ge_vec = (cmpvec_t)vcgeq(data_vec, max_vec); // NOLINT(modernize-avoid-c-style-cast)
+            auto const lt_vec = (cmpvec_t)vcltq(data_vec, min_vec); // NOLINT(modernize-avoid-c-style-cast)
+            bool const out_of_range = vgetq<0>(ge_vec) || vgetq<1>(ge_vec) || vgetq<0>(lt_vec) || vgetq<1>(lt_vec);
 
             if (out_of_range)
             {
