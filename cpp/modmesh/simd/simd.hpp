@@ -29,6 +29,7 @@
  */
 
 #include <modmesh/simd/simd_generic.hpp>
+#include <modmesh/simd/gemm.hpp>
 #include <modmesh/simd/simd_support.hpp>
 
 #include <modmesh/simd/neon/neon.hpp>

@@ -359,6 +359,7 @@ class MODMESH_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
                 { return self.div(scalar); })
             .def("matmul", &wrapped_type::matmul)
             .def("__matmul__", &wrapped_type::matmul)
+            .def("matmul_veclib", &wrapped_type::matmul_veclib)
             .def(
                 "fast_matmul",
                 [](wrapped_type const & self,
@@ -412,6 +413,8 @@ class MODMESH_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
                 { self.idiv(scalar); })
             .def("imatmul", [](wrapped_type & self, wrapped_type const & other)
                  { self.imatmul(other); })
+            .def("imatmul_veclib", [](wrapped_type & self, wrapped_type const & other)
+                 { self.imatmul_veclib(other); })
             .def("__imatmul__", [](wrapped_type & self, wrapped_type const & other)
                  {
                      self.imatmul(other);

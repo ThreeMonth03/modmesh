@@ -163,6 +163,7 @@ public:
 
     A matmul();
     A matmul_fast();
+    A matmul_veclib();
 
 private:
 
@@ -174,6 +175,7 @@ private:
     A matmul_vec_mat();
     A matmul_mat_vec();
     A matmul_mat_mat();
+    A matmul_mat_mat_veclib();
     A pack_rhs(size_t n, size_t k);
     void accumulate_tile(A const & packed_rhs,
                          size_t row_begin,
@@ -285,6 +287,28 @@ A SimpleArrayMatmulHelper<A, T>::matmul_fast()
     }
 
     return matmul_mat_mat_tiled();
+}
+
+/**
+ * Perform matrix multiplication using Accelerate/CBLAS when available.
+ */
+template <typename A, typename T>
+A SimpleArrayMatmulHelper<A, T>::matmul_veclib()
+{
+    if (m_lhs.ndim() == 1 && m_rhs.ndim() == 1)
+    {
+        return matmul_vec_vec();
+    }
+    if (m_lhs.ndim() == 1)
+    {
+        return matmul_vec_mat();
+    }
+    if (m_rhs.ndim() == 1)
+    {
+        return matmul_mat_vec();
+    }
+
+    return matmul_mat_mat_veclib();
 }
 
 /**
@@ -427,18 +451,33 @@ A SimpleArrayMatmulHelper<A, T>::matmul_mat_mat()
 }
 
 template <typename A, typename T>
+A SimpleArrayMatmulHelper<A, T>::matmul_mat_mat_veclib()
+{
+    if (!m_lhs.is_c_contiguous() || !m_rhs.is_c_contiguous())
+    {
+        return matmul_mat_mat();
+    }
+
+    size_t const m = m_result.shape(0);
+    size_t const n = m_result.shape(1);
+    size_t const k = m_lhs.shape(1);
+    simd::matmul(m, n, k, m_lhs.data(), m_rhs.data(), m_result.data());
+    return std::move(m_result);
+}
+
+template <typename A, typename T>
 A SimpleArrayMatmulHelper<A, T>::pack_rhs(size_t n, size_t k)
 {
     shape_type const packing_shape{n, k};
-    A packing(packing_shape);
-    for (size_t i = 0; i < n; ++i)
+    A packed_rhs(packing_shape);
+    for (size_t j = 0; j < n; ++j)
     {
-        for (size_t j = 0; j < k; ++j)
+        for (size_t l = 0; l < k; ++l)
         {
-            packing(i, j) = m_rhs(j, i);
+            packed_rhs(j, l) = m_rhs(l, j);
         }
     }
-    return packing;
+    return packed_rhs;
 }
 
 template <typename A, typename T>
@@ -1309,6 +1348,8 @@ public:
 
     A matmul(A const & other) const;
     A & imatmul(A const & other);
+    A matmul_veclib(A const & other) const;
+    A & imatmul_veclib(A const & other);
     A fast_matmul(A const & other,
                   size_t tile_x,
                   size_t tile_y,
@@ -1432,6 +1473,31 @@ A & SimpleArrayMixinCalculators<A, T>::imatmul(A const & other)
 {
     auto athis = static_cast<A *>(this);
     A result = athis->matmul(other);
+    *athis = std::move(result);
+
+    return *athis;
+}
+
+/**
+ * Perform matrix multiplication using Accelerate/CBLAS when available.
+ */
+template <typename A, typename T>
+A SimpleArrayMixinCalculators<A, T>::matmul_veclib(A const & other) const
+{
+    auto const * athis = static_cast<A const *>(this);
+    SimpleArrayMatmulHelper<A, T> helper(*athis, other);
+    return helper.matmul_veclib();
+}
+
+/**
+ * Perform in-place matrix multiplication using Accelerate/CBLAS when available.
+ * The result replaces the content of the current array.
+ */
+template <typename A, typename T>
+A & SimpleArrayMixinCalculators<A, T>::imatmul_veclib(A const & other)
+{
+    auto athis = static_cast<A *>(this);
+    A result = athis->matmul_veclib(other);
     *athis = std::move(result);
 
     return *athis;

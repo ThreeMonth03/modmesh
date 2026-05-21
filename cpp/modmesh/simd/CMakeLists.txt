@@ -29,10 +29,14 @@ cmake_minimum_required(VERSION 4.0.1)
 set(MODMESH_SIMD_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/simd.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/simd_support.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gemm.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gemm_generic.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/accelerate/accelerate.hpp
     CACHE FILEPATH "" FORCE)
 
 set(MODMESH_SIMD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/simd_support.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/accelerate/accelerate.cpp
     CACHE FILEPATH "" FORCE)
 
 set(MODMESH_SIMD_NEONHEADERS
