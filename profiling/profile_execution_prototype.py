@@ -107,13 +107,15 @@ def root_storage(value):
 def matmul_workload(lhs, rhs):
     lhs_array = np.asarray(lhs, dtype='float64')
     rhs_array = np.asarray(rhs, dtype='float64')
-    lhs_batch = lhs_array.shape[:-2]
-    rhs_batch = rhs_array.shape[:-2]
+    lhs_vector = lhs_array.ndim == 1
+    rhs_vector = rhs_array.ndim == 1
+    lhs_batch = () if lhs_vector else lhs_array.shape[:-2]
+    rhs_batch = () if rhs_vector else rhs_array.shape[:-2]
     batch_shape = np.broadcast_shapes(lhs_batch, rhs_batch)
     batch_matrices = int(np.prod(batch_shape, dtype='int64'))
-    rows = lhs_array.shape[-2]
+    rows = 1 if lhs_vector else lhs_array.shape[-2]
     inner_size = lhs_array.shape[-1]
-    columns = rhs_array.shape[-1]
+    columns = 1 if rhs_vector else rhs_array.shape[-1]
     itemsize = lhs_array.dtype.itemsize
     logical_input_bytes = (lhs_array.size + rhs_array.size) * itemsize
     lhs_storage = root_storage(lhs_array)
@@ -174,6 +176,54 @@ def make_stepped(values, axis=-1):
     view = storage[tuple(selection)]
     view[...] = values
     return view
+
+
+def append_matmul_case(
+        cases, layout, lhs, rhs, number, note='', dense_control=False,
+        family='matmul', legacy=True, blas=True):
+    lhs_sa = make_array(lhs)
+    rhs_sa = make_array(rhs)
+    legacy_call = None
+    blas_call = None
+    if legacy:
+        def run_legacy(lhs=lhs_sa, rhs=rhs_sa):
+            return lhs.matmul(rhs)
+
+        legacy_call = run_legacy
+    if blas:
+        def run_blas(lhs=lhs_sa, rhs=rhs_sa):
+            return lhs.matmul_blas(rhs)
+
+        blas_call = run_blas
+    control_call = None
+    control_label = ''
+    if dense_control:
+        dense_lhs = make_array(
+            np.ascontiguousarray(lhs, dtype='float64'))
+        dense_rhs = make_array(
+            np.ascontiguousarray(rhs, dtype='float64'))
+
+        def run_control(lhs=dense_lhs, rhs=dense_rhs):
+            return lhs._planned_matmul(rhs)
+
+        control_call = run_control
+        control_label = 'dense planned'
+    cases.append(BenchmarkCase(
+        family=family,
+        operation='matmul',
+        layout=layout,
+        numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
+        legacy_call=legacy_call,
+        blas_call=blas_call,
+        control_call=control_call,
+        control_label=control_label,
+        planned_call=lambda lhs=lhs_sa,
+        rhs=rhs_sa: lhs._planned_matmul(rhs),
+        number=number,
+        note=note,
+        operands=describe_operands(lhs=lhs, rhs=rhs),
+        workload=matmul_workload(lhs, rhs),
+    ))
 
 
 def call_inplace(destination, operand, operation, planned=False):
@@ -541,39 +591,50 @@ def matmul_cases(rng, quick):
     lhs_base = rng.random((side, side), dtype='float64')
     rhs_base = rng.random((side, side), dtype='float64')
     layouts = {
-        'matrix-matrix-c': (lhs_base, rhs_base),
+        'matrix-matrix-c': (
+            lhs_base, rhs_base, 'Dense GEMM control.'),
         'matrix-matrix-f': (
-            np.asfortranarray(lhs_base),
-            np.asfortranarray(rhs_base)),
+            np.asfortranarray(lhs_base, dtype='float64'),
+            np.asfortranarray(rhs_base, dtype='float64'),
+            'Both matrices have BLAS-describable F layout.'),
         'matrix-matrix-negative': (
-            lhs_base[::-1, ::-1], rhs_base[::-1, ::-1]),
+            lhs_base[::-1, ::-1],
+            rhs_base[::-1, ::-1],
+            'Both matrices require signed-stride handling.'),
         'matrix-matrix-lhs-step2': (
-            make_stepped(lhs_base), rhs_base),
+            make_stepped(lhs_base),
+            rhs_base,
+            'The lhs inner stride cannot be described by GEMM.'),
         'matrix-matrix-rhs-step2': (
-            lhs_base, make_stepped(rhs_base)),
+            lhs_base,
+            make_stepped(rhs_base),
+            'The rhs column stride cannot be described by GEMM.'),
         'matrix-matrix-both-step2': (
-            make_stepped(lhs_base), make_stepped(rhs_base)),
+            make_stepped(lhs_base),
+            make_stepped(rhs_base),
+            'Both matrices require packing or generic execution.'),
         'matrix-matrix-mixed-c-f': (
-            lhs_base, np.asfortranarray(rhs_base)),
+            lhs_base,
+            np.asfortranarray(rhs_base, dtype='float64'),
+            'C lhs and F rhs are both BLAS-describable.'),
+        'matrix-matrix-padded-leading-dimension': (
+            make_stepped(lhs_base, axis=0),
+            make_stepped(rhs_base, axis=0),
+            'Positive padded leading dimensions need no packing.'),
     }
     cases = []
-    for layout_name, operands in layouts.items():
-        lhs, rhs = operands
-        lhs_sa = make_array(lhs)
-        rhs_sa = make_array(rhs)
-        cases.append(BenchmarkCase(
-            family='matmul',
-            operation='matmul',
-            layout=layout_name,
-            numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
-            legacy_call=lambda lhs=lhs_sa, rhs=rhs_sa: lhs.matmul(rhs),
-            blas_call=lambda lhs=lhs_sa,
-            rhs=rhs_sa: lhs.matmul_blas(rhs),
-            planned_call=lambda lhs=lhs_sa,
-            rhs=rhs_sa: lhs._planned_matmul(rhs),
-            number=3 if quick else 7,
-            operands=describe_operands(lhs=lhs, rhs=rhs),
-        ))
+    for layout_name, layout_data in layouts.items():
+        lhs, rhs, note = layout_data
+        append_matmul_case(
+            cases,
+            layout_name,
+            lhs,
+            rhs,
+            3 if quick else 7,
+            note,
+            dense_control=not (
+                lhs.flags.c_contiguous and rhs.flags.c_contiguous),
+        )
 
     rectangular_lhs = rng.random(
         (side // 2, side), dtype='float64')
@@ -583,35 +644,135 @@ def matmul_cases(rng, quick):
     small_rhs = rng.random((16, 8), dtype='float64')
     vector_lhs = rng.random((side,), dtype='float64')
     vector_rhs = rng.random((side,), dtype='float64')
+    long_vector_size = 4096 if quick else 65536
+    long_vector_lhs = rng.random(
+        (long_vector_size,), dtype='float64')
+    long_vector_rhs = rng.random(
+        (long_vector_size,), dtype='float64')
     role_layouts = {
         'matrix-matrix-rectangular': (
-            rectangular_lhs, rectangular_rhs, 10 if quick else 40),
+            rectangular_lhs,
+            rectangular_rhs,
+            10 if quick else 40,
+            'Rectangular dense GEMM control.'),
         'matrix-matrix-small-direct': (
-            small_lhs, small_rhs, 100 if quick else 2000),
+            small_lhs,
+            small_rhs,
+            100 if quick else 2000,
+            'Work stays below the BLAS dispatch threshold.'),
         'vector-vector': (
-            vector_lhs, vector_rhs, 100 if quick else 2000),
+            vector_lhs,
+            vector_rhs,
+            100 if quick else 2000,
+            'Dense DOT control.'),
+        'vector-vector-negative': (
+            vector_lhs[::-1],
+            vector_rhs[::-1],
+            100 if quick else 2000,
+            'DOT operands both have negative increments.'),
+        'vector-vector-step2': (
+            make_stepped(vector_lhs),
+            make_stepped(vector_rhs),
+            100 if quick else 2000,
+            'DOT operands both have increment two.'),
+        'vector-vector-long-c': (
+            long_vector_lhs,
+            long_vector_rhs,
+            20,
+            'Long dense DOT exercises the BLAS route.'),
+        'vector-vector-long-negative': (
+            long_vector_lhs[::-1],
+            long_vector_rhs[::-1],
+            20,
+            'Long negative DOT uses signed-stride generic execution.'),
+        'vector-vector-long-step2': (
+            make_stepped(long_vector_lhs),
+            make_stepped(long_vector_rhs),
+            20,
+            'Long positive-stride DOT passes increments to BLAS.'),
         'vector-matrix': (
-            vector_lhs, rhs_base, 20 if quick else 200),
+            vector_lhs,
+            rhs_base,
+            20 if quick else 200,
+            'Dense vector-matrix control.'),
+        'vector-matrix-negative-vector': (
+            vector_lhs[::-1],
+            rhs_base,
+            20 if quick else 200,
+            'The GEMV vector has a negative increment.'),
+        'vector-matrix-step2-vector': (
+            make_stepped(vector_lhs),
+            rhs_base,
+            20 if quick else 200,
+            'The GEMV vector has increment two.'),
+        'vector-matrix-f-matrix': (
+            vector_lhs,
+            np.asfortranarray(rhs_base, dtype='float64'),
+            20 if quick else 200,
+            'The GEMV matrix is F-contiguous.'),
+        'vector-matrix-negative-matrix': (
+            vector_lhs,
+            rhs_base[::-1, :],
+            20 if quick else 200,
+            'The contracted matrix axis has a negative stride.'),
+        'vector-matrix-step2-matrix': (
+            vector_lhs,
+            make_stepped(rhs_base),
+            20 if quick else 200,
+            'The matrix column stride cannot be described by GEMV.'),
+        'vector-matrix-padded-matrix': (
+            vector_lhs,
+            make_stepped(rhs_base, axis=0),
+            20 if quick else 200,
+            'The matrix has a padded leading dimension.'),
         'matrix-vector': (
-            lhs_base, vector_rhs, 20 if quick else 200),
+            lhs_base,
+            vector_rhs,
+            20 if quick else 200,
+            'Dense matrix-vector control.'),
+        'matrix-vector-negative-vector': (
+            lhs_base,
+            vector_rhs[::-1],
+            20 if quick else 200,
+            'The GEMV vector has a negative increment.'),
+        'matrix-vector-step2-vector': (
+            lhs_base,
+            make_stepped(vector_rhs),
+            20 if quick else 200,
+            'The GEMV vector has increment two.'),
+        'matrix-vector-f-matrix': (
+            np.asfortranarray(lhs_base, dtype='float64'),
+            vector_rhs,
+            20 if quick else 200,
+            'The GEMV matrix is F-contiguous.'),
+        'matrix-vector-negative-matrix': (
+            lhs_base[:, ::-1],
+            vector_rhs,
+            20 if quick else 200,
+            'The contracted matrix axis has a negative stride.'),
+        'matrix-vector-step2-matrix': (
+            make_stepped(lhs_base),
+            vector_rhs,
+            20 if quick else 200,
+            'The matrix inner stride cannot be described by GEMV.'),
+        'matrix-vector-padded-matrix': (
+            make_stepped(lhs_base, axis=0),
+            vector_rhs,
+            20 if quick else 200,
+            'The matrix has a padded leading dimension.'),
     }
     for layout_name, layout_data in role_layouts.items():
-        lhs, rhs, number = layout_data
-        lhs_sa = make_array(lhs)
-        rhs_sa = make_array(rhs)
-        cases.append(BenchmarkCase(
-            family='matmul',
-            operation='matmul',
-            layout=layout_name,
-            numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
-            legacy_call=lambda lhs=lhs_sa, rhs=rhs_sa: lhs.matmul(rhs),
-            blas_call=lambda lhs=lhs_sa,
-            rhs=rhs_sa: lhs.matmul_blas(rhs),
-            planned_call=lambda lhs=lhs_sa,
-            rhs=rhs_sa: lhs._planned_matmul(rhs),
-            number=number,
-            operands=describe_operands(lhs=lhs, rhs=rhs),
-        ))
+        lhs, rhs, number, note = layout_data
+        append_matmul_case(
+            cases,
+            layout_name,
+            lhs,
+            rhs,
+            number,
+            note,
+            dense_control=not (
+                lhs.flags.c_contiguous and rhs.flags.c_contiguous),
+        )
 
     batch = 3 if quick else 8
     matrix = 16 if quick else 32
@@ -623,40 +784,102 @@ def matmul_cases(rng, quick):
         (batch, matrix, matrix), dtype='float64')
     same_batch_rhs = rng.random(
         (batch, matrix, matrix), dtype='float64')
+    vector = rng.random((matrix,), dtype='float64')
+    vector_batch_rhs = rng.random(
+        (2, batch, matrix, matrix), dtype='float64')
+    vector_batch_lhs = rng.random(
+        (2, batch, matrix, matrix), dtype='float64')
     batch_layouts = {
-        'batch-same-shape-c': (same_batch_lhs, same_batch_rhs),
-        'batch-broadcast-c': (batch_lhs, batch_rhs),
+        'batch-same-shape-c': (
+            same_batch_lhs,
+            same_batch_rhs,
+            'Dense same-shape matrix batches.'),
+        'batch-broadcast-c': (
+            batch_lhs,
+            batch_rhs,
+            'Leading matrix batch axes broadcast.'),
         'batch-broadcast-negative-matrix': (
             batch_lhs[..., ::-1, ::-1],
-            batch_rhs[..., ::-1, ::-1]),
+            batch_rhs[..., ::-1, ::-1],
+            'Broadcast matrices have negative inner strides.'),
         'batch-broadcast-step2-inner': (
             make_stepped(batch_lhs),
-            make_stepped(batch_rhs)),
+            make_stepped(batch_rhs),
+            'Broadcast matrices have step-two inner strides.'),
         'batch-broadcast-step2-batch': (
             make_stepped(batch_lhs, axis=0),
-            make_stepped(batch_rhs, axis=1)),
+            make_stepped(batch_rhs, axis=1),
+            'Matrix blocks are dense and batch axes are strided.'),
+        'vector-batch-matrix-c': (
+            vector,
+            vector_batch_rhs,
+            'One dense vector is reused across two batch axes.'),
+        'vector-batch-matrix-negative-vector': (
+            vector[::-1],
+            vector_batch_rhs,
+            'A negative-stride vector is reused across two batch axes.'),
+        'vector-batch-matrix-step2-vector': (
+            make_stepped(vector),
+            vector_batch_rhs,
+            'A step-two vector is reused across two batch axes.'),
+        'vector-batch-matrix-negative-matrix': (
+            vector,
+            vector_batch_rhs[..., ::-1, :],
+            'The batched matrix contracted axis is negative.'),
+        'vector-batch-matrix-step2-matrix': (
+            vector,
+            make_stepped(vector_batch_rhs, axis=-1),
+            'The batched matrix column stride is two.'),
+        'vector-batch-matrix-padded-matrix': (
+            vector,
+            make_stepped(vector_batch_rhs, axis=-2),
+            'The batched matrix has a padded leading dimension.'),
+        'batch-matrix-vector-c': (
+            vector_batch_lhs,
+            vector,
+            'One dense vector is reused across two batch axes.'),
+        'batch-matrix-vector-negative-vector': (
+            vector_batch_lhs,
+            vector[::-1],
+            'A negative-stride vector is reused across two batch axes.'),
+        'batch-matrix-vector-step2-vector': (
+            vector_batch_lhs,
+            make_stepped(vector),
+            'A step-two vector is reused across two batch axes.'),
+        'batch-matrix-vector-negative-matrix': (
+            vector_batch_lhs[..., ::-1],
+            vector,
+            'The batched matrix contracted axis is negative.'),
+        'batch-matrix-vector-step2-matrix': (
+            make_stepped(vector_batch_lhs),
+            vector,
+            'The batched matrix inner stride is two.'),
+        'batch-matrix-vector-padded-matrix': (
+            make_stepped(vector_batch_lhs, axis=-2),
+            vector,
+            'The batched matrix has a padded leading dimension.'),
     }
-    for layout_name, operands in batch_layouts.items():
-        lhs, rhs = operands
-        lhs_sa = make_array(lhs)
-        rhs_sa = make_array(rhs)
-        cases.append(BenchmarkCase(
+    for layout_name, layout_data in batch_layouts.items():
+        lhs, rhs, note = layout_data
+        append_matmul_case(
+            cases,
+            layout_name,
+            lhs,
+            rhs,
+            1 if quick else 3,
+            note,
+            dense_control=not (
+                lhs.flags.c_contiguous and rhs.flags.c_contiguous),
             family='matmul-batch',
-            operation='matmul',
-            layout=layout_name,
-            numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
-            planned_call=lambda lhs=lhs_sa,
-            rhs=rhs_sa: lhs._planned_matmul(rhs),
-            number=1 if quick else 3,
-            note='Legacy rejects rank greater than two.',
-            operands=describe_operands(lhs=lhs, rhs=rhs),
-        ))
+            legacy=False,
+            blas=False,
+        )
     return cases
 
 
 def append_hpc_matmul_case(
         cases, layout, lhs, rhs, legacy=False, blas=False,
-        control_lhs=None, control_label='', note=''):
+        control_lhs=None, control_rhs=None, control_label='', note=''):
     lhs_sa = make_array(lhs)
     rhs_sa = make_array(rhs)
     legacy_call = None
@@ -670,10 +893,13 @@ def append_hpc_matmul_case(
         def run_blas(lhs=lhs_sa, rhs=rhs_sa):
             return lhs.matmul_blas(rhs)
         blas_call = run_blas
-    if control_lhs is not None:
-        control_lhs_sa = make_array(control_lhs)
+    if control_lhs is not None or control_rhs is not None:
+        control_lhs_sa = make_array(
+            lhs if control_lhs is None else control_lhs)
+        control_rhs_sa = make_array(
+            rhs if control_rhs is None else control_rhs)
 
-        def run_control(lhs=control_lhs_sa, rhs=rhs_sa):
+        def run_control(lhs=control_lhs_sa, rhs=control_rhs_sa):
             return lhs._planned_matmul(rhs)
         control_call = run_control
     cases.append(BenchmarkCase(
@@ -853,13 +1079,104 @@ def hpc_matmul_cases(rng, include_slow=False):
         rhs_one_256,
         note='The matrix blocks are dense but the batch axis is strided.',
     )
+
+    vector_256 = rng.random((256,), dtype='float64')
+    vector_rhs_batch_256 = rng.random(
+        (64, 256, 256), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'vector-batch-matrix-256-b64',
+        vector_256,
+        vector_rhs_batch_256,
+        note='One vector is reused by 64 matrix-vector contractions.',
+    )
+    negative_vector_256 = vector_256[::-1]
+    append_hpc_matmul_case(
+        cases,
+        'negative-vector-batch-matrix-256-b64',
+        negative_vector_256,
+        vector_rhs_batch_256,
+        control_lhs=np.ascontiguousarray(
+            negative_vector_256, dtype='float64'),
+        control_label='dense planned',
+        note='A repeated negative vector may be packed at most once.',
+    )
+    stepped_vector_256 = make_stepped(vector_256)
+    append_hpc_matmul_case(
+        cases,
+        'step2-vector-batch-matrix-256-b64',
+        stepped_vector_256,
+        vector_rhs_batch_256,
+        control_lhs=np.ascontiguousarray(
+            stepped_vector_256, dtype='float64'),
+        control_label='dense planned',
+        note='A repeated step-two vector retains one physical copy.',
+    )
+    stepped_vector_rhs_256 = make_stepped(
+        vector_rhs_batch_256)
+    append_hpc_matmul_case(
+        cases,
+        'vector-batch-step2-matrix-256-b64',
+        vector_256,
+        stepped_vector_rhs_256,
+        control_rhs=np.ascontiguousarray(
+            stepped_vector_rhs_256, dtype='float64'),
+        control_label='dense planned',
+        note='Every rhs matrix has a step-two column stride.',
+    )
+
+    vector_lhs_batch_256 = rng.random(
+        (64, 256, 256), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'batch-matrix-vector-256-b64',
+        vector_lhs_batch_256,
+        vector_256,
+        note='One vector is reused by 64 matrix-vector contractions.',
+    )
+    append_hpc_matmul_case(
+        cases,
+        'batch-matrix-negative-vector-256-b64',
+        vector_lhs_batch_256,
+        negative_vector_256,
+        control_rhs=np.ascontiguousarray(
+            negative_vector_256, dtype='float64'),
+        control_label='dense planned',
+        note='A repeated negative vector may be packed at most once.',
+    )
+    append_hpc_matmul_case(
+        cases,
+        'batch-matrix-step2-vector-256-b64',
+        vector_lhs_batch_256,
+        stepped_vector_256,
+        control_rhs=np.ascontiguousarray(
+            stepped_vector_256, dtype='float64'),
+        control_label='dense planned',
+        note='A repeated step-two vector retains one physical copy.',
+    )
+    stepped_vector_lhs_256 = make_stepped(
+        vector_lhs_batch_256)
+    append_hpc_matmul_case(
+        cases,
+        'batch-step2-matrix-vector-256-b64',
+        stepped_vector_lhs_256,
+        vector_256,
+        control_lhs=np.ascontiguousarray(
+            stepped_vector_lhs_256, dtype='float64'),
+        control_label='dense planned',
+        note='Every lhs matrix has a step-two inner stride.',
+    )
     return cases
 
 
-def make_cases(quick, hpc_matmul=False, hpc_matmul_slow=False):
+def make_cases(
+        quick, hpc_matmul=False, hpc_matmul_slow=False,
+        matmul_only=False):
     rng = np.random.default_rng(SEED)
     if hpc_matmul:
         return hpc_matmul_cases(rng, hpc_matmul_slow)
+    if matmul_only:
+        return matmul_cases(rng, quick)
     cases = []
     cases.extend(elementwise_cases(rng, quick))
     cases.extend(inplace_cases(rng, quick))
@@ -1285,6 +1602,7 @@ def metadata(args):
         'quick': args.quick,
         'hpc_matmul': args.hpc_matmul,
         'hpc_matmul_slow': args.hpc_matmul_slow,
+        'matmul_only': args.matmul_only,
         'case_count': args.case_count,
         'case_filters': args.case_filters,
         'requested_cpu': args.cpu,
@@ -1314,6 +1632,11 @@ def parse_args():
         '--hpc-matmul-slow',
         action='store_true',
         help='Include the optional 2048-square case in the HPC suite.',
+    )
+    parser.add_argument(
+        '--matmul-only',
+        action='store_true',
+        help='Run only matmul topology cases.',
     )
     parser.add_argument('--check-only', action='store_true',
                         help='Run correctness checks without timing.')
@@ -1355,7 +1678,11 @@ def main():
     args = parse_args()
     set_cpu_affinity(args.cpu)
     cases = make_cases(
-        args.quick, args.hpc_matmul, args.hpc_matmul_slow)
+        args.quick,
+        args.hpc_matmul,
+        args.hpc_matmul_slow,
+        args.matmul_only,
+    )
     if args.case_filters:
         cases = [
             case for case in cases

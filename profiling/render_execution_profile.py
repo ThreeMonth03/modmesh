@@ -123,6 +123,8 @@ def render_reproduction(lines, metadata):
         command.append('    --hpc-matmul \\')
     if metadata.get('hpc_matmul_slow', False):
         command.append('    --hpc-matmul-slow \\')
+    if metadata.get('matmul_only', False):
+        command.append('    --matmul-only \\')
     for case_filter in metadata.get('case_filters', []):
         command.append(f'    --filter {shlex.quote(case_filter)} \\')
     command.extend((
@@ -224,6 +226,10 @@ def render_family(lines, family, rows):
     has_control = any(row.get('control_label') for row in rows)
     headers = ['Operation', 'Scenario']
     separators = ['---', '---']
+    has_notes = any(row.get('note') for row in rows)
+    if has_notes:
+        headers.append('Purpose')
+        separators.append('---')
     if has_workload:
         headers.append('Workload')
         separators.append('---')
@@ -266,6 +272,8 @@ def render_family(lines, family, rows):
     ))
     for row in rows:
         cells = [row['operation'], row['layout']]
+        if has_notes:
+            cells.append(row.get('note') or 'n/a')
         if has_workload:
             cells.append(format_workload(row.get('workload')))
         cells.extend((
