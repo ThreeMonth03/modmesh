@@ -4,6 +4,7 @@
  */
 
 #include <solvcon/buffer/execution/reduction_plan.hpp>
+#include <solvcon/buffer/execution/reduction_schedule.hpp>
 
 namespace solvcon
 {
@@ -21,9 +22,12 @@ ReductionSliceCursor::ReductionSliceCursor(ReductionPlan const & plan)
 }
 
 ReducedOffsetCursor::ReducedOffsetCursor(
-    ReductionPlan const & plan, ssize_t outer_offset)
+    ReductionPlan const & plan,
+    ReductionSchedule const & schedule,
+    ssize_t outer_offset)
     : m_plan(&plan)
     , m_outer_offset(outer_offset)
+    , m_inner_contiguous(schedule.inner_contiguous())
     , m_mappings{plan.inner_input()}
     , m_cursor(plan.inner(), m_mappings)
 {

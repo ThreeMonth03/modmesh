@@ -72,6 +72,9 @@ $(SETUPROOT)/execution_loop.o: $(SETUPROOT)/solvcon/buffer/execution/loop.cpp Ma
 $(SETUPROOT)/execution_reduction_plan.o: $(SETUPROOT)/solvcon/buffer/execution/reduction_plan.cpp Makefile
 	c++ $(CFLAGS) -c $< -o $@
 
+$(SETUPROOT)/execution_reduction_schedule.o: $(SETUPROOT)/solvcon/buffer/execution/reduction_schedule.cpp Makefile
+	c++ $(CFLAGS) -c $< -o $@
+
 $(SETUPROOT)/execution_matmul_plan.o: $(SETUPROOT)/solvcon/buffer/execution/matmul_plan.cpp Makefile
 	c++ $(CFLAGS) -c $< -o $@
 
@@ -92,6 +95,7 @@ OBJS = \
 	$(SETUPROOT)/SimpleArray.o \
 	$(SETUPROOT)/execution_loop.o \
 	$(SETUPROOT)/execution_reduction_plan.o \
+	$(SETUPROOT)/execution_reduction_schedule.o \
 	$(SETUPROOT)/execution_matmul_plan.o \
 	$(SETUPROOT)/blas_compat.o \
 	$(SETUPROOT)/wrap_ConcreteBuffer.o \

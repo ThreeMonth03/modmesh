@@ -35,11 +35,6 @@ public:
     {
         return m_inner_input;
     }
-    InnerLoopPlan const & inner_loop() const noexcept
-    {
-        return m_inner_loop;
-    }
-    bool inner_contiguous() const noexcept { return m_inner_contiguous; }
 
     template <typename Array>
     static ReductionPlan make(Array const & input,
@@ -55,8 +50,6 @@ private:
     shape_type m_output_shape;
     OperandMapping m_outer_input;
     OperandMapping m_inner_input;
-    InnerLoopPlan m_inner_loop;
-    bool m_inner_contiguous = false;
 }; /* end class ReductionPlan */
 
 template <typename Array>
@@ -114,10 +107,6 @@ ReductionPlan ReductionPlan::make(Array const & input,
     plan.m_inner = LoopDomain(std::move(inner_shape));
     plan.m_outer_input = OperandMapping(std::move(outer_strides));
     plan.m_inner_input = OperandMapping(std::move(inner_strides));
-    small_vector<OperandMapping> const inner_mappings{
-        plan.m_inner_input};
-    plan.m_inner_loop = InnerLoopPlan(plan.m_inner, inner_mappings);
-    plan.m_inner_contiguous = plan.m_inner_input.is_row_major(plan.m_inner);
     return plan;
 }
 
@@ -155,15 +144,18 @@ private:
     size_t m_output_index = 0;
 }; /* end class ReductionSliceCursor */
 
+class ReductionSchedule;
+
 class ReducedOffsetCursor
 {
 public:
     ReducedOffsetCursor(ReductionPlan const & plan,
+                        ReductionSchedule const & schedule,
                         ssize_t outer_offset);
 
     explicit operator bool() const noexcept
     {
-        if (m_plan->inner_contiguous())
+        if (m_inner_contiguous)
         {
             return m_index < m_plan->inner().size();
         }
@@ -171,7 +163,7 @@ public:
     }
     ssize_t offset() const noexcept
     {
-        if (m_plan->inner_contiguous())
+        if (m_inner_contiguous)
         {
             return m_outer_offset + static_cast<ssize_t>(m_index);
         }
@@ -179,7 +171,7 @@ public:
     }
     void advance()
     {
-        if (m_plan->inner_contiguous())
+        if (m_inner_contiguous)
         {
             ++m_index;
         }
@@ -192,6 +184,7 @@ public:
 private:
     ReductionPlan const * m_plan;
     ssize_t m_outer_offset;
+    bool m_inner_contiguous;
     size_t m_index = 0;
     small_vector<OperandMapping> m_mappings;
     MappedOffsetCursor m_cursor;

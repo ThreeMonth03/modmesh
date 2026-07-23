@@ -5,7 +5,8 @@
  * BSD 3-Clause License, see COPYING
  */
 
-#include <solvcon/buffer/execution/reduction_plan.hpp>
+#include <solvcon/buffer/execution/reduction_outer.hpp>
+#include <solvcon/buffer/execution/reduction_schedule.hpp>
 #include <solvcon/math/math.hpp>
 #include <solvcon/simd/simd.hpp>
 
@@ -40,6 +41,8 @@ public:
     using value_type = T;
     using real_type = typename reduction_real<value_type>::type;
     using real_array_type = typename Array::template rebind<real_type>;
+    using outer_executor =
+        OuterReductionExecutor<Array, value_type, real_type>;
 
     static Array mean(Array const & input, ReductionPlan const & plan);
     static value_type mean(Array const & input);
@@ -65,9 +68,11 @@ private:
         Array const & weight, ReductionPlan const & plan);
     static value_type execute_sum(Array const & input,
                                   ReductionPlan const & plan,
+                                  ReductionSchedule const & schedule,
                                   ssize_t outer_offset);
     static value_type execute_mean(Array const & input,
                                    ReductionPlan const & plan,
+                                   ReductionSchedule const & schedule,
                                    ssize_t outer_offset);
     static value_type execute_weight_sum(
         Array const & weight,
@@ -84,10 +89,12 @@ private:
     static real_type execute_squared_difference(
         Array const & input,
         ReductionPlan const & plan,
+        ReductionSchedule const & schedule,
         ssize_t outer_offset,
         value_type mean_value);
     static real_type execute_variance(Array const & input,
                                       ReductionPlan const & plan,
+                                      ReductionSchedule const & schedule,
                                       ssize_t outer_offset,
                                       size_t ddof);
 }; /* end class ReductionExecutor */
@@ -119,6 +126,7 @@ typename ReductionExecutor<Array, T>::value_type
 ReductionExecutor<Array, T>::execute_sum(
     Array const & input,
     ReductionPlan const & plan,
+    ReductionSchedule const & schedule,
     ssize_t outer_offset)
 {
     value_type const * data = input.logical_data();
@@ -131,7 +139,7 @@ ReductionExecutor<Array, T>::execute_sum(
         return simd::sum(start, start + plan.inner().size());
     }
     value_type total{};
-    InnerLoopPlan const & inner = plan.inner_loop();
+    InnerLoopPlan const & inner = schedule.inner_loop();
     for (InnerLoopCursor cursor(inner); cursor;
          cursor.advance())
     {
@@ -151,6 +159,7 @@ typename ReductionExecutor<Array, T>::value_type
 ReductionExecutor<Array, T>::execute_mean(
     Array const & input,
     ReductionPlan const & plan,
+    ReductionSchedule const & schedule,
     ssize_t outer_offset)
 {
     if (plan.inner().empty())
@@ -159,7 +168,7 @@ ReductionExecutor<Array, T>::execute_mean(
             "planned mean of an empty reduction domain");
     }
 
-    return execute_sum(input, plan, outer_offset) /
+    return execute_sum(input, plan, schedule, outer_offset) /
            static_cast<value_type>(plan.inner().size());
 }
 
@@ -167,12 +176,18 @@ template <typename Array, typename T>
 Array ReductionExecutor<Array, T>::mean(
     Array const & input, ReductionPlan const & plan)
 {
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
+    if (schedule.traversal() == ReductionTraversal::outer_contiguous)
+    {
+        return outer_executor::mean(input, plan);
+    }
+
     Array output(plan.output_shape());
     value_type * output_data = output.logical_data();
     for (ReductionSliceCursor cursor(plan); cursor; cursor.advance())
     {
         output_data[cursor.output_index()] = execute_mean(
-            input, plan, cursor.input_offset());
+            input, plan, schedule, cursor.input_offset());
     }
     return output;
 }
@@ -187,7 +202,8 @@ ReductionExecutor<Array, T>::mean(Array const & input)
             "planned mean of an empty reduction domain");
     }
     ReductionPlan const plan = ReductionPlan::make_all(input);
-    return execute_mean(input, plan, 0);
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
+    return execute_mean(input, plan, schedule, 0);
 }
 
 template <typename Array, typename T>
@@ -281,6 +297,7 @@ Array ReductionExecutor<Array, T>::average(
     Array const & weight,
     ReductionPlan const & plan)
 {
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
     OperandMapping const weight_mapping = make_weight_mapping(weight, plan);
     small_vector<OperandMapping> const inner_mappings{
         plan.inner_input(), weight_mapping};
@@ -292,6 +309,12 @@ Array ReductionExecutor<Array, T>::average(
         throw std::runtime_error(
             "planned average total weight is zero");
     }
+    if (schedule.traversal() == ReductionTraversal::outer_contiguous)
+    {
+        return outer_executor::average(
+            input, weight, plan, weight_mapping, total_weight);
+    }
+
     Array output(plan.output_shape());
     value_type * output_data = output.logical_data();
     for (ReductionSliceCursor cursor(plan); cursor; cursor.advance())
@@ -346,6 +369,7 @@ typename ReductionExecutor<Array, T>::real_type
 ReductionExecutor<Array, T>::execute_squared_difference(
     Array const & input,
     ReductionPlan const & plan,
+    ReductionSchedule const & schedule,
     ssize_t outer_offset,
     value_type mean_value)
 {
@@ -364,7 +388,7 @@ ReductionExecutor<Array, T>::execute_squared_difference(
     }
 
     real_type total{};
-    InnerLoopPlan const & inner = plan.inner_loop();
+    InnerLoopPlan const & inner = schedule.inner_loop();
     for (InnerLoopCursor cursor(inner); cursor;
          cursor.advance())
     {
@@ -392,6 +416,7 @@ typename ReductionExecutor<Array, T>::real_type
 ReductionExecutor<Array, T>::execute_variance(
     Array const & input,
     ReductionPlan const & plan,
+    ReductionSchedule const & schedule,
     ssize_t outer_offset,
     size_t ddof)
 {
@@ -402,9 +427,10 @@ ReductionExecutor<Array, T>::execute_variance(
             "planned variance ddof exceeds reduction size");
     }
 
-    value_type const mean_value = execute_mean(input, plan, outer_offset);
+    value_type const mean_value = execute_mean(
+        input, plan, schedule, outer_offset);
     real_type const total = execute_squared_difference(
-        input, plan, outer_offset, mean_value);
+        input, plan, schedule, outer_offset, mean_value);
     return total / static_cast<real_type>(count - ddof);
 }
 
@@ -415,12 +441,18 @@ ReductionExecutor<Array, T>::variance(
     ReductionPlan const & plan,
     size_t ddof)
 {
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
+    if (schedule.traversal() == ReductionTraversal::outer_contiguous)
+    {
+        return outer_executor::variance(input, plan, ddof);
+    }
+
     real_array_type output(plan.output_shape());
     real_type * output_data = output.logical_data();
     for (ReductionSliceCursor cursor(plan); cursor; cursor.advance())
     {
         output_data[cursor.output_index()] = execute_variance(
-            input, plan, cursor.input_offset(), ddof);
+            input, plan, schedule, cursor.input_offset(), ddof);
     }
     return output;
 }
@@ -430,7 +462,8 @@ typename ReductionExecutor<Array, T>::real_type
 ReductionExecutor<Array, T>::variance(Array const & input, size_t ddof)
 {
     ReductionPlan const plan = ReductionPlan::make_all(input);
-    return execute_variance(input, plan, 0, ddof);
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
+    return execute_variance(input, plan, schedule, 0, ddof);
 }
 
 template <typename Array, typename T>
@@ -449,11 +482,14 @@ Array ReductionExecutor<Array, T>::collect(
     Array output(plan.output_shape());
     value_type * output_data = output.logical_data();
     value_type const * input_data = input.logical_data();
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
     for (ReductionSliceCursor slice(plan); slice; slice.advance())
     {
         small_vector<value_type> values(plan.inner().size());
         size_t value_index = 0;
-        for (ReducedOffsetCursor cursor(plan, slice.input_offset()); cursor;
+        for (ReducedOffsetCursor cursor(
+                 plan, schedule, slice.input_offset());
+             cursor;
              cursor.advance())
         {
             values[value_index++] = input_data[cursor.offset()];
@@ -477,8 +513,10 @@ ReductionExecutor<Array, T>::collect(Array const & input, Finalize finalize)
 
     small_vector<value_type> values(plan.inner().size());
     value_type const * input_data = input.logical_data();
+    ReductionSchedule const schedule = ReductionSchedule::make(plan);
     size_t value_index = 0;
-    for (ReducedOffsetCursor cursor(plan, 0); cursor; cursor.advance())
+    for (ReducedOffsetCursor cursor(plan, schedule, 0); cursor;
+         cursor.advance())
     {
         values[value_index++] = input_data[cursor.offset()];
     }

@@ -13,6 +13,8 @@ set(SOLVCON_BUFFER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/elementwise_kernel.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/elementwise.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_plan.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_schedule.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_outer.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/matmul_plan.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/matmul.hpp
@@ -29,6 +31,7 @@ set(SOLVCON_BUFFER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleArray.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/loop.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_plan.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_schedule.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/matmul_plan.cpp
     CACHE FILEPATH "" FORCE)
 

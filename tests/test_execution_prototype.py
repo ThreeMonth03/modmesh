@@ -142,6 +142,30 @@ class PlannedReductionTC(unittest.TestCase):
 
         np.testing.assert_allclose(result.ndarray, expected)
 
+    def test_fortran_outer_contiguous_reductions(self):
+        values = np.arange(5 * 7, dtype='float64').reshape(5, 7)
+        values = np.asfortranarray(
+            values * 0.25 + 1.0, dtype='float64')
+        weights = np.arange(7, dtype='float64') + 1.0
+        sarr = make_array(values)
+
+        operations = {
+            'mean': np.mean,
+            'var': np.var,
+            'std': np.std,
+        }
+        for operation, reference in operations.items():
+            with self.subTest(operation=operation):
+                result = getattr(
+                    sarr, f'_planned_{operation}')((1,))
+                np.testing.assert_allclose(
+                    result.ndarray, reference(values, axis=1))
+
+        result = sarr._planned_average((1,), make_array(weights))
+        np.testing.assert_allclose(
+            result.ndarray,
+            np.average(values, axis=1, weights=weights))
+
     def test_empty_kept_domain(self):
         values = solvcon.SimpleArrayFloat64(shape=(0, 3), value=0.0)
         result = values._planned_mean((1,))
@@ -240,6 +264,12 @@ class PlannedTypedExecutionTC(unittest.TestCase):
                 result = array_type(array=transposed)._planned_var((2,))
                 np.testing.assert_allclose(
                     result.ndarray, np.var(transposed, axis=2), rtol=1e-5)
+
+                fortran = np.asfortranarray(
+                    values.reshape(6, 4), dtype=dtype)
+                result = array_type(array=fortran)._planned_var((1,))
+                np.testing.assert_allclose(
+                    result.ndarray, np.var(fortran, axis=1), rtol=1e-5)
 
                 matrix_rhs = np.arange(
                     20, dtype=dtype).reshape(1, 1, 4, 5) + 1
