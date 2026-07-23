@@ -1,37 +1,35 @@
 \begin{pspicture}(0,0)(15,8)
 \psset{framearc=.12,framesep=.12}
 
-\rput(3.75,7.45){\psframebox{Existing signed-stride layout}}
-\rput(11.25,7.45){\psframebox{OperationDefinition}}
+\rput(7.5,7.45){\psframebox{Existing signed-stride layout}}
+\psline{->}(7.5,7.15)(7.5,6.55)
+\rput(7.5,6.25){\psframebox{LoopDomain / OperandMapping / InnerLoopPlan}}
 
-\psline{->}(3.75,7.15)(3.75,6.55)
-\rput(3.75,6.25){\psframebox{LoopDomain and OperandMapping}}
+\psline{->}(7.5,5.95)(2.5,5.05)
+\psline{->}(7.5,5.95)(7.5,5.05)
+\psline{->}(7.5,5.95)(12.5,5.05)
+\rput(2.5,4.75){\psframebox{ElementwisePlan}}
+\rput(7.5,4.75){\psframebox{ReductionPlan}}
+\rput(12.5,4.75){\psframebox{MatmulPlan}}
 
-\psline{->}(11.25,7.15)(11.25,6.55)
-\rput(11.25,6.25){\psframebox{broadcast / reduction / iteration / compute}}
-
-\psline{->}(3.75,5.95)(7.5,5.05)
-\psline{->}(11.25,5.95)(7.5,5.05)
-\rput(7.5,4.75){\psframebox{make\_operation\_plan}}
-
-\psline{->}(7.5,4.45)(2.5,3.65)
+\psline{->}(2.5,4.45)(2.5,3.65)
 \psline{->}(7.5,4.45)(7.5,3.65)
-\psline{->}(7.5,4.45)(12.5,3.65)
+\psline{->}(12.5,4.45)(12.5,3.65)
+\rput(2.5,3.35){\psframebox{ElementwiseExecutor}}
+\rput(7.5,3.35){\psframebox{ReductionSchedule / Executor}}
+\rput(12.5,3.35){\psframebox{MatmulExecutor}}
 
-\rput(2.5,3.35){\psframebox{ElementwisePlan}}
-\rput(7.5,3.35){\psframebox{ReductionPlan}}
-\rput(12.5,3.35){\psframebox{MatmulPlan}}
+\rput(1.1,2.25){\psframebox{typed kernel}}
+\psline{->}(1.1,2.55)(2.0,3.05)
+\rput(6.1,2.25){\psframebox{reducer state}}
+\psline{->}(6.1,2.55)(7.0,3.05)
 
-\psline{->}(2.5,3.05)(2.5,1.9)
-\psline{->}(7.5,3.05)(7.5,2.65)
-\psline{->}(12.5,3.05)(12.5,1.9)
+\psline{->}(2.5,3.05)(2.5,1.55)
+\psline{->}(7.5,3.05)(7.5,1.55)
+\psline{->}(12.5,3.05)(12.5,1.55)
+\rput(2.5,1.25){\psframebox{contiguous / inner / mapped}}
+\rput(7.5,1.25){\psframebox{slice / outer tile / collect}}
+\rput(12.5,1.25){\psframebox{direct / descriptor / pack / BLAS}}
 
-\rput(2.5,1.6){\psframebox{SIMD / inner / mapped}}
-\rput(7.5,2.35){\psframebox{ReductionSchedule}}
-\rput(12.5,1.6){\psframebox{direct / pack / BLAS}}
-
-\psline{->}(7.5,2.05)(7.5,1.15)
-\rput(7.5,.85){\psframebox{slice / outer tile / collect}}
-
-\rput(7.5,.2){Compile-time rule selection; family-specific runtime plans}
+\rput(7.5,.35){Shared coordinate facts; family-owned topology and dispatch}
 \end{pspicture}
