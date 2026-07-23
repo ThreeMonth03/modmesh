@@ -12,13 +12,33 @@ namespace solvcon
 {
 
 float dot_blas(ssize_t size, float const * lhs, float const * rhs);
+float dot_blas(ssize_t size,
+               float const * lhs,
+               ssize_t lhs_increment,
+               float const * rhs,
+               ssize_t rhs_increment);
 double dot_blas(ssize_t size, double const * lhs, double const * rhs);
+double dot_blas(ssize_t size,
+                double const * lhs,
+                ssize_t lhs_increment,
+                double const * rhs,
+                ssize_t rhs_increment);
 Complex<float> dot_blas(ssize_t size,
                         Complex<float> const * lhs,
                         Complex<float> const * rhs);
+Complex<float> dot_blas(ssize_t size,
+                        Complex<float> const * lhs,
+                        ssize_t lhs_increment,
+                        Complex<float> const * rhs,
+                        ssize_t rhs_increment);
 Complex<double> dot_blas(ssize_t size,
                          Complex<double> const * lhs,
                          Complex<double> const * rhs);
+Complex<double> dot_blas(ssize_t size,
+                         Complex<double> const * lhs,
+                         ssize_t lhs_increment,
+                         Complex<double> const * rhs,
+                         ssize_t rhs_increment);
 void gemv_blas(ssize_t m,
                ssize_t n,
                float const * matrix,
@@ -27,10 +47,26 @@ void gemv_blas(ssize_t m,
                bool transpose_matrix);
 void gemv_blas(ssize_t m,
                ssize_t n,
+               float const * matrix,
+               float const * vector,
+               float * result,
+               bool transpose_matrix,
+               ssize_t leading_dimension,
+               ssize_t vector_increment);
+void gemv_blas(ssize_t m,
+               ssize_t n,
                double const * matrix,
                double const * vector,
                double * result,
                bool transpose_matrix);
+void gemv_blas(ssize_t m,
+               ssize_t n,
+               double const * matrix,
+               double const * vector,
+               double * result,
+               bool transpose_matrix,
+               ssize_t leading_dimension,
+               ssize_t vector_increment);
 void gemv_blas(ssize_t m,
                ssize_t n,
                Complex<float> const * matrix,
@@ -39,10 +75,26 @@ void gemv_blas(ssize_t m,
                bool transpose_matrix);
 void gemv_blas(ssize_t m,
                ssize_t n,
+               Complex<float> const * matrix,
+               Complex<float> const * vector,
+               Complex<float> * result,
+               bool transpose_matrix,
+               ssize_t leading_dimension,
+               ssize_t vector_increment);
+void gemv_blas(ssize_t m,
+               ssize_t n,
                Complex<double> const * matrix,
                Complex<double> const * vector,
                Complex<double> * result,
                bool transpose_matrix);
+void gemv_blas(ssize_t m,
+               ssize_t n,
+               Complex<double> const * matrix,
+               Complex<double> const * vector,
+               Complex<double> * result,
+               bool transpose_matrix,
+               ssize_t leading_dimension,
+               ssize_t vector_increment);
 void gemm_blas(ssize_t m,
                ssize_t n,
                ssize_t k,

@@ -63,8 +63,21 @@ private:
                                      Array const & rhs,
                                      BlasMatrixLayout const & lhs_layout,
                                      BlasMatrixLayout const & rhs_layout);
+    static Array execute_vector_blas(MatmulPlan const & plan,
+                                     Array const & lhs,
+                                     Array const & rhs);
+    static Array execute_vector_batch_blas(MatmulPlan const & plan,
+                                           Array const & lhs,
+                                           Array const & rhs);
+    static void execute_gemv(MatmulPlan const & plan,
+                             BlasMatrixLayout const & layout,
+                             value_type const * lhs_data,
+                             value_type const * rhs_data,
+                             value_type * output_data);
     static Array execute_packed_blas(Array const & lhs,
                                      Array const & rhs);
+    static Array execute_vector_blas_dispatch(
+        MatmulPlan const & plan, Array const & lhs, Array const & rhs);
     static Array execute_packed_batch_blas(Array const & lhs,
                                            Array const & rhs,
                                            bool pack_lhs,
@@ -208,6 +221,114 @@ Array MatmulExecutor<Array, T>::execute_matrix_blas(
 }
 
 template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_vector_blas(
+    MatmulPlan const & plan,
+    Array const & lhs,
+    Array const & rhs)
+{
+    Array output(plan.output_shape());
+    value_type * output_data = output.logical_data();
+    if (plan.lhs_vector() && plan.rhs_vector())
+    {
+        output_data[0] = dot_blas(
+            plan.inner_size(),
+            lhs.logical_data(),
+            plan.lhs_inner_stride(),
+            rhs.logical_data(),
+            plan.rhs_inner_stride());
+        return output;
+    }
+
+    std::optional<BlasMatrixLayout> const layout =
+        plan.lhs_vector() ? rhs_blas_layout(plan)
+                          : lhs_blas_layout(plan);
+    if (!layout)
+    {
+        return execute_generic(plan, lhs, rhs);
+    }
+    execute_gemv(plan,
+                 layout.value(),
+                 lhs.logical_data(),
+                 rhs.logical_data(),
+                 output_data);
+    return output;
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_vector_batch_blas(
+    MatmulPlan const & plan,
+    Array const & lhs,
+    Array const & rhs)
+{
+    std::optional<BlasMatrixLayout> const layout =
+        plan.lhs_vector() ? rhs_blas_layout(plan)
+                          : lhs_blas_layout(plan);
+    if (!layout)
+    {
+        return execute_generic(plan, lhs, rhs);
+    }
+    Array output(plan.output_shape());
+    value_type * output_data = output.logical_data();
+    value_type const * lhs_data = lhs.logical_data();
+    value_type const * rhs_data = rhs.logical_data();
+    small_vector<OperandMapping> const batch_mappings{
+        plan.output_batch(), plan.lhs_batch(), plan.rhs_batch()};
+    for (MappedOffsetCursor cursor(plan.batch(), batch_mappings); cursor;
+         cursor.advance())
+    {
+        execute_gemv(plan,
+                     layout.value(),
+                     lhs_data + cursor.offset(1),
+                     rhs_data + cursor.offset(2),
+                     output_data + cursor.offset(0));
+    }
+    return output;
+}
+
+template <typename Array, typename T>
+void MatmulExecutor<Array, T>::execute_gemv(
+    MatmulPlan const & plan,
+    BlasMatrixLayout const & layout,
+    value_type const * lhs_data,
+    value_type const * rhs_data,
+    value_type * output_data)
+{
+    if (plan.lhs_vector())
+    {
+        bool const transpose = !layout.transpose();
+        ssize_t const rows = layout.transpose()
+                                 ? plan.columns()
+                                 : plan.inner_size();
+        ssize_t const columns = layout.transpose()
+                                    ? plan.inner_size()
+                                    : plan.columns();
+        gemv_blas(rows,
+                  columns,
+                  rhs_data,
+                  lhs_data,
+                  output_data,
+                  transpose,
+                  layout.leading_dimension(),
+                  plan.lhs_inner_stride());
+        return;
+    }
+    ssize_t const rows = layout.transpose()
+                             ? plan.inner_size()
+                             : plan.rows();
+    ssize_t const columns = layout.transpose()
+                                ? plan.rows()
+                                : plan.inner_size();
+    gemv_blas(rows,
+              columns,
+              lhs_data,
+              rhs_data,
+              output_data,
+              layout.transpose(),
+              layout.leading_dimension(),
+              plan.rhs_inner_stride());
+}
+
+template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::execute_packed_blas(
     Array const & lhs, Array const & rhs)
 {
@@ -228,6 +349,61 @@ Array MatmulExecutor<Array, T>::execute_packed_blas(
 
     helper_type helper(*ready_lhs, *ready_rhs);
     return helper.matmul_blas();
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_vector_blas_dispatch(
+    MatmulPlan const & plan,
+    Array const & lhs,
+    Array const & rhs)
+{
+    if (plan.lhs_vector() && plan.rhs_vector() &&
+        (plan.lhs_inner_stride() <= 0 ||
+         plan.rhs_inner_stride() <= 0))
+    {
+        return execute_generic(plan, lhs, rhs);
+    }
+    if (plan.batch().rank() != 0)
+    {
+        std::optional<BlasMatrixLayout> const matrix_layout =
+            plan.lhs_vector() ? rhs_blas_layout(plan)
+                              : lhs_blas_layout(plan);
+        if (!matrix_layout)
+        {
+            return execute_generic(plan, lhs, rhs);
+        }
+    }
+    bool const pack_lhs =
+        plan.lhs_vector()
+            ? plan.lhs_inner_stride() <= 0
+            : !lhs_blas_layout(plan);
+    bool const pack_rhs =
+        plan.rhs_vector()
+            ? plan.rhs_inner_stride() <= 0
+            : !rhs_blas_layout(plan);
+    std::optional<Array> packed_lhs;
+    std::optional<Array> packed_rhs;
+    Array const * ready_lhs = &lhs;
+    Array const * ready_rhs = &rhs;
+    if (pack_lhs)
+    {
+        packed_lhs.emplace(lhs.to_row_major());
+        ready_lhs = &packed_lhs.value();
+    }
+    if (pack_rhs)
+    {
+        packed_rhs.emplace(rhs.to_row_major());
+        ready_rhs = &packed_rhs.value();
+    }
+
+    MatmulPlan const ready_plan =
+        MatmulPlan::make(*ready_lhs, *ready_rhs);
+    if (ready_plan.batch().rank() != 0)
+    {
+        return execute_vector_batch_blas(
+            ready_plan, *ready_lhs, *ready_rhs);
+    }
+    return execute_vector_blas(ready_plan, *ready_lhs, *ready_rhs);
 }
 
 template <typename Array, typename T>
@@ -296,22 +472,23 @@ Array MatmulExecutor<Array, T>::execute_unbatched_blas(
         helper_type helper(lhs, rhs);
         return helper.matmul_blas();
     }
-    if (lhs.ndim() == 2 && rhs.ndim() == 2)
+    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    if (plan.lhs_vector() || plan.rhs_vector())
     {
-        MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
-        std::optional<BlasMatrixLayout> const lhs_layout =
-            lhs_blas_layout(plan);
-        std::optional<BlasMatrixLayout> const rhs_layout =
-            rhs_blas_layout(plan);
-        if (lhs_layout && rhs_layout)
-        {
-            return execute_matrix_blas(
-                plan,
-                lhs,
-                rhs,
-                lhs_layout.value(),
-                rhs_layout.value());
-        }
+        return execute_vector_blas_dispatch(plan, lhs, rhs);
+    }
+    std::optional<BlasMatrixLayout> const lhs_layout =
+        lhs_blas_layout(plan);
+    std::optional<BlasMatrixLayout> const rhs_layout =
+        rhs_blas_layout(plan);
+    if (lhs_layout && rhs_layout)
+    {
+        return execute_matrix_blas(
+            plan,
+            lhs,
+            rhs,
+            lhs_layout.value(),
+            rhs_layout.value());
     }
     return execute_packed_blas(lhs, rhs);
 }
@@ -327,8 +504,13 @@ Array MatmulExecutor<Array, T>::execute_unbatched(
             return execute_unbatched_blas(lhs, rhs);
         }
     }
-    helper_type helper(lhs, rhs);
-    return helper.matmul();
+    if (lhs.is_c_contiguous() && rhs.is_c_contiguous())
+    {
+        helper_type helper(lhs, rhs);
+        return helper.matmul();
+    }
+    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    return execute_generic(plan, lhs, rhs);
 }
 
 template <typename Array, typename T>
@@ -345,6 +527,10 @@ Array MatmulExecutor<Array, T>::execute_planned(
             static_cast<size_t>(plan.inner_size());
         bool const matrix_operands =
             !plan.lhs_vector() && !plan.rhs_vector();
+        if (!matrix_operands && matrix_work >= BLAS_MINIMUM_WORK)
+        {
+            return execute_vector_blas_dispatch(plan, lhs, rhs);
+        }
         if (matrix_operands && matrix_work >= BLAS_MINIMUM_WORK)
         {
             std::optional<BlasMatrixLayout> const lhs_layout =

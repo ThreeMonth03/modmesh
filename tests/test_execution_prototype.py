@@ -244,6 +244,50 @@ class PlannedMatmulTC(unittest.TestCase):
                     rhs_strides=case_rhs.strides):
                 self.assert_matmul_equal(case_lhs, case_rhs)
 
+    def test_non_contiguous_vector_roles(self):
+        vector = np.arange(8, dtype='float64')
+        matrix = np.arange(8 * 6, dtype='float64').reshape(8, 6)
+        cases = (
+            (vector[::-1], vector[::-1]),
+            (make_stepped(vector), make_stepped(vector)),
+            (vector[::-1], matrix),
+            (make_stepped(vector), matrix),
+            (vector, np.asfortranarray(matrix, dtype='float64')),
+            (vector, matrix[::-1, :]),
+            (vector, make_stepped(matrix)),
+            (matrix.T, vector[::-1]),
+            (np.asfortranarray(matrix.T, dtype='float64'), vector),
+            (make_stepped(matrix.T), vector),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_strides=case_lhs.strides,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
+    def test_strided_blas_vector_roles(self):
+        long_vector = np.arange(4096, dtype='float64') / 4096
+        matrix = np.arange(
+            65 * 65, dtype='float64').reshape(65, 65) / (65 * 65)
+        vector = np.arange(65, dtype='float64') / 65
+        batch = np.arange(
+            2 * 65 * 65, dtype='float64').reshape(2, 65, 65)
+        batch /= 2 * 65 * 65
+        cases = (
+            (make_stepped(long_vector), make_stepped(long_vector)),
+            (make_stepped(vector),
+             np.asfortranarray(matrix, dtype='float64')),
+            (np.asfortranarray(matrix, dtype='float64'),
+             make_stepped(vector)),
+            (make_stepped(vector), batch),
+            (batch, make_stepped(vector)),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_strides=case_lhs.strides,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
     def test_batched_broadcasting(self):
         lhs = np.arange(2 * 1 * 3 * 4, dtype='float64')
         lhs = lhs.reshape(2, 1, 3, 4)
@@ -252,6 +296,30 @@ class PlannedMatmulTC(unittest.TestCase):
         cases = (
             (lhs, rhs),
             (make_stepped(lhs), make_stepped(rhs)),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_strides=case_lhs.strides,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
+    def test_batched_vector_roles(self):
+        vector = np.arange(4, dtype='float64')
+        rhs = np.arange(
+            2 * 1 * 4 * 3, dtype='float64').reshape(2, 1, 4, 3)
+        lhs = np.arange(
+            2 * 1 * 3 * 4, dtype='float64').reshape(2, 1, 3, 4)
+        cases = (
+            (vector, rhs),
+            (vector[::-1], rhs),
+            (make_stepped(vector), rhs),
+            (vector, rhs[..., ::-1, :]),
+            (vector, make_stepped(rhs)),
+            (lhs, vector),
+            (lhs, vector[::-1]),
+            (lhs, make_stepped(vector)),
+            (lhs[..., ::-1], vector),
+            (make_stepped(lhs), vector),
         )
         for case_lhs, case_rhs in cases:
             with self.subTest(
