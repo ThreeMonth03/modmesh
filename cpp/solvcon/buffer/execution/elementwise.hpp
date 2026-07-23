@@ -7,6 +7,7 @@
 
 #include <solvcon/buffer/execution/elementwise_kernel.hpp>
 #include <solvcon/buffer/execution/loop.hpp>
+#include <solvcon/buffer/execution/operation.hpp>
 
 #include <cstdint>
 #include <stdexcept>
@@ -38,11 +39,13 @@ public:
     }
     ElementwiseLayout layout() const noexcept { return m_layout; }
 
-    template <typename Array, typename... Inputs>
+    template <typename Operation, typename Array, typename... Inputs>
+    requires ElementwiseOperation<Operation>
     static ElementwisePlan make(Array const & output,
                                 Inputs const &... inputs);
 
-    template <typename Array>
+    template <typename Operation, typename Array>
+    requires ElementwiseOperation<Operation>
     static ElementwisePlan make_scalar(Array const & output,
                                        Array const & lhs);
 
@@ -53,15 +56,13 @@ private:
     ElementwiseLayout m_layout = ElementwiseLayout::strided;
 }; /* end class ElementwisePlan */
 
-template <typename Array, typename... Inputs>
-ElementwisePlan ElementwisePlan::make(Array const & output,
-                                      Inputs const &... inputs)
+template <typename Operation, typename Array, typename... Inputs>
+requires ElementwiseOperation<Operation>
+ElementwisePlan ElementwisePlan::make(
+    Array const & output, Inputs const &... inputs)
 {
-    shape_type result_shape;
-    ((result_shape = LoopDomain::common_shape(
-          result_shape, inputs.shape())),
-     ...);
-    LoopDomain const domain(result_shape);
+    LoopDomain const domain =
+        Operation::broadcasting_rule::make_domain(inputs...);
     if (output.shape() != domain.shape())
     {
         throw std::invalid_argument(
@@ -72,8 +73,8 @@ ElementwisePlan ElementwisePlan::make(Array const & output,
     plan.m_domain = domain;
     plan.m_output = OperandMapping::exact(output.stride());
     plan.m_inputs = small_vector<OperandMapping>{
-        OperandMapping::broadcast(
-            inputs.shape(), inputs.stride(), domain)...};
+        Operation::broadcasting_rule::make_mapping(
+            inputs, domain)...};
 
     bool row_major = plan.m_output.is_row_major(domain);
     bool common_dense_layout = plan.m_output.is_dense(domain);
@@ -94,9 +95,10 @@ ElementwisePlan ElementwisePlan::make(Array const & output,
     return plan;
 }
 
-template <typename Array>
-ElementwisePlan ElementwisePlan::make_scalar(Array const & output,
-                                             Array const & lhs)
+template <typename Operation, typename Array>
+requires ElementwiseOperation<Operation>
+ElementwisePlan ElementwisePlan::make_scalar(
+    Array const & output, Array const & lhs)
 {
     if (output.shape() != lhs.shape())
     {
@@ -108,7 +110,8 @@ ElementwisePlan ElementwisePlan::make_scalar(Array const & output,
     plan.m_domain = LoopDomain(output.shape());
     plan.m_output = OperandMapping::exact(output.stride());
     plan.m_inputs = small_vector<OperandMapping>{
-        OperandMapping::exact(lhs.stride())};
+        Operation::broadcasting_rule::make_mapping(
+            lhs, plan.m_domain)};
     bool const row_major = plan.m_output.is_row_major(plan.m_domain) &&
                            plan.m_inputs[0].is_row_major(plan.m_domain);
     bool const common_dense_layout =
@@ -125,50 +128,72 @@ ElementwisePlan ElementwisePlan::make_scalar(Array const & output,
     return plan;
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
+template <typename Operation, typename Array, typename... Inputs>
+auto ElementwiseIterationRule::make(
+    Array const & output, Inputs const &... inputs)
+{
+    static_assert(ElementwiseOperation<Operation>);
+    return ElementwisePlan::make<Operation>(output, inputs...);
+}
+
+template <typename Operation, typename Array>
+auto ElementwiseIterationRule::make_scalar(
+    Array const & output, Array const & input)
+{
+    static_assert(ElementwiseOperation<Operation>);
+    return ElementwisePlan::make_scalar<Operation>(output, input);
+}
+
+template <typename Operation, typename T>
+concept ExecutableElementwiseOperation =
+    ElementwiseOperation<Operation> &&
+    ElementwiseKernel<typename Operation::compute_rule, T>;
+
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
 class ElementwiseExecutor
 {
 public:
     using value_type = T;
+    using kernel_type = typename Operation::compute_rule;
 
     static Array transform(Array const & lhs,
                            Array const & rhs,
-                           Kernel kernel);
+                           kernel_type kernel);
     static Array transform(Array const & lhs,
                            value_type scalar,
-                           Kernel kernel);
+                           kernel_type kernel);
     static void transform_into(Array & destination,
                                Array const & rhs,
-                               Kernel kernel);
+                               kernel_type kernel);
     static void transform_into(Array & destination,
                                value_type scalar,
-                               Kernel kernel);
+                               kernel_type kernel);
 
 private:
     static void execute(ElementwisePlan const & plan,
                         Array & output,
                         Array const & lhs,
                         Array const & rhs,
-                        Kernel kernel);
+                        kernel_type kernel);
     static void execute_scalar(ElementwisePlan const & plan,
                                Array & output,
                                Array const & lhs,
                                value_type scalar,
-                               Kernel kernel);
+                               kernel_type kernel);
     static void execute_into(Array & destination,
                              Array const & rhs,
-                             Kernel kernel);
+                             kernel_type kernel);
 }; /* end class ElementwiseExecutor */
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-void ElementwiseExecutor<Array, Kernel, T>::execute(
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+void ElementwiseExecutor<Array, T, Operation>::execute(
     ElementwisePlan const & plan,
     Array & output,
     Array const & lhs,
     Array const & rhs,
-    Kernel kernel)
+    kernel_type kernel)
 {
     value_type * output_data = output.logical_data();
     value_type const * lhs_data = lhs.logical_data();
@@ -186,10 +211,10 @@ void ElementwiseExecutor<Array, Kernel, T>::execute(
         ssize_t const rhs_offset = rhs_mapping.span(
                                                   plan.domain())
                                        .minimum();
-        Kernel::contiguous(output_data + output_offset,
-                           plan.domain().size(),
-                           lhs_data + lhs_offset,
-                           rhs_data + rhs_offset);
+        kernel_type::contiguous(output_data + output_offset,
+                                plan.domain().size(),
+                                lhs_data + lhs_offset,
+                                rhs_data + rhs_offset);
         return;
     }
 
@@ -208,17 +233,18 @@ void ElementwiseExecutor<Array, Kernel, T>::execute(
                 lhs_stride == 1 &&
                 rhs_stride == 1)
             {
-                Kernel::contiguous(output_data + cursor.offset(0),
-                                   inner.size(),
-                                   lhs_data + cursor.offset(1),
-                                   rhs_data + cursor.offset(2));
+                kernel_type::contiguous(
+                    output_data + cursor.offset(0),
+                    inner.size(),
+                    lhs_data + cursor.offset(1),
+                    rhs_data + cursor.offset(2));
                 continue;
             }
             if (output_stride == 1 &&
                 lhs_stride == 1 &&
                 rhs_stride == 0)
             {
-                Kernel::contiguous_scalar(
+                kernel_type::contiguous_scalar(
                     output_data + cursor.offset(0),
                     inner.size(),
                     lhs_data + cursor.offset(1),
@@ -250,14 +276,14 @@ void ElementwiseExecutor<Array, Kernel, T>::execute(
     }
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-void ElementwiseExecutor<Array, Kernel, T>::execute_scalar(
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+void ElementwiseExecutor<Array, T, Operation>::execute_scalar(
     ElementwisePlan const & plan,
     Array & output,
     Array const & lhs,
     value_type scalar,
-    Kernel kernel)
+    kernel_type kernel)
 {
     value_type * output_data = output.logical_data();
     value_type const * lhs_data = lhs.logical_data();
@@ -267,7 +293,7 @@ void ElementwiseExecutor<Array, Kernel, T>::execute_scalar(
         output_data += plan.output().span(plan.domain()).minimum();
         lhs_data += lhs_mapping.span(plan.domain()).minimum();
         size_t const count = plan.domain().size();
-        Kernel::contiguous_scalar(
+        kernel_type::contiguous_scalar(
             output_data, count, lhs_data, scalar);
         return;
     }
@@ -305,14 +331,14 @@ void ElementwiseExecutor<Array, Kernel, T>::execute_scalar(
     }
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-Array ElementwiseExecutor<Array, Kernel, T>::transform(
-    Array const & lhs, Array const & rhs, Kernel kernel)
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+Array ElementwiseExecutor<Array, T, Operation>::transform(
+    Array const & lhs, Array const & rhs, kernel_type kernel)
 {
-    shape_type const result_shape = LoopDomain::common_shape(
-        lhs.shape(), rhs.shape());
-    LoopDomain const result_domain(result_shape);
+    LoopDomain const result_domain =
+        Operation::broadcasting_rule::make_domain(lhs, rhs);
+    shape_type const & result_shape = result_domain.shape();
     OperandMapping const lhs_mapping = OperandMapping::exact(lhs.stride());
     bool const preserve_layout = result_shape == lhs.shape() &&
                                  result_shape == rhs.shape() &&
@@ -322,15 +348,16 @@ Array ElementwiseExecutor<Array, Kernel, T>::transform(
                        ? LayoutAllocator<Array>::allocate(
                              result_shape, lhs.stride())
                        : Array(result_shape);
-    ElementwisePlan const plan = ElementwisePlan::make(output, lhs, rhs);
+    ElementwisePlan const plan =
+        make_operation_plan<Operation>(output, lhs, rhs);
     execute(plan, output, lhs, rhs, kernel);
     return output;
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-Array ElementwiseExecutor<Array, Kernel, T>::transform(
-    Array const & lhs, value_type scalar, Kernel kernel)
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+Array ElementwiseExecutor<Array, T, Operation>::transform(
+    Array const & lhs, value_type scalar, kernel_type kernel)
 {
     LoopDomain const domain(lhs.shape());
     OperandMapping const mapping = OperandMapping::exact(lhs.stride());
@@ -338,16 +365,16 @@ Array ElementwiseExecutor<Array, Kernel, T>::transform(
                        ? LayoutAllocator<Array>::allocate(
                              lhs.shape(), lhs.stride())
                        : Array(lhs.shape());
-    ElementwisePlan const plan = ElementwisePlan::make_scalar(
-        output, lhs);
+    ElementwisePlan const plan =
+        make_scalar_operation_plan<Operation>(output, lhs);
     execute_scalar(plan, output, lhs, scalar, kernel);
     return output;
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-void ElementwiseExecutor<Array, Kernel, T>::transform_into(
-    Array & destination, Array const & rhs, Kernel kernel)
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+void ElementwiseExecutor<Array, T, Operation>::transform_into(
+    Array & destination, Array const & rhs, kernel_type kernel)
 {
     bool const exact_alias =
         destination.logical_data() == rhs.logical_data() &&
@@ -363,19 +390,19 @@ void ElementwiseExecutor<Array, Kernel, T>::transform_into(
     execute_into(destination, rhs, kernel);
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-void ElementwiseExecutor<Array, Kernel, T>::execute_into(
-    Array & destination, Array const & rhs, Kernel kernel)
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+void ElementwiseExecutor<Array, T, Operation>::execute_into(
+    Array & destination, Array const & rhs, kernel_type kernel)
 {
     if (destination.shape() == rhs.shape() &&
         destination.stride() == rhs.stride() &&
         ((destination.is_c_contiguous() && rhs.is_c_contiguous()) ||
          (destination.is_f_contiguous() && rhs.is_f_contiguous())))
     {
-        Kernel::inplace(destination.logical_data(),
-                        destination.size(),
-                        rhs.logical_data());
+        kernel_type::inplace(destination.logical_data(),
+                             destination.size(),
+                             rhs.logical_data());
         return;
     }
 
@@ -388,27 +415,28 @@ void ElementwiseExecutor<Array, Kernel, T>::execute_into(
                                    destination.shape(),
                                    destination.stride())
                                    .minimum();
-        Kernel::inplace(destination.logical_data() + offset,
-                        destination.size(),
-                        rhs.logical_data() + offset);
+        kernel_type::inplace(destination.logical_data() + offset,
+                             destination.size(),
+                             rhs.logical_data() + offset);
         return;
     }
 
-    ElementwisePlan const plan = ElementwisePlan::make(
-        destination, destination, rhs);
+    ElementwisePlan const plan =
+        make_operation_plan<Operation>(
+            destination, destination, rhs);
     execute(plan, destination, destination, rhs, kernel);
 }
 
-template <typename Array, typename Kernel, typename T>
-requires ElementwiseKernel<Kernel, T>
-void ElementwiseExecutor<Array, Kernel, T>::transform_into(
-    Array & destination, value_type scalar, Kernel kernel)
+template <typename Array, typename T, typename Operation>
+requires ExecutableElementwiseOperation<Operation, T>
+void ElementwiseExecutor<Array, T, Operation>::transform_into(
+    Array & destination, value_type scalar, kernel_type kernel)
 {
     if (destination.is_c_contiguous() || destination.is_f_contiguous())
     {
-        Kernel::scalar(destination.logical_data(),
-                       destination.size(),
-                       scalar);
+        kernel_type::scalar(destination.logical_data(),
+                            destination.size(),
+                            scalar);
         return;
     }
 
@@ -420,12 +448,13 @@ void ElementwiseExecutor<Array, Kernel, T>::transform_into(
                                 destination.shape(),
                                 destination.stride())
                                 .minimum();
-        Kernel::scalar(data, destination.size(), scalar);
+        kernel_type::scalar(data, destination.size(), scalar);
         return;
     }
 
-    ElementwisePlan const plan = ElementwisePlan::make_scalar(
-        destination, destination);
+    ElementwisePlan const plan =
+        make_scalar_operation_plan<Operation>(
+            destination, destination);
     execute_scalar(plan, destination, destination, scalar, kernel);
 }
 

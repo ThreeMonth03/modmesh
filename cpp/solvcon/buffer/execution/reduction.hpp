@@ -43,6 +43,12 @@ public:
     using real_array_type = typename Array::template rebind<real_type>;
     using outer_executor =
         OuterReductionExecutor<Array, value_type, real_type>;
+    using mean_compute_rule_type =
+        typename mean_operation_type<value_type>::compute_rule;
+    using average_compute_rule_type =
+        typename average_operation_type<value_type>::compute_rule;
+    using variance_compute_rule_type =
+        typename variance_operation_type<real_type>::compute_rule;
 
     static Array mean(Array const & input, ReductionPlan const & plan);
     static value_type mean(Array const & input);
@@ -168,8 +174,9 @@ ReductionExecutor<Array, T>::execute_mean(
             "planned mean of an empty reduction domain");
     }
 
-    return execute_sum(input, plan, schedule, outer_offset) /
-           static_cast<value_type>(plan.inner().size());
+    return mean_compute_rule_type::finalize(
+        execute_sum(input, plan, schedule, outer_offset),
+        plan.inner().size());
 }
 
 template <typename Array, typename T>
@@ -201,7 +208,9 @@ ReductionExecutor<Array, T>::mean(Array const & input)
         throw std::runtime_error(
             "planned mean of an empty reduction domain");
     }
-    ReductionPlan const plan = ReductionPlan::make_all(input);
+    ReductionPlan const plan =
+        make_all_operation_plan<
+            mean_operation_type<value_type>>(input);
     ReductionSchedule const schedule = ReductionSchedule::make(plan);
     return execute_mean(input, plan, schedule, 0);
 }
@@ -288,7 +297,8 @@ ReductionExecutor<Array, T>::execute_average(
             }
         }
     }
-    return weighted_sum / total_weight;
+    return average_compute_rule_type::finalize(
+        weighted_sum, total_weight);
 }
 
 template <typename Array, typename T>
@@ -341,7 +351,9 @@ ReductionExecutor<Array, T>::average(
         throw std::invalid_argument(
             "weight shape does not match input shape");
     }
-    ReductionPlan const plan = ReductionPlan::make_all(input);
+    ReductionPlan const plan =
+        make_all_operation_plan<
+            average_operation_type<value_type>>(input);
     OperandMapping const weight_mapping = OperandMapping::exact(
         weight.stride());
     small_vector<OperandMapping> const inner_mappings{
@@ -431,7 +443,8 @@ ReductionExecutor<Array, T>::execute_variance(
         input, plan, schedule, outer_offset);
     real_type const total = execute_squared_difference(
         input, plan, schedule, outer_offset, mean_value);
-    return total / static_cast<real_type>(count - ddof);
+    return variance_compute_rule_type::finalize(
+        total, count, ddof);
 }
 
 template <typename Array, typename T>
@@ -461,7 +474,9 @@ template <typename Array, typename T>
 typename ReductionExecutor<Array, T>::real_type
 ReductionExecutor<Array, T>::variance(Array const & input, size_t ddof)
 {
-    ReductionPlan const plan = ReductionPlan::make_all(input);
+    ReductionPlan const plan =
+        make_all_operation_plan<
+            variance_operation_type<real_type>>(input);
     ReductionSchedule const schedule = ReductionSchedule::make(plan);
     return execute_variance(input, plan, schedule, 0, ddof);
 }
@@ -504,7 +519,8 @@ template <typename Finalize>
 typename ReductionExecutor<Array, T>::value_type
 ReductionExecutor<Array, T>::collect(Array const & input, Finalize finalize)
 {
-    ReductionPlan const plan = ReductionPlan::make_all(input);
+    ReductionPlan const plan =
+        make_all_operation_plan<collection_operation_type>(input);
     if (plan.inner().empty())
     {
         throw std::runtime_error(

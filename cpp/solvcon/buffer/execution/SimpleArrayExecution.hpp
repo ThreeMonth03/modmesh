@@ -67,23 +67,41 @@ public:
     static A planned_matmul(A const & self, A const & other);
 
 private:
-    using add_executor = execution::ElementwiseExecutor<
+    using add_operation_type = execution::elementwise_operation_type<
+        execution::AddKernel<value_type>>;
+    using subtract_operation_type = execution::elementwise_operation_type<
+        execution::SubtractKernel<value_type>>;
+    using multiply_operation_type = execution::elementwise_operation_type<
+        execution::MultiplyKernel<value_type>>;
+    using divide_operation_type = execution::elementwise_operation_type<
+        execution::DivideKernel<value_type>>;
+    using mean_operation_type =
+        execution::mean_operation_type<value_type>;
+    using average_operation_type =
+        execution::average_operation_type<value_type>;
+    using variance_operation_type =
+        execution::variance_operation_type<real_type>;
+    using collection_operation_type =
+        execution::collection_operation_type;
+
+    using add_executor_type = execution::ElementwiseExecutor<
         A,
-        execution::AddKernel<value_type>,
-        value_type>;
-    using subtract_executor = execution::ElementwiseExecutor<
+        value_type,
+        add_operation_type>;
+    using subtract_executor_type = execution::ElementwiseExecutor<
         A,
-        execution::SubtractKernel<value_type>,
-        value_type>;
-    using multiply_executor = execution::ElementwiseExecutor<
+        value_type,
+        subtract_operation_type>;
+    using multiply_executor_type = execution::ElementwiseExecutor<
         A,
-        execution::MultiplyKernel<value_type>,
-        value_type>;
-    using divide_executor = execution::ElementwiseExecutor<
+        value_type,
+        multiply_operation_type>;
+    using divide_executor_type = execution::ElementwiseExecutor<
         A,
-        execution::DivideKernel<value_type>,
-        value_type>;
-    using matmul_executor = execution::MatmulExecutor<A, value_type>;
+        value_type,
+        divide_operation_type>;
+    using matmul_executor_type =
+        execution::MatmulExecutor<A, value_type>;
 
     class MedianFinalize
     {
@@ -120,7 +138,7 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_add(
     A const & self, A const & other)
 {
-    return add_executor::transform(
+    return add_executor_type::transform(
         self, other, execution::AddKernel<value_type>{});
 }
 
@@ -128,7 +146,7 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_add(
     A const & self, value_type scalar)
 {
-    return add_executor::transform(
+    return add_executor_type::transform(
         self, scalar, execution::AddKernel<value_type>{});
 }
 
@@ -137,7 +155,7 @@ A SimpleArrayExecution<A, T>::planned_sub(
     A const & self, A const & other)
 {
     reject_boolean("sub");
-    return subtract_executor::transform(
+    return subtract_executor_type::transform(
         self, other, execution::SubtractKernel<value_type>{});
 }
 
@@ -146,7 +164,7 @@ A SimpleArrayExecution<A, T>::planned_sub(
     A const & self, value_type scalar)
 {
     reject_boolean("sub");
-    return subtract_executor::transform(
+    return subtract_executor_type::transform(
         self, scalar, execution::SubtractKernel<value_type>{});
 }
 
@@ -154,7 +172,7 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_mul(
     A const & self, A const & other)
 {
-    return multiply_executor::transform(
+    return multiply_executor_type::transform(
         self, other, execution::MultiplyKernel<value_type>{});
 }
 
@@ -162,7 +180,7 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_mul(
     A const & self, value_type scalar)
 {
-    return multiply_executor::transform(
+    return multiply_executor_type::transform(
         self, scalar, execution::MultiplyKernel<value_type>{});
 }
 
@@ -171,7 +189,7 @@ A SimpleArrayExecution<A, T>::planned_div(
     A const & self, A const & other)
 {
     reject_boolean("div");
-    return divide_executor::transform(
+    return divide_executor_type::transform(
         self, other, execution::DivideKernel<value_type>{});
 }
 
@@ -180,7 +198,7 @@ A SimpleArrayExecution<A, T>::planned_div(
     A const & self, value_type scalar)
 {
     reject_boolean("div");
-    return divide_executor::transform(
+    return divide_executor_type::transform(
         self, scalar, execution::DivideKernel<value_type>{});
 }
 
@@ -188,7 +206,7 @@ template <typename A, typename T>
 void SimpleArrayExecution<A, T>::planned_iadd(
     A & self, A const & other)
 {
-    add_executor::transform_into(
+    add_executor_type::transform_into(
         self, other, execution::AddKernel<value_type>{});
 }
 
@@ -196,7 +214,7 @@ template <typename A, typename T>
 void SimpleArrayExecution<A, T>::planned_iadd(
     A & self, value_type scalar)
 {
-    add_executor::transform_into(
+    add_executor_type::transform_into(
         self, scalar, execution::AddKernel<value_type>{});
 }
 
@@ -205,7 +223,7 @@ void SimpleArrayExecution<A, T>::planned_isub(
     A & self, A const & other)
 {
     reject_boolean("isub");
-    subtract_executor::transform_into(
+    subtract_executor_type::transform_into(
         self, other, execution::SubtractKernel<value_type>{});
 }
 
@@ -214,7 +232,7 @@ void SimpleArrayExecution<A, T>::planned_isub(
     A & self, value_type scalar)
 {
     reject_boolean("isub");
-    subtract_executor::transform_into(
+    subtract_executor_type::transform_into(
         self, scalar, execution::SubtractKernel<value_type>{});
 }
 
@@ -222,7 +240,7 @@ template <typename A, typename T>
 void SimpleArrayExecution<A, T>::planned_imul(
     A & self, A const & other)
 {
-    multiply_executor::transform_into(
+    multiply_executor_type::transform_into(
         self, other, execution::MultiplyKernel<value_type>{});
 }
 
@@ -230,7 +248,7 @@ template <typename A, typename T>
 void SimpleArrayExecution<A, T>::planned_imul(
     A & self, value_type scalar)
 {
-    multiply_executor::transform_into(
+    multiply_executor_type::transform_into(
         self, scalar, execution::MultiplyKernel<value_type>{});
 }
 
@@ -239,7 +257,7 @@ void SimpleArrayExecution<A, T>::planned_idiv(
     A & self, A const & other)
 {
     reject_boolean("idiv");
-    divide_executor::transform_into(
+    divide_executor_type::transform_into(
         self, other, execution::DivideKernel<value_type>{});
 }
 
@@ -248,7 +266,7 @@ void SimpleArrayExecution<A, T>::planned_idiv(
     A & self, value_type scalar)
 {
     reject_boolean("idiv");
-    divide_executor::transform_into(
+    divide_executor_type::transform_into(
         self, scalar, execution::DivideKernel<value_type>{});
 }
 
@@ -256,7 +274,9 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_mean(
     A const & self, shape_type const & axes)
 {
-    auto const plan = execution::ReductionPlan::make(self, axes, false);
+    auto const plan =
+        execution::make_operation_plan<mean_operation_type>(
+            self, axes, false);
     return execution::ReductionExecutor<A, value_type>::mean(self, plan);
 }
 
@@ -273,7 +293,9 @@ A SimpleArrayExecution<A, T>::planned_average(
     shape_type const & axes,
     A const & weight)
 {
-    auto const plan = execution::ReductionPlan::make(self, axes, false);
+    auto const plan =
+        execution::make_operation_plan<average_operation_type>(
+            self, axes, false);
     return execution::ReductionExecutor<A, value_type>::average(
         self, weight, plan);
 }
@@ -294,7 +316,9 @@ SimpleArrayExecution<A, T>::planned_var(
     shape_type const & axes,
     size_t ddof)
 {
-    auto const plan = execution::ReductionPlan::make(self, axes, false);
+    auto const plan =
+        execution::make_operation_plan<variance_operation_type>(
+            self, axes, false);
     return execution::ReductionExecutor<A, value_type>::variance(
         self, plan, ddof);
 }
@@ -335,7 +359,9 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_median(
     A const & self, shape_type const & axes)
 {
-    auto const plan = execution::ReductionPlan::make(self, axes, false);
+    auto const plan =
+        execution::make_operation_plan<collection_operation_type>(
+            self, axes, false);
     return execution::ReductionExecutor<A, value_type>::collect(
         self, plan, MedianFinalize(self));
 }
@@ -352,7 +378,7 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_matmul(
     A const & self, A const & other)
 {
-    return matmul_executor::multiply(self, other);
+    return matmul_executor_type::multiply(self, other);
 }
 
 } /* end namespace detail */

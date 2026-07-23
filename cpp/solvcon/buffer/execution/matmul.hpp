@@ -25,6 +25,7 @@ class MatmulExecutor
 public:
     using value_type = T;
     using helper_type = SimpleArrayMatmulHelper<Array, value_type>;
+    using operation_type = matrix_multiply_operation_type;
 
     static Array multiply(Array const & lhs, Array const & rhs);
 
@@ -250,7 +251,8 @@ Array MatmulExecutor<Array, T>::execute_unbatched_blas(
 {
     if (lhs.ndim() == 2 && rhs.ndim() == 2)
     {
-        MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+        MatmulPlan const plan =
+            make_operation_plan<operation_type>(lhs, rhs);
         std::optional<BlasMatrixLayout> const lhs_layout =
             lhs_blas_layout(plan);
         std::optional<BlasMatrixLayout> const rhs_layout =
@@ -329,7 +331,8 @@ Array MatmulExecutor<Array, T>::multiply(
     {
         return execute_unbatched(lhs, rhs);
     }
-    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    MatmulPlan const plan =
+        make_operation_plan<operation_type>(lhs, rhs);
     return execute_planned(plan, lhs, rhs);
 }
 

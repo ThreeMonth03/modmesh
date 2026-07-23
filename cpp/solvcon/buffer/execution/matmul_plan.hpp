@@ -5,7 +5,7 @@
  * BSD 3-Clause License, see COPYING
  */
 
-#include <solvcon/buffer/execution/loop.hpp>
+#include <solvcon/buffer/execution/operation.hpp>
 
 #include <format>
 #include <stdexcept>
@@ -53,7 +53,8 @@ public:
     bool lhs_vector() const noexcept { return m_lhs_vector; }
     bool rhs_vector() const noexcept { return m_rhs_vector; }
 
-    template <typename Array>
+    template <typename Operation, typename Array>
+    requires MatmulOperation<Operation>
     static MatmulPlan make(Array const & lhs, Array const & rhs);
 
 private:
@@ -75,7 +76,8 @@ private:
     bool m_rhs_vector = false;
 }; /* end class MatmulPlan */
 
-template <typename Array>
+template <typename Operation, typename Array>
+requires MatmulOperation<Operation>
 MatmulPlan MatmulPlan::make(Array const & lhs, Array const & rhs)
 {
     if (lhs.ndim() == 0 || rhs.ndim() == 0)
@@ -97,7 +99,8 @@ MatmulPlan MatmulPlan::make(Array const & lhs, Array const & rhs)
     plan.m_columns = plan.m_rhs_vector
                          ? 1
                          : rhs.shape(rhs.ndim() - 1);
-    if (plan.m_inner_size != rhs_inner_size)
+    if (!Operation::reduction_rule::compatible(
+            plan.m_inner_size, rhs_inner_size))
     {
         throw std::invalid_argument(std::format(
             "planned matmul shape mismatch: lhs={} rhs={}",
@@ -119,11 +122,11 @@ MatmulPlan MatmulPlan::make(Array const & lhs, Array const & rhs)
         lhs.stride().begin(), lhs.stride().begin() + lhs_batch_rank);
     stride_type const rhs_batch_strides(
         rhs.stride().begin(), rhs.stride().begin() + rhs_batch_rank);
-    plan.m_batch = LoopDomain(LoopDomain::common_shape(
-        lhs_batch_shape, rhs_batch_shape));
-    plan.m_lhs_batch = OperandMapping::broadcast(
+    plan.m_batch = Operation::broadcasting_rule::make_domain(
+        lhs_batch_shape, rhs_batch_shape);
+    plan.m_lhs_batch = Operation::broadcasting_rule::make_mapping(
         lhs_batch_shape, lhs_batch_strides, plan.m_batch);
-    plan.m_rhs_batch = OperandMapping::broadcast(
+    plan.m_rhs_batch = Operation::broadcasting_rule::make_mapping(
         rhs_batch_shape, rhs_batch_strides, plan.m_batch);
 
     plan.m_output_shape = plan.m_batch.shape();
@@ -161,6 +164,14 @@ MatmulPlan MatmulPlan::make(Array const & lhs, Array const & rhs)
                                    ? 0
                                    : rhs.stride(rhs.ndim() - 1);
     return plan;
+}
+
+template <typename Operation, typename Array>
+auto MatmulIterationRule::make(
+    Array const & lhs, Array const & rhs)
+{
+    static_assert(MatmulOperation<Operation>);
+    return MatmulPlan::make<Operation>(lhs, rhs);
 }
 
 } /* end namespace execution */
