@@ -1,0 +1,25 @@
+\begin{pspicture}(0,0)(13.5,6.2)
+\psset{framearc=.12,framesep=.12}
+
+\rput(6.75,5.65){\psframebox{Existing signed-stride layout}}
+\psline{->}(6.75,5.35)(6.75,4.8)
+\rput(6.75,4.5){\psframebox{Loop domains and operand mappings}}
+
+\psline{->}(6.75,4.2)(2.25,3.35)
+\psline{->}(6.75,4.2)(6.75,3.35)
+\psline{->}(6.75,4.2)(11.25,3.35)
+
+\rput(2.25,3){\psframebox{ElementwisePlan}}
+\rput(6.75,3){\psframebox{ReductionPlan}}
+\rput(11.25,3){\psframebox{MatmulPlan}}
+
+\psline{->}(2.25,2.7)(2.25,1.85)
+\psline{->}(6.75,2.7)(6.75,1.85)
+\psline{->}(11.25,2.7)(11.25,1.85)
+
+\rput(2.25,1.5){\psframebox{SIMD / broadcast inner / strided}}
+\rput(6.75,1.5){\psframebox{stream / collect}}
+\rput(11.25,1.5){\psframebox{direct / pack+BLAS / batch}}
+
+\rput(6.75,.45){Shared mapping facts; family-specific dispatch and kernels}
+\end{pspicture}
