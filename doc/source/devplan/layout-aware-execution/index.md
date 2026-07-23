@@ -441,21 +441,20 @@ and planned medians, both ratios, and correctness status.  Transposed
 F-contiguous inputs and genuine non-dense step-two views are separate rows.
 No range-only family summary substitutes for those measurements.
 
-The clean optimized run used revision `d320b553`, Linux on WSL2 x86-64,
+The clean optimized run used revision `953a9623`, Linux on WSL2 x86-64,
 Python 3.12.7, NumPy 2.3.0, 15 paired samples, five warmups, one thread, and
 CPU 0.  It produced the following complete classification:
 
 | Comparison | Faster | Parity | Slower | Inconclusive | Not comparable |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Legacy versus planned | 75 planned | 2 | 0 | 16 | 24 legacy incorrect and 37 new only |
-| NumPy versus planned | 76 planned | 3 | 13 NumPy | 62 | 0 |
+| Legacy versus planned | 74 planned | 0 | 0 | 19 | 24 legacy incorrect and 37 new only |
+| NumPy versus planned | 74 planned | 0 | 5 NumPy | 75 | 0 |
 
 Every correct legacy route with a conclusive classification improved or
-reached parity, and no route regressed.  The 13 conclusive NumPy-faster rows
-are eight axis reductions, four full reductions, and one microsecond in-place
-array case.  The 12 reduction rows motivate the tiled multi-output reduction
-experiment below rather than another common plan layer.  The in-place case
-remains subject to the paired microbenchmark caveat below.
+reached parity, and no route regressed.  The five conclusive NumPy-faster rows
+are mean reductions: one axis reduction and four full-layout cases.  They
+motivate specialized accumulation work rather than another common plan
+layer.
 
 The matrix includes out-of-place array and scalar arithmetic, shape
 broadcasting, in-place array, scalar, and broadcast operations, axis and full
