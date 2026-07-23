@@ -74,8 +74,7 @@ private:
     static Array execute_unbatched(Array const & lhs,
                                    Array const & rhs);
     static Array execute_unbatched_blas(Array const & lhs,
-                                        Array const & rhs,
-                                        helper_type & helper);
+                                        Array const & rhs);
     static Array execute_planned(MatmulPlan const & plan,
                                  Array const & lhs,
                                  Array const & rhs);
@@ -290,8 +289,13 @@ bool MatmulExecutor<Array, T>::large_enough_for_blas(
 
 template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::execute_unbatched_blas(
-    Array const & lhs, Array const & rhs, helper_type & helper)
+    Array const & lhs, Array const & rhs)
 {
+    if (lhs.is_c_contiguous() && rhs.is_c_contiguous())
+    {
+        helper_type helper(lhs, rhs);
+        return helper.matmul_blas();
+    }
     if (lhs.ndim() == 2 && rhs.ndim() == 2)
     {
         MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
@@ -309,10 +313,6 @@ Array MatmulExecutor<Array, T>::execute_unbatched_blas(
                 rhs_layout.value());
         }
     }
-    if (lhs.is_c_contiguous() && rhs.is_c_contiguous())
-    {
-        return helper.matmul_blas();
-    }
     return execute_packed_blas(lhs, rhs);
 }
 
@@ -320,14 +320,14 @@ template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::execute_unbatched(
     Array const & lhs, Array const & rhs)
 {
-    helper_type helper(lhs, rhs);
     if constexpr (can_matmul_blas_v<value_type>)
     {
         if (large_enough_for_blas(lhs, rhs))
         {
-            return execute_unbatched_blas(lhs, rhs, helper);
+            return execute_unbatched_blas(lhs, rhs);
         }
     }
+    helper_type helper(lhs, rhs);
     return helper.matmul();
 }
 
