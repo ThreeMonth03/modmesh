@@ -2,7 +2,7 @@
 
 ## Recorded environment
 
-- Code revision: `0db69f45b0184fc6eb7b64df14b5f026905c2447`.
+- Code revision: `e3a0ba930bccab72107eeb8454083940db83d398`.
 - Dirty tree: `false`.
 - Platform: `macOS-26.5.1-arm64-arm-64bit`.
 - Machine: `arm64`.
@@ -28,7 +28,7 @@ $ python3 profiling/profile_execution_prototype.py \
     --benchmark-only \
     --repeat 15 \
     --warmup 5 \
-    --output /tmp/solvcon-execution-0db69f45.json
+    --output /tmp/solvcon-execution-e3a0ba93.json
 ```
 
 The profiler silently checks every route against NumPy before
@@ -53,14 +53,14 @@ sample. Call order rotates within each paired sample.
 
 | Family | Cases | Improved | Parity | Regression | Legacy incorrect | New only | Inconclusive |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| elementwise-array | 20 | 12 | 0 | 0 | 8 | 0 | 0 |
+| elementwise-array | 20 | 11 | 0 | 0 | 8 | 0 | 1 |
 | elementwise-scalar | 16 | 12 | 0 | 0 | 4 | 0 | 0 |
 | elementwise-broadcast | 24 | 0 | 0 | 0 | 0 | 24 | 0 |
-| inplace-array | 12 | 0 | 0 | 0 | 8 | 0 | 4 |
+| inplace-array | 12 | 0 | 4 | 0 | 8 | 0 | 0 |
 | inplace-broadcast | 8 | 0 | 0 | 0 | 0 | 8 | 0 |
-| inplace-scalar | 12 | 0 | 1 | 0 | 4 | 0 | 7 |
+| inplace-scalar | 12 | 0 | 7 | 0 | 4 | 0 | 1 |
 | reduction-axis | 25 | 25 | 0 | 0 | 0 | 0 | 0 |
-| reduction-full | 20 | 16 | 4 | 0 | 0 | 0 | 0 |
+| reduction-full | 20 | 18 | 1 | 0 | 0 | 0 | 1 |
 | matmul | 12 | 10 | 2 | 0 | 0 | 0 | 0 |
 | matmul-batch | 5 | 0 | 0 | 0 | 0 | 5 | 0 |
 
@@ -70,205 +70,205 @@ sample. Call order rotates within each paired sample.
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.471975 | 0.951040 | 0.467329 | 2.027x (1.915..2.406) | 1.006x (0.927..1.044) | improved | inconclusive |
-| sub | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.470771 | 0.943985 | 0.467787 | 2.016x (1.927..2.065) | 1.008x (0.897..1.050) | improved | inconclusive |
-| mul | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.474035 | 0.974754 | 0.468988 | 2.010x (1.878..2.116) | 1.007x (1.000..1.045) | improved | parity |
-| div | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.589558 | 1.096627 | 0.597096 | 1.855x (1.705..2.004) | 0.981x (0.910..1.057) | improved | inconclusive |
-| add | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.529146 | 1.011612 | 0.529271 | 1.921x (1.838..1.996) | 0.999x (0.971..1.011) | improved | parity |
-| sub | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.556129 | 1.067027 | 0.529906 | 1.934x (1.869..2.173) | 1.000x (0.972..1.088) | improved | inconclusive |
-| mul | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.597229 | 1.157648 | 0.604096 | 1.903x (1.739..2.138) | 0.987x (0.882..1.013) | improved | inconclusive |
-| div | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.590323 | 1.103990 | 0.589231 | 1.872x (1.824..1.954) | 1.003x (0.945..1.041) | improved | inconclusive |
-| add | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.796035 | 1.105210 | 0.582627 | 1.925x (1.787..2.199) | 1.524x (1.463..1.610) | improved | planned-faster |
-| sub | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.791902 | 1.004304 | 0.517288 | 1.936x (1.821..2.109) | 1.533x (1.501..1.540) | improved | planned-faster |
-| mul | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.907329 | 1.096125 | 0.584233 | 1.919x (1.762..1.985) | 1.541x (1.431..1.722) | improved | planned-faster |
-| div | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.812581 | 1.017383 | 0.532162 | 1.926x (1.748..2.084) | 1.534x (1.444..1.560) | improved | planned-faster |
-| add | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.751746 | n/a | 6.140833 | n/a | 0.123x (0.122..0.124) | legacy-incorrect | numpy-faster |
-| sub | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.764306 | n/a | 6.152567 | n/a | 0.124x (0.122..0.130) | legacy-incorrect | numpy-faster |
-| mul | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.759154 | n/a | 6.131079 | n/a | 0.123x (0.121..0.129) | legacy-incorrect | numpy-faster |
-| div | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.778698 | n/a | 6.091721 | n/a | 0.127x (0.122..0.153) | legacy-incorrect | numpy-faster |
-| add | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.702629 | n/a | 6.117815 | n/a | 0.115x (0.113..0.138) | legacy-incorrect | numpy-faster |
-| sub | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.698444 | n/a | 6.105742 | n/a | 0.115x (0.114..0.119) | legacy-incorrect | numpy-faster |
-| mul | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.701419 | n/a | 6.124858 | n/a | 0.115x (0.114..0.131) | legacy-incorrect | numpy-faster |
-| div | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.716623 | n/a | 6.093315 | n/a | 0.118x (0.115..0.124) | legacy-incorrect | numpy-faster |
+| add | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.620842 | 1.277277 | 0.604806 | 1.962x (1.618..2.487) | 1.040x (0.955..1.524) | improved | inconclusive |
+| sub | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.538090 | 1.081862 | 0.539985 | 1.941x (1.844..2.095) | 0.997x (0.896..1.125) | improved | inconclusive |
+| mul | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.714604 | 1.427433 | 0.724896 | 1.929x (1.873..2.204) | 0.981x (0.880..1.136) | improved | inconclusive |
+| div | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(1024,1), flags=C | 20 | 0.707719 | 1.327035 | 0.655408 | 1.959x (1.568..2.226) | 0.977x (0.743..1.055) | improved | inconclusive |
+| add | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.702227 | 1.417560 | 0.703206 | 1.925x (1.728..2.252) | 0.996x (0.912..1.050) | improved | inconclusive |
+| sub | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.692263 | 1.297898 | 0.643577 | 1.930x (1.683..2.081) | 1.009x (0.923..1.072) | improved | inconclusive |
+| mul | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.615879 | 1.186256 | 0.599129 | 1.902x (1.668..2.138) | 1.003x (0.798..1.108) | improved | inconclusive |
+| div | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs: shape=(1024,1024), strides=(1,1024), flags=F | 20 | 0.587167 | 1.095898 | 0.584490 | 1.903x (1.872..2.036) | 1.018x (0.994..1.059) | improved | inconclusive |
+| add | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 1.067338 | 1.406760 | 0.751971 | 1.850x (0.952..2.060) | 1.509x (0.848..1.846) | inconclusive | inconclusive |
+| sub | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.796702 | 1.028396 | 0.525696 | 1.929x (1.886..2.032) | 1.518x (1.489..1.561) | improved | planned-faster |
+| mul | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.807865 | 1.050704 | 0.539083 | 1.941x (1.852..2.173) | 1.521x (1.488..1.549) | improved | planned-faster |
+| div | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs: shape=(1024,1024), strides=(-1024,-1), flags=N | 20 | 0.818706 | 1.051115 | 0.575956 | 1.899x (1.856..1.950) | 1.522x (1.405..1.544) | improved | planned-faster |
+| add | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.951498 | n/a | 1.172198 | n/a | 0.814x (0.739..0.985) | legacy-incorrect | inconclusive |
+| sub | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 1.102806 | n/a | 1.327623 | n/a | 0.831x (0.816..0.923) | legacy-incorrect | numpy-faster |
+| mul | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 1.101667 | n/a | 1.351321 | n/a | 0.816x (0.807..0.848) | legacy-incorrect | numpy-faster |
+| div | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 1.105498 | n/a | 1.114054 | n/a | 0.993x (0.986..1.035) | legacy-incorrect | parity |
+| add | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.900090 | n/a | 1.004519 | n/a | 0.896x (0.883..0.919) | legacy-incorrect | numpy-faster |
+| sub | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.897969 | n/a | 1.005037 | n/a | 0.896x (0.890..0.917) | legacy-incorrect | numpy-faster |
+| mul | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.898571 | n/a | 1.003200 | n/a | 0.895x (0.866..0.906) | legacy-incorrect | numpy-faster |
+| div | mixed-c-step2 | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs: shape=(1024,1024), strides=(2048,2), flags=S | 20 | 0.904654 | n/a | 0.901754 | n/a | 1.040x (0.995..1.052) | legacy-incorrect | inconclusive |
 
 ### elementwise-scalar
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.299640 | 0.685840 | 0.462196 | 1.477x (1.441..1.535) | 0.649x (0.618..0.676) | improved | numpy-faster |
-| sub | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.296442 | 0.678954 | 0.470081 | 1.443x (1.433..1.506) | 0.633x (0.608..0.645) | improved | numpy-faster |
-| mul | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.299208 | 0.693898 | 0.464169 | 1.493x (1.453..1.542) | 0.644x (0.615..0.655) | improved | numpy-faster |
-| div | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.297781 | 0.713710 | 0.500381 | 1.421x (1.381..1.450) | 0.596x (0.580..0.632) | improved | numpy-faster |
-| add | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.301815 | 0.680638 | 0.464358 | 1.472x (1.448..1.524) | 0.651x (0.625..0.657) | improved | numpy-faster |
-| sub | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.304394 | 0.707140 | 0.472210 | 1.479x (1.449..1.684) | 0.646x (0.617..0.732) | improved | numpy-faster |
-| mul | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.302748 | 0.684321 | 0.464217 | 1.471x (1.426..1.495) | 0.652x (0.628..0.680) | improved | numpy-faster |
-| div | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.304683 | 0.733192 | 0.503750 | 1.447x (1.405..1.560) | 0.605x (0.579..0.634) | improved | numpy-faster |
-| add | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.682335 | 0.684975 | 0.461808 | 1.484x (1.437..1.724) | 1.475x (1.462..1.497) | improved | planned-faster |
-| sub | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.681354 | 0.678725 | 0.468450 | 1.447x (1.435..1.477) | 1.455x (1.450..1.527) | improved | planned-faster |
-| mul | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.682271 | 0.688121 | 0.461746 | 1.488x (1.469..1.584) | 1.478x (1.471..1.484) | improved | planned-faster |
-| div | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.682356 | 0.711483 | 0.498758 | 1.432x (1.395..1.650) | 1.369x (1.359..1.422) | improved | planned-faster |
-| add | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.694004 | n/a | 5.711481 | n/a | 0.122x (0.120..0.123) | legacy-incorrect | numpy-faster |
-| sub | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.695477 | n/a | 5.691548 | n/a | 0.122x (0.120..0.122) | legacy-incorrect | numpy-faster |
-| mul | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.700748 | n/a | 5.725244 | n/a | 0.122x (0.108..0.133) | legacy-incorrect | numpy-faster |
-| div | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.763252 | n/a | 5.532388 | n/a | 0.138x (0.125..0.143) | legacy-incorrect | numpy-faster |
+| add | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.372402 | 0.924535 | 0.398229 | 2.322x (2.073..2.546) | 0.999x (0.921..1.025) | improved | inconclusive |
+| sub | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.304492 | 0.699881 | 0.303023 | 2.290x (2.272..2.352) | 1.004x (0.994..1.009) | improved | parity |
+| mul | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.307517 | 0.732808 | 0.306463 | 2.385x (2.360..2.557) | 1.001x (0.992..1.012) | improved | parity |
+| div | c-contiguous | lhs: shape=(1024,1024), strides=(1024,1), flags=C<br>rhs=scalar(1.0001) | 20 | 0.343371 | 0.822229 | 0.344258 | 2.389x (2.324..2.481) | 0.992x (0.979..1.016) | improved | parity |
+| add | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.347892 | 0.781473 | 0.348219 | 2.244x (2.203..2.293) | 0.999x (0.993..1.006) | improved | parity |
+| sub | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.344408 | 0.764571 | 0.344183 | 2.250x (2.200..2.404) | 1.006x (0.994..1.065) | improved | inconclusive |
+| mul | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.345842 | 0.756913 | 0.347238 | 2.233x (2.180..2.347) | 0.998x (0.987..1.042) | improved | parity |
+| div | f-contiguous | lhs: shape=(1024,1024), strides=(1,1024), flags=F<br>rhs=scalar(1.0001) | 20 | 0.346371 | 0.795344 | 0.347325 | 2.336x (2.274..2.431) | 1.000x (0.979..1.005) | improved | parity |
+| add | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.685190 | 0.706315 | 0.303456 | 2.338x (2.291..2.466) | 2.269x (2.231..2.333) | improved | planned-faster |
+| sub | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.686158 | 0.713400 | 0.303625 | 2.339x (2.300..2.390) | 2.260x (2.220..2.279) | improved | planned-faster |
+| mul | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.685992 | 0.708315 | 0.304027 | 2.330x (2.280..2.398) | 2.254x (2.236..2.272) | improved | planned-faster |
+| div | negative-dense | lhs: shape=(1024,1024), strides=(-1024,-1), flags=N<br>rhs=scalar(1.0001) | 20 | 0.775963 | 0.850148 | 0.343317 | 2.322x (2.150..2.556) | 2.281x (2.243..2.511) | improved | planned-faster |
+| add | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.700652 | n/a | 0.602298 | n/a | 1.163x (1.157..1.169) | legacy-incorrect | planned-faster |
+| sub | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.933208 | n/a | 0.811821 | n/a | 1.154x (0.968..2.655) | legacy-incorrect | inconclusive |
+| mul | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.974967 | n/a | 0.815363 | n/a | 1.175x (1.133..1.257) | legacy-incorrect | planned-faster |
+| div | step2-inner | lhs: shape=(1024,1024), strides=(2048,2), flags=S<br>rhs=scalar(1.0001) | 20 | 0.967533 | n/a | 0.831050 | n/a | 1.153x (1.024..1.177) | legacy-incorrect | inconclusive |
 
 ### elementwise-broadcast
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.036604 | n/a | 0.024829 | n/a | 1.475x (1.438..1.499) | new-only | planned-faster |
-| sub | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.036567 | n/a | 0.024842 | n/a | 1.471x (1.421..1.477) | new-only | planned-faster |
-| mul | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.036571 | n/a | 0.024708 | n/a | 1.479x (1.453..1.487) | new-only | planned-faster |
-| div | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.036558 | n/a | 0.024983 | n/a | 1.464x (1.432..1.474) | new-only | planned-faster |
-| add | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.035425 | n/a | 0.043600 | n/a | 0.810x (0.770..0.818) | new-only | numpy-faster |
-| sub | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.035425 | n/a | 0.043625 | n/a | 0.811x (0.789..0.827) | new-only | numpy-faster |
-| mul | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.035433 | n/a | 0.043767 | n/a | 0.810x (0.802..0.821) | new-only | numpy-faster |
-| div | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.035392 | n/a | 0.043750 | n/a | 0.808x (0.797..0.815) | new-only | numpy-faster |
-| add | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.042717 | n/a | 0.043121 | n/a | 0.991x (0.985..0.998) | new-only | parity |
-| sub | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.042725 | n/a | 0.043196 | n/a | 0.988x (0.987..0.996) | new-only | parity |
-| mul | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.042733 | n/a | 0.043271 | n/a | 0.991x (0.978..0.995) | new-only | parity |
-| div | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.045221 | n/a | 0.043321 | n/a | 1.043x (1.022..1.059) | new-only | inconclusive |
-| add | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.057521 | n/a | 0.382725 | n/a | 0.150x (0.150..0.152) | new-only | numpy-faster |
-| sub | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.057492 | n/a | 0.382525 | n/a | 0.151x (0.150..0.152) | new-only | numpy-faster |
-| mul | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.057525 | n/a | 0.382808 | n/a | 0.150x (0.150..0.151) | new-only | numpy-faster |
-| div | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.057850 | n/a | 0.380575 | n/a | 0.152x (0.150..0.156) | new-only | numpy-faster |
-| add | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085333 | n/a | 0.380517 | n/a | 0.224x (0.223..0.231) | new-only | numpy-faster |
-| sub | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085367 | n/a | 0.380154 | n/a | 0.224x (0.223..0.226) | new-only | numpy-faster |
-| mul | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085367 | n/a | 0.380354 | n/a | 0.224x (0.216..0.226) | new-only | numpy-faster |
-| div | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085446 | n/a | 0.377967 | n/a | 0.226x (0.225..0.229) | new-only | numpy-faster |
-| add | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083183 | n/a | 0.084775 | n/a | 0.978x (0.964..0.987) | new-only | parity |
-| sub | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083308 | n/a | 0.085008 | n/a | 0.979x (0.973..0.986) | new-only | parity |
-| mul | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083117 | n/a | 0.084871 | n/a | 0.978x (0.941..0.982) | new-only | inconclusive |
-| div | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.088125 | n/a | 0.085500 | n/a | 1.031x (1.018..1.035) | new-only | parity |
+| add | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.056704 | n/a | 0.037825 | n/a | 1.488x (1.446..1.522) | new-only | planned-faster |
+| sub | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.057275 | n/a | 0.038762 | n/a | 1.487x (1.432..1.516) | new-only | planned-faster |
+| mul | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.055963 | n/a | 0.037571 | n/a | 1.488x (1.449..1.511) | new-only | planned-faster |
+| div | rhs-row-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.048129 | n/a | 0.032487 | n/a | 1.484x (1.470..1.513) | new-only | planned-faster |
+| add | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.046446 | n/a | 0.031496 | n/a | 1.471x (1.447..1.486) | new-only | planned-faster |
+| sub | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.046829 | n/a | 0.031850 | n/a | 1.472x (1.392..1.509) | new-only | planned-faster |
+| mul | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.048029 | n/a | 0.031775 | n/a | 1.484x (1.401..1.623) | new-only | planned-faster |
+| div | rhs-column-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,1), strides=(2,2), flags=S | 10 | 0.046017 | n/a | 0.031746 | n/a | 1.451x (1.444..1.456) | new-only | planned-faster |
+| add | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.056129 | n/a | 0.059263 | n/a | 0.944x (0.919..0.954) | new-only | inconclusive |
+| sub | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.049338 | n/a | 0.052792 | n/a | 0.949x (0.886..0.959) | new-only | inconclusive |
+| mul | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.048767 | n/a | 0.052108 | n/a | 0.939x (0.883..0.949) | new-only | numpy-faster |
+| div | outer-step2-row | lhs: shape=(256,1), strides=(2,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.051412 | n/a | 0.051775 | n/a | 0.990x (0.976..1.001) | new-only | parity |
+| add | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.065775 | n/a | 0.052883 | n/a | 1.245x (1.230..1.261) | new-only | planned-faster |
+| sub | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.065125 | n/a | 0.052679 | n/a | 1.241x (1.233..1.250) | new-only | planned-faster |
+| mul | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.065025 | n/a | 0.052467 | n/a | 1.239x (1.235..1.247) | new-only | planned-faster |
+| div | lhs-step2-rhs-row | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(1,256), strides=(256,1), flags=CF | 10 | 0.067321 | n/a | 0.054325 | n/a | 1.246x (1.197..1.302) | new-only | planned-faster |
+| add | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085279 | n/a | 0.046108 | n/a | 1.853x (1.840..1.870) | new-only | planned-faster |
+| sub | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085146 | n/a | 0.045963 | n/a | 1.856x (1.841..1.865) | new-only | planned-faster |
+| mul | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085371 | n/a | 0.046408 | n/a | 1.844x (1.830..1.855) | new-only | planned-faster |
+| div | negative-lhs-negative-row | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(1,256), strides=(256,-1), flags=N | 10 | 0.085342 | n/a | 0.046296 | n/a | 1.845x (1.828..1.853) | new-only | planned-faster |
+| add | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083150 | n/a | 0.090254 | n/a | 0.921x (0.907..0.931) | new-only | numpy-faster |
+| sub | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083275 | n/a | 0.090487 | n/a | 0.927x (0.898..0.941) | new-only | numpy-faster |
+| mul | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.083013 | n/a | 0.089854 | n/a | 0.928x (0.909..0.939) | new-only | numpy-faster |
+| div | rank-aligned | lhs: shape=(2,256,1), strides=(256,1,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 10 | 0.088167 | n/a | 0.090704 | n/a | 0.974x (0.968..0.992) | new-only | parity |
 
 ### inplace-array
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.102701 | 0.098812 | 0.098296 | 1.002x (0.999..1.093) | 1.045x (1.011..1.059) | inconclusive | inconclusive |
-| sub | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.148074 | 0.132539 | 0.128828 | 1.006x (0.913..1.812) | 1.072x (0.932..1.174) | inconclusive | inconclusive |
-| mul | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.116972 | 0.111486 | 0.112482 | 0.992x (0.903..1.036) | 1.044x (0.893..1.104) | inconclusive | inconclusive |
-| div | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.122053 | 0.120158 | 0.109499 | 1.003x (0.408..1.450) | 1.079x (0.503..1.341) | inconclusive | inconclusive |
-| add | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.281062 | n/a | 1.897466 | n/a | 0.136x (0.119..0.152) | legacy-incorrect | numpy-faster |
-| sub | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.214697 | n/a | 1.552017 | n/a | 0.137x (0.134..0.143) | legacy-incorrect | numpy-faster |
-| mul | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.216505 | n/a | 1.554894 | n/a | 0.138x (0.135..0.146) | legacy-incorrect | numpy-faster |
-| div | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.217210 | n/a | 1.496273 | n/a | 0.145x (0.143..0.154) | legacy-incorrect | numpy-faster |
-| add | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.205911 | n/a | 1.530378 | n/a | 0.134x (0.133..0.136) | legacy-incorrect | numpy-faster |
-| sub | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.203233 | n/a | 1.532177 | n/a | 0.133x (0.131..0.133) | legacy-incorrect | numpy-faster |
-| mul | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.203987 | n/a | 1.538448 | n/a | 0.133x (0.129..0.134) | legacy-incorrect | numpy-faster |
-| div | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.206204 | n/a | 1.531575 | n/a | 0.135x (0.133..0.295) | legacy-incorrect | numpy-faster |
+| add | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.102812 | 0.098693 | 0.098322 | 1.004x (1.000..1.011) | 1.045x (1.038..1.057) | parity | inconclusive |
+| sub | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.102653 | 0.098280 | 0.098762 | 0.996x (0.992..1.001) | 1.040x (1.034..1.044) | parity | parity |
+| mul | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.102618 | 0.098712 | 0.098952 | 0.998x (0.986..1.007) | 1.037x (1.028..1.045) | parity | parity |
+| div | c-destination-c-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.107681 | 0.099598 | 0.101281 | 0.984x (0.975..0.991) | 1.063x (1.057..1.071) | parity | planned-faster |
+| add | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.209145 | n/a | 0.187408 | n/a | 1.116x (1.109..1.129) | legacy-incorrect | planned-faster |
+| sub | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.207883 | n/a | 0.196824 | n/a | 1.056x (1.009..1.079) | legacy-incorrect | inconclusive |
+| mul | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.208602 | n/a | 0.193949 | n/a | 1.088x (0.850..1.109) | legacy-incorrect | inconclusive |
+| div | negative-destination-c-rhs | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.225910 | n/a | 0.219069 | n/a | 1.042x (0.966..1.073) | legacy-incorrect | inconclusive |
+| add | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.206153 | n/a | 0.201554 | n/a | 1.026x (0.993..1.049) | legacy-incorrect | parity |
+| sub | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.201753 | n/a | 0.200678 | n/a | 1.018x (0.997..1.033) | legacy-incorrect | parity |
+| mul | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.202403 | n/a | 0.202237 | n/a | 1.008x (0.987..1.023) | legacy-incorrect | parity |
+| div | step2-destination-c-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(512,512), strides=(512,1), flags=C | 50 | 0.203857 | n/a | 0.209155 | n/a | 0.976x (0.965..0.982) | legacy-incorrect | parity |
 
 ### inplace-broadcast
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.156195 | n/a | 0.113704 | n/a | 1.371x (1.326..1.416) | new-only | planned-faster |
-| sub | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.154772 | n/a | 0.115036 | n/a | 1.349x (1.291..1.417) | new-only | planned-faster |
-| mul | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.158256 | n/a | 0.117896 | n/a | 1.350x (1.152..1.452) | new-only | planned-faster |
-| div | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.162647 | n/a | 0.120583 | n/a | 1.323x (1.198..1.405) | new-only | planned-faster |
-| add | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.263430 | n/a | 1.560645 | n/a | 0.169x (0.163..0.175) | new-only | numpy-faster |
-| sub | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.257304 | n/a | 1.570261 | n/a | 0.165x (0.160..0.168) | new-only | numpy-faster |
-| mul | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.282643 | n/a | 1.695771 | n/a | 0.170x (0.159..0.246) | new-only | numpy-faster |
-| div | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.286031 | n/a | 1.680417 | n/a | 0.170x (0.148..0.214) | new-only | numpy-faster |
+| add | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.154061 | n/a | 0.114296 | n/a | 1.348x (1.336..1.373) | new-only | planned-faster |
+| sub | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.153085 | n/a | 0.115148 | n/a | 1.332x (1.314..1.385) | new-only | planned-faster |
+| mul | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.153877 | n/a | 0.111865 | n/a | 1.380x (1.346..1.403) | new-only | planned-faster |
+| div | c-destination-row-rhs | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.156276 | n/a | 0.119678 | n/a | 1.310x (1.289..1.329) | new-only | planned-faster |
+| add | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.250426 | n/a | 0.179731 | n/a | 1.393x (1.379..1.401) | new-only | planned-faster |
+| sub | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.251797 | n/a | 0.180244 | n/a | 1.393x (1.382..1.408) | new-only | planned-faster |
+| mul | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.250424 | n/a | 0.179423 | n/a | 1.407x (1.378..1.419) | new-only | planned-faster |
+| div | step2-destination-row-rhs | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs: shape=(1,512), strides=(512,1), flags=CF | 50 | 0.255216 | n/a | 0.183599 | n/a | 1.391x (1.375..1.403) | new-only | planned-faster |
 
 ### inplace-scalar
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| add | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.067223 | 0.068308 | 0.069628 | 1.002x (0.886..1.167) | 1.008x (0.861..1.104) | inconclusive | inconclusive |
-| sub | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.073825 | 0.074519 | 0.073065 | 1.008x (0.950..1.273) | 1.000x (0.951..1.161) | inconclusive | inconclusive |
-| mul | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.133093 | 0.125332 | 0.123623 | 1.052x (0.968..1.202) | 1.017x (0.780..1.254) | inconclusive | inconclusive |
-| div | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.072872 | 0.077627 | 0.077869 | 1.000x (0.967..1.021) | 1.008x (0.972..1.033) | parity | parity |
-| add | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.065125 | 0.063867 | 0.063585 | 1.001x (0.984..1.103) | 1.027x (1.015..1.081) | inconclusive | inconclusive |
-| sub | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.065181 | 0.068347 | 0.064777 | 1.017x (0.945..1.166) | 1.007x (0.901..1.075) | inconclusive | inconclusive |
-| mul | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.071611 | 0.064175 | 0.066863 | 0.965x (0.808..1.105) | 1.007x (0.873..1.265) | inconclusive | inconclusive |
-| div | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.076268 | 0.071926 | 0.072427 | 0.997x (0.866..1.139) | 1.064x (0.893..1.166) | inconclusive | inconclusive |
-| add | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.210274 | n/a | 1.562562 | n/a | 0.141x (0.125..0.194) | legacy-incorrect | numpy-faster |
-| sub | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.181617 | n/a | 1.332817 | n/a | 0.136x (0.135..0.137) | legacy-incorrect | numpy-faster |
-| mul | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.182311 | n/a | 1.344987 | n/a | 0.136x (0.127..0.233) | legacy-incorrect | numpy-faster |
-| div | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.187058 | n/a | 1.311330 | n/a | 0.143x (0.137..0.146) | legacy-incorrect | numpy-faster |
+| add | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.063205 | 0.063225 | 0.063273 | 1.000x (0.986..1.008) | 0.995x (0.983..1.006) | parity | parity |
+| sub | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.063059 | 0.063435 | 0.063325 | 1.002x (0.990..1.011) | 0.996x (0.989..1.001) | parity | parity |
+| mul | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.062979 | 0.062883 | 0.062832 | 0.998x (0.986..1.014) | 1.002x (0.988..1.015) | parity | parity |
+| div | c-destination | destination: shape=(512,512), strides=(512,1), flags=C<br>rhs=scalar(1.0001) | 50 | 0.072553 | 0.070968 | 0.071349 | 0.998x (0.981..1.010) | 1.018x (1.003..1.023) | parity | parity |
+| add | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.063889 | 0.062903 | 0.062930 | 0.997x (0.991..1.012) | 1.016x (1.007..1.024) | parity | parity |
+| sub | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.063921 | 0.062981 | 0.062929 | 1.001x (0.989..1.025) | 1.015x (1.001..1.025) | parity | parity |
+| mul | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.073385 | 0.073599 | 0.072452 | 1.011x (0.991..1.257) | 1.016x (1.000..1.051) | inconclusive | inconclusive |
+| div | negative-destination | destination: shape=(512,512), strides=(-512,-1), flags=N<br>rhs=scalar(1.0001) | 50 | 0.084479 | 0.080263 | 0.080453 | 0.997x (0.990..1.002) | 1.047x (1.038..1.061) | parity | inconclusive |
+| add | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.179441 | n/a | 0.155637 | n/a | 1.151x (1.146..1.161) | legacy-incorrect | planned-faster |
+| sub | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.178734 | n/a | 0.153862 | n/a | 1.162x (1.156..1.166) | legacy-incorrect | planned-faster |
+| mul | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.180312 | n/a | 0.153593 | n/a | 1.175x (1.168..1.181) | legacy-incorrect | planned-faster |
+| div | step2-destination | destination: shape=(512,512), strides=(1024,2), flags=S<br>rhs=scalar(1.0001) | 50 | 0.183612 | n/a | 0.159494 | n/a | 1.150x (1.143..1.162) | legacy-incorrect | planned-faster |
 
 ### reduction-axis
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| mean | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.094796 | 4.005258 | 1.025750 | 3.898x (3.829..6.756) | 0.093x (0.090..0.103) | improved | numpy-faster |
-| var | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.409408 | 4.354442 | 2.014346 | 2.151x (2.044..2.217) | 0.202x (0.194..0.213) | improved | numpy-faster |
-| std | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.406563 | 4.438600 | 2.017817 | 2.202x (2.164..2.282) | 0.202x (0.196..0.243) | improved | numpy-faster |
-| median | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 4.324263 | 4.507629 | 1.988275 | 2.262x (2.207..2.318) | 2.160x (2.135..2.220) | improved | planned-faster |
-| average | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.247750 | 3.847046 | 1.263258 | 3.046x (3.007..3.065) | 0.195x (0.191..0.197) | improved | numpy-faster |
-| mean | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.086379 | 3.989200 | 1.153037 | 3.501x (3.290..3.636) | 0.075x (0.070..0.084) | improved | numpy-faster |
-| var | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.392517 | 4.275950 | 2.138333 | 1.999x (1.987..2.004) | 0.183x (0.182..0.186) | improved | numpy-faster |
-| std | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.405567 | 4.391546 | 2.166883 | 2.015x (1.947..3.778) | 0.186x (0.182..0.230) | improved | numpy-faster |
-| median | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 6.727567 | 4.532971 | 2.232183 | 2.021x (2.005..2.092) | 3.014x (2.950..3.155) | improved | planned-faster |
-| average | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.233037 | 3.855362 | 1.319446 | 2.917x (2.818..2.935) | 0.173x (0.166..0.177) | improved | numpy-faster |
-| mean | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.099754 | 3.926187 | 1.043108 | 3.763x (3.643..3.888) | 0.096x (0.092..0.103) | improved | numpy-faster |
-| var | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.595646 | 4.460129 | 2.096050 | 2.120x (2.050..2.185) | 0.286x (0.279..0.344) | improved | numpy-faster |
-| std | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.653833 | 4.719750 | 2.114954 | 2.148x (1.964..2.290) | 0.287x (0.245..0.317) | improved | numpy-faster |
-| median | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 4.265217 | 4.385604 | 2.060613 | 2.125x (1.991..2.216) | 2.074x (1.937..2.100) | improved | planned-faster |
-| average | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.414775 | 3.832842 | 1.245375 | 3.077x (2.890..3.088) | 0.332x (0.328..0.419) | improved | numpy-faster |
-| mean | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.106908 | 3.848492 | 1.043075 | 3.687x (3.620..3.759) | 0.102x (0.101..0.107) | improved | numpy-faster |
-| var | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.504921 | 4.265121 | 2.004758 | 2.131x (2.020..2.182) | 0.252x (0.239..0.255) | improved | numpy-faster |
-| std | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.506412 | 4.281900 | 2.003338 | 2.141x (2.113..2.191) | 0.253x (0.249..0.255) | improved | numpy-faster |
-| median | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 4.273817 | 4.369329 | 2.072825 | 2.114x (1.970..2.147) | 2.056x (1.841..2.117) | improved | planned-faster |
-| average | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.341254 | 3.845013 | 1.265038 | 3.032x (3.015..3.096) | 0.270x (0.265..0.280) | improved | numpy-faster |
-| mean | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.096675 | 3.849262 | 0.989929 | 3.896x (3.871..3.954) | 0.097x (0.096..0.102) | improved | numpy-faster |
-| var | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.472000 | 4.266617 | 1.958971 | 2.178x (2.175..2.185) | 0.241x (0.239..0.242) | improved | numpy-faster |
-| std | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.470454 | 4.280604 | 1.958746 | 2.186x (2.182..2.193) | 0.240x (0.239..0.243) | improved | numpy-faster |
-| median | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 4.182783 | 4.366188 | 1.934371 | 2.261x (2.244..2.276) | 2.168x (2.143..2.184) | improved | planned-faster |
-| average | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.332808 | 3.834967 | 1.256271 | 3.049x (3.037..3.058) | 0.265x (0.254..0.287) | improved | numpy-faster |
+| mean | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.088100 | 3.857279 | 0.195488 | 19.689x (19.090..20.033) | 0.453x (0.442..0.466) | improved | numpy-faster |
+| var | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.400504 | 4.282150 | 0.411700 | 10.430x (10.312..10.532) | 0.975x (0.964..1.030) | improved | parity |
+| std | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.398725 | 4.296746 | 0.411600 | 10.467x (10.335..10.493) | 0.969x (0.959..0.983) | improved | parity |
+| median | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 4.184062 | 4.377742 | 1.931862 | 2.269x (2.236..2.290) | 2.169x (2.151..2.204) | improved | planned-faster |
+| average | axis1-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.244400 | 3.858792 | 0.213133 | 18.074x (15.982..18.275) | 1.139x (1.049..1.203) | improved | inconclusive |
+| mean | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.086450 | 3.882375 | 0.450446 | 8.600x (7.895..8.795) | 0.185x (0.179..0.203) | improved | numpy-faster |
+| var | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.396858 | 4.273621 | 0.979988 | 4.351x (4.286..4.415) | 0.405x (0.397..0.410) | improved | numpy-faster |
+| std | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.394454 | 4.282942 | 0.975133 | 4.391x (4.372..4.419) | 0.405x (0.402..0.409) | improved | numpy-faster |
+| median | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 6.433117 | 4.403100 | 2.129029 | 2.072x (2.039..2.085) | 3.030x (2.975..3.070) | improved | planned-faster |
+| average | axis1-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.225175 | 3.874158 | 0.534575 | 7.253x (6.809..7.305) | 0.421x (0.416..0.461) | improved | numpy-faster |
+| mean | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.092992 | 3.856679 | 0.193833 | 19.873x (19.561..19.954) | 0.480x (0.477..0.488) | improved | numpy-faster |
+| var | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.575287 | 4.279113 | 0.409858 | 10.428x (10.322..10.489) | 1.403x (1.389..1.411) | improved | planned-faster |
+| std | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 0.576967 | 4.297042 | 0.411025 | 10.458x (10.415..10.595) | 1.405x (1.392..1.420) | improved | planned-faster |
+| median | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N | 10 | 4.372087 | 4.427087 | 2.074067 | 2.144x (2.092..2.174) | 2.106x (2.041..2.240) | improved | planned-faster |
+| average | axis1-negative-inner | values: shape=(512,512), strides=(512,-1), flags=N<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.418837 | 3.871992 | 0.530750 | 7.312x (7.159..7.385) | 0.789x (0.767..0.812) | improved | numpy-faster |
+| mean | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.111871 | 3.890196 | 0.411596 | 9.458x (8.183..9.552) | 0.266x (0.242..0.278) | improved | numpy-faster |
+| var | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.509262 | 4.284675 | 0.953667 | 4.488x (4.338..4.533) | 0.536x (0.529..0.562) | improved | numpy-faster |
+| std | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.528879 | 4.356396 | 0.960196 | 4.550x (4.307..4.584) | 0.539x (0.530..1.016) | improved | inconclusive |
+| median | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 4.307567 | 4.396496 | 2.054283 | 2.145x (2.108..2.299) | 2.092x (2.021..2.115) | improved | planned-faster |
+| average | axis1-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.336783 | 3.899971 | 0.529913 | 7.354x (7.291..7.450) | 0.636x (0.620..0.685) | improved | numpy-faster |
+| mean | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.095812 | 3.866325 | 0.198163 | 19.521x (18.130..19.728) | 0.480x (0.449..0.496) | improved | numpy-faster |
+| var | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.469383 | 4.269737 | 0.411946 | 10.366x (10.306..10.419) | 1.139x (1.133..1.160) | improved | planned-faster |
+| std | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 0.475579 | 4.297438 | 0.414704 | 10.374x (10.171..10.793) | 1.150x (1.136..1.173) | improved | planned-faster |
+| median | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S | 10 | 4.248800 | 4.397000 | 1.941258 | 2.276x (2.128..2.285) | 2.191x (2.032..2.218) | improved | planned-faster |
+| average | axis1-step2-outer | values: shape=(512,512), strides=(1024,1), flags=S<br>weights: shape=(512), strides=(1), flags=CF | 10 | 0.352375 | 3.913621 | 0.216892 | 18.070x (17.627..18.351) | 1.597x (1.515..1.844) | improved | planned-faster |
 
 ### reduction-full
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| mean | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.083437 | 0.402892 | 0.402954 | 1.000x (0.997..1.003) | 0.207x (0.206..0.209) | parity | numpy-faster |
-| var | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.329621 | 3.087062 | 1.948592 | 1.586x (1.581..1.588) | 0.169x (0.168..0.174) | improved | numpy-faster |
-| std | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.329029 | 3.086854 | 1.947421 | 1.585x (1.579..1.589) | 0.169x (0.168..0.171) | improved | numpy-faster |
-| median | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 3.365496 | 3.622558 | 1.827058 | 1.982x (1.975..1.992) | 1.843x (1.836..1.852) | improved | planned-faster |
-| average | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.269475 | 7.684646 | 1.220687 | 6.299x (6.267..6.308) | 0.221x (0.217..0.226) | improved | numpy-faster |
-| mean | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.083746 | 0.403388 | 0.403187 | 1.000x (0.982..1.002) | 0.207x (0.205..0.216) | parity | numpy-faster |
-| var | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.322092 | 3.091204 | 2.101304 | 1.470x (1.460..1.475) | 0.153x (0.144..0.155) | improved | numpy-faster |
-| std | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.323883 | 3.087604 | 2.100437 | 1.470x (1.466..1.476) | 0.154x (0.154..0.157) | improved | numpy-faster |
-| median | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 3.674017 | 3.629887 | 1.966962 | 1.845x (1.839..1.852) | 1.867x (1.864..1.872) | improved | planned-faster |
-| average | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.628708 | 7.745925 | 1.279417 | 6.044x (6.003..6.365) | 0.488x (0.476..0.505) | improved | numpy-faster |
-| mean | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.084517 | 0.402867 | 0.402883 | 1.000x (0.996..1.002) | 0.209x (0.209..0.211) | parity | numpy-faster |
-| var | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.426654 | 3.089242 | 1.959408 | 1.577x (1.571..1.582) | 0.218x (0.217..0.222) | improved | numpy-faster |
-| std | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.428346 | 3.087975 | 1.959008 | 1.577x (1.574..1.582) | 0.219x (0.217..0.221) | improved | numpy-faster |
-| median | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 4.399442 | 3.598729 | 1.853346 | 1.942x (1.924..1.962) | 2.374x (2.344..2.390) | improved | planned-faster |
-| average | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.339333 | 7.687288 | 1.207533 | 6.362x (6.331..6.392) | 0.281x (0.279..0.283) | improved | numpy-faster |
-| mean | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.101775 | 0.403779 | 0.403042 | 1.001x (0.999..1.006) | 0.252x (0.249..0.259) | parity | numpy-faster |
-| var | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.446321 | 3.091358 | 1.989075 | 1.554x (1.550..1.559) | 0.224x (0.223..0.229) | improved | numpy-faster |
-| std | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.454492 | 3.090663 | 1.995717 | 1.552x (1.536..1.594) | 0.228x (0.224..0.230) | improved | numpy-faster |
-| median | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 3.456158 | 3.635950 | 1.912100 | 1.901x (1.883..1.910) | 1.809x (1.797..1.828) | improved | planned-faster |
-| average | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.353025 | 7.906504 | 1.219600 | 6.344x (6.311..7.007) | 0.285x (0.279..0.292) | improved | numpy-faster |
+| mean | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.083488 | 0.403017 | 0.202096 | 1.996x (1.980..2.021) | 0.413x (0.407..0.436) | improved | numpy-faster |
+| var | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.341679 | 3.133879 | 0.406904 | 7.680x (7.523..7.751) | 0.833x (0.811..0.876) | improved | numpy-faster |
+| std | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 0.331183 | 3.109079 | 0.405613 | 7.653x (7.537..7.693) | 0.814x (0.802..0.849) | improved | numpy-faster |
+| median | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C | 10 | 3.455692 | 3.710875 | 1.861392 | 1.988x (1.873..2.129) | 1.857x (1.534..1.876) | improved | planned-faster |
+| average | full-c-contiguous | values: shape=(512,512), strides=(512,1), flags=C<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.285075 | 7.774763 | 0.409571 | 19.055x (18.124..19.210) | 0.691x (0.661..0.729) | improved | numpy-faster |
+| mean | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.088025 | 0.412538 | 0.204450 | 1.994x (1.630..2.395) | 0.421x (0.399..0.549) | improved | numpy-faster |
+| var | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.337058 | 3.142392 | 0.406162 | 7.696x (7.409..7.791) | 0.829x (0.790..0.864) | improved | numpy-faster |
+| std | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 0.335767 | 3.107483 | 0.404867 | 7.686x (7.624..9.689) | 0.832x (0.810..0.881) | improved | numpy-faster |
+| median | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F | 10 | 3.798729 | 3.736708 | 1.999408 | 1.856x (1.814..2.203) | 1.892x (1.863..2.035) | improved | planned-faster |
+| average | full-f-contiguous | values: shape=(512,512), strides=(1,512), flags=F<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.638979 | 7.737867 | 0.743967 | 10.419x (10.361..10.585) | 0.847x (0.834..0.904) | improved | numpy-faster |
+| mean | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.083504 | 0.403054 | 0.202075 | 1.994x (1.966..2.006) | 0.413x (0.409..0.416) | improved | numpy-faster |
+| var | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.425533 | 3.091083 | 0.403850 | 7.659x (7.616..7.696) | 1.055x (1.049..1.065) | improved | inconclusive |
+| std | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 0.430571 | 3.096738 | 0.404496 | 7.656x (7.593..7.925) | 1.059x (1.050..1.102) | improved | planned-faster |
+| median | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N | 10 | 4.422321 | 3.607704 | 1.866408 | 1.935x (1.926..1.948) | 2.367x (2.353..2.409) | improved | planned-faster |
+| average | full-negative-dense | values: shape=(512,512), strides=(-512,-1), flags=N<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.348329 | 7.701842 | 0.741929 | 10.389x (10.311..10.698) | 0.464x (0.457..0.495) | improved | numpy-faster |
+| mean | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.099900 | 0.403154 | 0.403467 | 0.999x (0.996..1.003) | 0.247x (0.247..0.251) | parity | numpy-faster |
+| var | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.462225 | 3.118033 | 0.944875 | 3.299x (3.249..3.334) | 0.484x (0.475..0.495) | improved | numpy-faster |
+| std | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 0.455950 | 3.105250 | 0.945350 | 3.293x (3.267..3.306) | 0.481x (0.478..0.487) | improved | numpy-faster |
+| median | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S | 10 | 3.490363 | 3.666867 | 2.270767 | 1.907x (0.587..2.084) | 1.808x (0.467..1.969) | inconclusive | inconclusive |
+| average | full-step2-inner | values: shape=(512,512), strides=(1024,2), flags=S<br>weights: shape=(512,512), strides=(512,1), flags=C | 10 | 0.543225 | 11.594113 | 1.133000 | 10.117x (8.663..11.309) | 0.485x (0.399..0.523) | improved | numpy-faster |
 
 ### matmul
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| matmul | matrix-matrix-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(256,1), flags=C | 7 | 0.154804 | 24.918452 | 0.151673 | 164.792x (160.765..166.664) | 1.021x (0.992..1.037) | improved | parity |
-| matmul | matrix-matrix-f | lhs: shape=(256,256), strides=(1,256), flags=F<br>rhs: shape=(256,256), strides=(1,256), flags=F | 7 | 0.153387 | 25.660929 | 0.238845 | 106.517x (103.164..110.302) | 0.649x (0.631..0.659) | improved | numpy-faster |
-| matmul | matrix-matrix-negative | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(256,256), strides=(-256,-1), flags=N | 7 | 29.577756 | 24.769863 | 0.235899 | 104.685x (102.502..108.535) | 126.212x (122.792..131.234) | improved | planned-faster |
-| matmul | matrix-matrix-lhs-step2 | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(256,256), strides=(256,1), flags=C | 7 | 29.643952 | 24.713107 | 0.196649 | 126.476x (124.215..130.111) | 150.858x (148.999..155.232) | improved | planned-faster |
-| matmul | matrix-matrix-rhs-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(512,2), flags=S | 7 | 29.914690 | 26.839530 | 0.195268 | 136.687x (133.312..141.249) | 153.514x (149.925..158.103) | improved | planned-faster |
-| matmul | matrix-matrix-both-step2 | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(256,256), strides=(512,2), flags=S | 7 | 29.907899 | 27.000911 | 0.236696 | 113.462x (110.380..117.552) | 126.578x (121.690..129.302) | improved | planned-faster |
-| matmul | matrix-matrix-mixed-c-f | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(1,256), flags=F | 7 | 0.175512 | 14.782042 | 0.198208 | 74.983x (73.823..98.616) | 0.893x (0.868..0.945) | improved | numpy-faster |
-| matmul | matrix-matrix-rectangular | lhs: shape=(128,256), strides=(256,1), flags=C<br>rhs: shape=(256,64), strides=(64,1), flags=C | 40 | 0.025217 | 3.045059 | 0.024330 | 124.715x (122.617..125.865) | 1.017x (1.000..1.046) | improved | parity |
-| matmul | matrix-matrix-small-direct | lhs: shape=(8,16), strides=(16,1), flags=C<br>rhs: shape=(16,8), strides=(8,1), flags=C | 2000 | 0.001158 | 0.001529 | 0.001521 | 1.002x (0.980..1.046) | 0.760x (0.745..0.834) | parity | numpy-faster |
-| matmul | vector-vector | lhs: shape=(256), strides=(1), flags=CF<br>rhs: shape=(256), strides=(1), flags=CF | 2000 | 0.000886 | 0.001159 | 0.001161 | 0.999x (0.992..1.018) | 0.765x (0.758..0.784) | parity | numpy-faster |
-| matmul | vector-matrix | lhs: shape=(256), strides=(1), flags=CF<br>rhs: shape=(256,256), strides=(256,1), flags=C | 200 | 0.018906 | 0.141006 | 0.014657 | 6.863x (6.652..8.075) | 1.006x (0.923..1.142) | improved | inconclusive |
-| matmul | matrix-vector | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 200 | 0.007076 | 0.061048 | 0.006914 | 8.844x (7.813..8.958) | 1.024x (0.897..1.047) | improved | inconclusive |
+| matmul | matrix-matrix-c | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(256,1), flags=C | 7 | 0.202929 | 31.611631 | 0.198744 | 159.893x (150.767..171.066) | 1.022x (1.005..1.111) | improved | inconclusive |
+| matmul | matrix-matrix-f | lhs: shape=(256,256), strides=(1,256), flags=F<br>rhs: shape=(256,256), strides=(1,256), flags=F | 7 | 0.226542 | 36.348726 | 0.231589 | 167.289x (135.018..183.984) | 1.016x (0.911..1.206) | improved | inconclusive |
+| matmul | matrix-matrix-negative | lhs: shape=(256,256), strides=(-256,-1), flags=N<br>rhs: shape=(256,256), strides=(-256,-1), flags=N | 7 | 29.766345 | 24.632679 | 0.240018 | 103.907x (82.618..105.778) | 125.602x (122.842..139.172) | improved | planned-faster |
+| matmul | matrix-matrix-lhs-step2 | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(256,256), strides=(256,1), flags=C | 7 | 29.674821 | 24.729946 | 0.195375 | 125.935x (122.634..130.188) | 151.998x (150.193..158.872) | improved | planned-faster |
+| matmul | matrix-matrix-rhs-step2 | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(512,2), flags=S | 7 | 29.928851 | 26.988458 | 0.194446 | 138.114x (134.410..142.326) | 154.310x (150.141..157.346) | improved | planned-faster |
+| matmul | matrix-matrix-both-step2 | lhs: shape=(256,256), strides=(512,2), flags=S<br>rhs: shape=(256,256), strides=(512,2), flags=S | 7 | 30.107548 | 27.202268 | 0.236571 | 114.705x (113.756..119.227) | 127.436x (125.592..131.902) | improved | planned-faster |
+| matmul | matrix-matrix-mixed-c-f | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256,256), strides=(1,256), flags=F | 7 | 0.175982 | 14.698482 | 0.172935 | 84.970x (83.037..85.861) | 1.015x (0.991..1.035) | improved | parity |
+| matmul | matrix-matrix-rectangular | lhs: shape=(128,256), strides=(256,1), flags=C<br>rhs: shape=(256,64), strides=(64,1), flags=C | 40 | 0.025071 | 3.054314 | 0.024953 | 122.920x (120.628..130.978) | 0.999x (0.994..1.109) | improved | inconclusive |
+| matmul | matrix-matrix-small-direct | lhs: shape=(8,16), strides=(16,1), flags=C<br>rhs: shape=(16,8), strides=(8,1), flags=C | 2000 | 0.001146 | 0.001531 | 0.001535 | 0.998x (0.985..1.002) | 0.744x (0.740..0.752) | parity | numpy-faster |
+| matmul | vector-vector | lhs: shape=(256), strides=(1), flags=CF<br>rhs: shape=(256), strides=(1), flags=CF | 2000 | 0.000883 | 0.001177 | 0.001181 | 0.997x (0.983..1.003) | 0.748x (0.733..0.751) | parity | numpy-faster |
+| matmul | vector-matrix | lhs: shape=(256), strides=(1), flags=CF<br>rhs: shape=(256,256), strides=(256,1), flags=C | 200 | 0.014398 | 0.097119 | 0.014446 | 6.729x (6.682..6.772) | 0.997x (0.991..1.003) | improved | parity |
+| matmul | matrix-vector | lhs: shape=(256,256), strides=(256,1), flags=C<br>rhs: shape=(256), strides=(1), flags=CF | 200 | 0.006812 | 0.057970 | 0.006751 | 8.581x (8.549..8.624) | 1.008x (1.002..1.012) | improved | parity |
 
 ### matmul-batch
 
 | Operation | Scenario | Operands | Calls/sample | NumPy ms | Legacy ms | Planned ms | Legacy/planned (q10..q90) | NumPy/planned (q10..q90) | Legacy status | Planned vs NumPy |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| matmul | batch-same-shape-c | lhs: shape=(8,32,32), strides=(1024,32,1), flags=C<br>rhs: shape=(8,32,32), strides=(1024,32,1), flags=C | 3 | 0.007569 | n/a | 0.177236 | n/a | 0.042x (0.040..0.055) | new-only | numpy-faster |
-| matmul | batch-broadcast-c | lhs: shape=(8,1,32,32), strides=(1024,1024,32,1), flags=C<br>rhs: shape=(1,8,32,32), strides=(8192,1024,32,1), flags=C | 3 | 0.044250 | n/a | 1.400750 | n/a | 0.031x (0.029..0.037) | new-only | numpy-faster |
-| matmul | batch-broadcast-negative-matrix | lhs: shape=(8,1,32,32), strides=(1024,1024,-32,-1), flags=N<br>rhs: shape=(1,8,32,32), strides=(8192,1024,-32,-1), flags=N | 3 | 1.641625 | n/a | 1.405806 | n/a | 1.160x (1.086..1.250) | new-only | planned-faster |
-| matmul | batch-broadcast-step2-inner | lhs: shape=(8,1,32,32), strides=(2048,2048,64,2), flags=S<br>rhs: shape=(1,8,32,32), strides=(16384,2048,64,2), flags=S | 3 | 1.635958 | n/a | 1.441472 | n/a | 1.128x (1.005..1.224) | new-only | inconclusive |
-| matmul | batch-broadcast-step2-batch | lhs: shape=(8,1,32,32), strides=(2048,1024,32,1), flags=S<br>rhs: shape=(1,8,32,32), strides=(16384,2048,32,1), flags=S | 3 | 0.043139 | n/a | 1.417486 | n/a | 0.031x (0.029..0.034) | new-only | numpy-faster |
+| matmul | batch-same-shape-c | lhs: shape=(8,32,32), strides=(1024,32,1), flags=C<br>rhs: shape=(8,32,32), strides=(1024,32,1), flags=C | 3 | 0.007292 | n/a | 0.007180 | n/a | 1.010x (0.893..1.041) | new-only | inconclusive |
+| matmul | batch-broadcast-c | lhs: shape=(8,1,32,32), strides=(1024,1024,32,1), flags=C<br>rhs: shape=(1,8,32,32), strides=(8192,1024,32,1), flags=C | 3 | 0.042431 | n/a | 0.042403 | n/a | 1.001x (0.989..1.011) | new-only | parity |
+| matmul | batch-broadcast-negative-matrix | lhs: shape=(8,1,32,32), strides=(1024,1024,-32,-1), flags=N<br>rhs: shape=(1,8,32,32), strides=(8192,1024,-32,-1), flags=N | 3 | 1.588194 | n/a | 1.389986 | n/a | 1.142x (1.135..1.151) | new-only | planned-faster |
+| matmul | batch-broadcast-step2-inner | lhs: shape=(8,1,32,32), strides=(2048,2048,64,2), flags=S<br>rhs: shape=(1,8,32,32), strides=(16384,2048,64,2), flags=S | 3 | 1.602695 | n/a | 1.400972 | n/a | 1.147x (1.135..1.156) | new-only | planned-faster |
+| matmul | batch-broadcast-step2-batch | lhs: shape=(8,1,32,32), strides=(2048,1024,32,1), flags=S<br>rhs: shape=(1,8,32,32), strides=(16384,2048,32,1), flags=S | 3 | 0.045042 | n/a | 0.043986 | n/a | 1.020x (0.972..1.049) | new-only | parity |
 
 ## Legacy correctness failures
 

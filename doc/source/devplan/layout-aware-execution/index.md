@@ -317,19 +317,22 @@ $ source /path/to/devenv/scripts/init
 $ devenv use prime
 $ uname -m
 $ python3 -c 'import platform; print(platform.machine())'
-$ make BUILD_QT=OFF CMAKE_BUILD_TYPE=Release SOLVCON_PROFILE=OFF \
+$ NPROC=2 MAKE_PARALLEL=-j2 make BUILD_QT=OFF \
+    CMAKE_BUILD_TYPE=Release SOLVCON_PROFILE=OFF \
     CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)"
-$ TMPDIR=/tmp python3 -m pytest -q \
+$ TMPDIR=/tmp PYTHONPATH=. pytest -q \
     tests/test_buffer.py tests/test_execution_prototype.py \
     tests/test_matrix.py tests/test_blas_lapack.py
-$ TMPDIR=/tmp python3 profiling/profile_execution_prototype.py \
+$ PYTHONPATH=. python3 profiling/profile_execution_prototype.py \
     --check-only --stress 1000
-$ TMPDIR=/tmp python3 profiling/profile_execution_prototype.py \
+$ PYTHONPATH=. python3 profiling/profile_execution_prototype.py \
     --benchmark-only --repeat 15 --warmup 5 \
     --output /tmp/solvcon-execution-macos.json
-$ python3 profiling/render_execution_profile.py \
+$ PYTHONPATH=. python3 profiling/render_execution_profile.py \
     /tmp/solvcon-execution-macos.json \
     doc/source/devplan/layout-aware-execution/macos-results.md
+$ cp /tmp/solvcon-execution-macos.json \
+    doc/source/devplan/layout-aware-execution/macos-results.json
 ```
 
 The JSON records `platform`, `machine`, Python, NumPy, NumPy's build
@@ -337,7 +340,7 @@ configuration, `_solvcon` linkage from `otool -L`, Git revision, dirty state,
 seed, sample counts, raw samples, paired ratio quantiles, and all
 thread-control variables.  The benchmark script sets the supported BLAS and
 OpenMP thread controls to one before importing NumPy.  Do not pass `--cpu` on
-macOS because the Linux affinity API is unavailable.  Attach both generated
+macOS because the Linux affinity API is unavailable.  Commit both generated
 files when reporting a new run.  In particular, compare the contiguous,
 F-contiguous, negative, step-two, and batched matmul rows.  They determine
 whether the 4096-work packing threshold is also appropriate for Accelerate.
@@ -417,72 +420,78 @@ versus 0.0328 ms planned.  A 31-sample audit of the same binary produced
 Microsecond in-place rows should therefore be read with their paired interval,
 not from one median.
 
-## macOS baseline and required rerun
+## Optimized macOS measurement
 
 The complete 154-row Apple Silicon result is recorded in the
-[macOS benchmark notebook](macos-results.md).  The clean run used revision
-`0db69f45`, macOS 26.5.1 on an Apple M1 with 8 GB of memory, native arm64
+[macOS benchmark notebook](macos-results.md), with raw samples in the
+[machine-readable JSON](macos-results.json).  The clean run used revision
+`e3a0ba93`, macOS 26.5.1 on an Apple M1 with 8 GB of memory, native arm64
 Python 3.11.6, NumPy 2.2.4, 15 paired samples, five warmups, and one thread.
 NumPy and the extension both link to Accelerate.  CPU affinity is not
 available on macOS.
 
-This run predates the fixed-stride inner loops, NEON reduction accumulators,
-compact scalar outputs, transpose-aware BLAS views, and batch BLAS dispatch in
-the current branch.  It is the diagnosis baseline, not evidence for the
-optimized revision.  The macOS command above must be rerun after checking out
-the current branch.  Both the rendered notebook and raw JSON should be
-attached before making a cross-platform performance claim.
+| Comparison | Faster | Parity | Slower | Inconclusive | Not comparable |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Legacy versus planned | 76 planned | 14 | 0 | 3 | 24 legacy incorrect and 37 new only |
+| NumPy versus planned | 59 planned | 28 | 36 NumPy | 31 | 0 |
 
-| Family | Cases | Improved | Parity | Regression | Legacy incorrect | New only | Inconclusive |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| elementwise-array | 20 | 12 | 0 | 0 | 8 | 0 | 0 |
-| elementwise-scalar | 16 | 12 | 0 | 0 | 4 | 0 | 0 |
-| elementwise-broadcast | 24 | 0 | 0 | 0 | 0 | 24 | 0 |
-| inplace-array | 12 | 0 | 0 | 0 | 8 | 0 | 4 |
-| inplace-broadcast | 8 | 0 | 0 | 0 | 0 | 8 | 0 |
-| inplace-scalar | 12 | 0 | 1 | 0 | 4 | 0 | 7 |
-| reduction-axis | 25 | 25 | 0 | 0 | 0 | 0 | 0 |
-| reduction-full | 20 | 16 | 4 | 0 | 0 | 0 | 0 |
-| matmul | 12 | 10 | 2 | 0 | 0 | 0 | 0 |
-| matmul-batch | 5 | 0 | 0 | 0 | 0 | 5 | 0 |
+Every correct legacy route with a conclusive classification improved or
+reached parity, and none regressed.  Compared with the diagnosis baseline,
+planned-faster NumPy comparisons increased from 30 to 59 and NumPy-faster
+comparisons fell from 91 to 36.
 
-Across legacy comparisons, 75 rows improve, seven reach parity, none regress,
-24 expose known legacy correctness failures, 37 cover new operations, and 11
-remain inconclusive.  The planned and NumPy comparison has 30 planned-faster,
-11 parity, 91 NumPy-faster, and 22 inconclusive rows.
+The following medians show where the optimized implementation changed the
+Apple Silicon result.  Cross-run speedups compare two separately recorded
+medians, so they diagnose the direction and size of the change rather than a
+paired uncertainty interval.
 
-The baseline confirms the pack-before-BLAS route for larger non-contiguous
-matrix inputs.  For the negative and step-two 256 by 256 cases, planned is
-about 105 to 137 times faster than legacy and 126 to 154 times faster than
-NumPy.  Contiguous C matmul is parity with NumPy, while F-contiguous and mixed
-C/F inputs favor NumPy.  Contiguous batched matmul also favors NumPy, but the
-negative-matrix batch case favors planned.  The F/mixed matrix layouts,
-contiguous batch cases, axis reductions, and step-two elementwise rows are the
-highest-value comparisons for the optimized rerun.
+| Case | Baseline ms | Optimized ms | Speedup | Optimized versus NumPy |
+| --- | ---: | ---: | ---: | --- |
+| Step-two array add | 6.1408 | 1.1722 | 5.24x | inconclusive |
+| Step-two scalar add | 5.7115 | 0.6023 | 9.48x | planned-faster |
+| Step-two broadcast add | 0.3827 | 0.0529 | 7.24x | planned-faster |
+| Step-two in-place array add | 1.5304 | 0.2016 | 7.59x | parity |
+| Step-two in-place broadcast add | 1.5606 | 0.1797 | 8.68x | planned-faster |
+| C-layout axis mean | 1.0257 | 0.1955 | 5.25x | NumPy-faster |
+| C-layout axis variance | 2.0143 | 0.4117 | 4.89x | parity |
+| Same-shape C batch matmul | 0.1772 | 0.0072 | 24.68x | inconclusive |
+| Broadcast C batch matmul | 1.4008 | 0.0424 | 33.03x | parity |
+
+Fixed-stride inner loops remove most mapped cursor cost.  Step-two scalar,
+broadcast, and in-place routes move from large NumPy losses to parity or
+planned wins.  NEON accumulation cuts the C-layout axis mean and variance
+costs by about five times; variance reaches parity, while mean and
+F-contiguous axis reductions still favor NumPy.  The tiled multi-output
+recommendation therefore remains useful.
+
+Batch BLAS removes the scalar-contraction bottleneck.  Compatible contiguous
+batches now reach parity or an interval crossing parity, while negative and
+step-two matrix batches are planned-faster.  Direct F-layout and mixed C/F
+matrix descriptors also move from NumPy-faster to inconclusive or parity.
+For large negative and step-two 256 by 256 inputs, packing before Accelerate
+remains roughly 104 to 138 times faster than legacy and 126 to 154 times
+faster than NumPy.
 
 ## Recommendations
 
-1. Rerun the full clean matrix on Apple Silicon before changing the public
-   API.  This validates NEON accumulation, direct F-layout BLAS, and batch
-   BLAS against Accelerate.
-2. Keep `LoopDomain`, `OperandMapping`, and fixed-stride inner-loop lowering
+1. Keep `LoopDomain`, `OperandMapping`, and fixed-stride inner-loop lowering
    as the shared vocabulary, but keep the three family plans and executors
    separate.  Their measured fast paths depend on different topology and cost
    rules.
-3. Investigate F-contiguous axis reductions with a tiled multi-output kernel.
+2. Investigate F-contiguous axis reductions with a tiled multi-output kernel.
    Reducing axis 1 of a 512 by 512 F-layout array currently walks one
    cache-unfriendly stride at a time.  Loop interchange can read physical
    memory sequentially while holding several output accumulators.
-4. Add an x86 SIMD backend only after profiling the remaining elementwise and
+3. Add an x86 SIMD backend only after profiling the remaining elementwise and
    reduction rows.  This Ubuntu machine has AVX2, but the solvcon SIMD facade
    currently falls back to generic loops outside AArch64.
-5. Keep the 4096 matmul threshold as a measured initial policy, not an ABI.
+4. Keep the 4096 matmul threshold as a measured initial policy, not an ABI.
    Offline backend-specific benchmarks may justify separate direct, BLAS, and
    pack thresholds.  Do not benchmark alternatives inside each public call.
-6. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
+5. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
-7. Keep CallProfiler probes temporary.  Insert them around a suspected plan,
+6. Keep CallProfiler probes temporary.  Insert them around a suspected plan,
    dispatch, or kernel boundary for diagnosis, then remove them before final
    microbenchmarks so probe overhead does not enter the result.
 
