@@ -7,6 +7,7 @@
 
 #include <solvcon/buffer/pymod/buffer_pymod.hpp> // Must be the first include.
 
+#include <solvcon/buffer/execution/SimpleArrayExecution.hpp>
 #include <solvcon/buffer/pymod/array_common.hpp>
 
 #include <cstdint>
@@ -28,6 +29,11 @@ class SOLVCON_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
     using value_type = typename wrapped_type::value_type;
     using array_order_type = typename wrapped_type::ArrayOrder;
     using property_helper = ArrayPropertyHelper<T>;
+    using execution_type = solvcon::detail::SimpleArrayExecution<
+        wrapped_type,
+        value_type>;
+    using execution_real_array_type =
+        typename execution_type::real_array_type;
 
     friend root_base_type;
 
@@ -171,6 +177,7 @@ class SOLVCON_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
                                    { return pybind11::cast(SimpleArrayPlex(arr)); })
             .wrap_modifiers()
             .wrap_calculators()
+            .wrap_execution()
             .wrap_matrix()
             .wrap_sort()
             .wrap_search()
@@ -503,6 +510,208 @@ class SOLVCON_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
             ;
 
         return *this;
+    }
+
+    static wrapped_type planned_mean_axes(
+        wrapped_type const & self,
+        pybind11::object const & axes)
+    {
+        return execution_type::planned_mean(self, make_shape(axes));
+    }
+
+    static wrapped_type planned_average_axes(
+        wrapped_type const & self,
+        pybind11::object const & axes,
+        wrapped_type const & weight)
+    {
+        return execution_type::planned_average(
+            self, make_shape(axes), weight);
+    }
+
+    static execution_real_array_type planned_var_axes(
+        wrapped_type const & self,
+        pybind11::object const & axes,
+        size_t ddof)
+    {
+        return execution_type::planned_var(
+            self, make_shape(axes), ddof);
+    }
+
+    static execution_real_array_type planned_std_axes(
+        wrapped_type const & self,
+        pybind11::object const & axes,
+        size_t ddof)
+    {
+        return execution_type::planned_std(
+            self, make_shape(axes), ddof);
+    }
+
+    static wrapped_type planned_median_axes(
+        wrapped_type const & self,
+        pybind11::object const & axes)
+    {
+        return execution_type::planned_median(self, make_shape(axes));
+    }
+
+    wrapper_type & wrap_execution()
+    {
+        wrap_execution_elementwise();
+        wrap_execution_reduction();
+        wrap_execution_matmul();
+        return *this;
+    }
+
+    void wrap_execution_elementwise()
+    {
+        (*this)
+            .def(
+                "_planned_add",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    wrapped_type const &>(&execution_type::planned_add))
+            .def(
+                "_planned_add",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    value_type>(&execution_type::planned_add))
+            .def(
+                "_planned_sub",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    wrapped_type const &>(&execution_type::planned_sub))
+            .def(
+                "_planned_sub",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    value_type>(&execution_type::planned_sub))
+            .def(
+                "_planned_mul",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    wrapped_type const &>(&execution_type::planned_mul))
+            .def(
+                "_planned_mul",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    value_type>(&execution_type::planned_mul))
+            .def(
+                "_planned_div",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    wrapped_type const &>(&execution_type::planned_div))
+            .def(
+                "_planned_div",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    value_type>(&execution_type::planned_div))
+            .def(
+                "_planned_iadd",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    wrapped_type const &>(&execution_type::planned_iadd))
+            .def(
+                "_planned_iadd",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    value_type>(&execution_type::planned_iadd))
+            .def(
+                "_planned_isub",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    wrapped_type const &>(&execution_type::planned_isub))
+            .def(
+                "_planned_isub",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    value_type>(&execution_type::planned_isub))
+            .def(
+                "_planned_imul",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    wrapped_type const &>(&execution_type::planned_imul))
+            .def(
+                "_planned_imul",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    value_type>(&execution_type::planned_imul))
+            .def(
+                "_planned_idiv",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    wrapped_type const &>(&execution_type::planned_idiv))
+            .def(
+                "_planned_idiv",
+                pybind11::overload_cast<
+                    wrapped_type &,
+                    value_type>(&execution_type::planned_idiv))
+            //
+            ;
+    }
+
+    void wrap_execution_reduction()
+    {
+        (*this)
+            .def(
+                "_planned_mean",
+                pybind11::overload_cast<wrapped_type const &>(
+                    &execution_type::planned_mean))
+            .def(
+                "_planned_mean",
+                &WrapSimpleArray::planned_mean_axes,
+                pybind11::arg("axes"))
+            .def(
+                "_planned_average",
+                pybind11::overload_cast<
+                    wrapped_type const &,
+                    wrapped_type const &>(
+                    &execution_type::planned_average),
+                pybind11::arg("weight"))
+            .def(
+                "_planned_average",
+                &WrapSimpleArray::planned_average_axes,
+                pybind11::arg("axes"),
+                pybind11::arg("weight"))
+            .def(
+                "_planned_var",
+                pybind11::overload_cast<wrapped_type const &, size_t>(
+                    &execution_type::planned_var),
+                pybind11::arg("ddof") = 0)
+            .def(
+                "_planned_var",
+                &WrapSimpleArray::planned_var_axes,
+                pybind11::arg("axes"),
+                pybind11::arg("ddof") = 0)
+            .def(
+                "_planned_std",
+                pybind11::overload_cast<wrapped_type const &, size_t>(
+                    &execution_type::planned_std),
+                pybind11::arg("ddof") = 0)
+            .def(
+                "_planned_std",
+                &WrapSimpleArray::planned_std_axes,
+                pybind11::arg("axes"),
+                pybind11::arg("ddof") = 0)
+            .def(
+                "_planned_median",
+                pybind11::overload_cast<wrapped_type const &>(
+                    &execution_type::planned_median))
+            .def(
+                "_planned_median",
+                &WrapSimpleArray::planned_median_axes,
+                pybind11::arg("axes"))
+            //
+            ;
+    }
+
+    void wrap_execution_matmul()
+    {
+        (*this)
+            .def(
+                "_planned_matmul",
+                &execution_type::planned_matmul,
+                pybind11::arg("other"))
+            //
+            ;
     }
 
     // NOLINTBEGIN(bugprone-easily-swappable-parameters)

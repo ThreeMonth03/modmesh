@@ -92,6 +92,111 @@ void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 }
 
 template <typename T>
+void add_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::add_scalar<T>(dest, dest_end, src, scalar);
+        break;
+
+    default:
+        return generic::add_scalar<T>(dest, dest_end, src, scalar);
+    }
+}
+
+template <typename T>
+void sub_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::sub_scalar<T>(dest, dest_end, src, scalar);
+        break;
+
+    default:
+        return generic::sub_scalar<T>(dest, dest_end, src, scalar);
+    }
+}
+
+template <typename T>
+void mul_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::mul_scalar<T>(dest, dest_end, src, scalar);
+        break;
+
+    default:
+        return generic::mul_scalar<T>(dest, dest_end, src, scalar);
+    }
+}
+
+template <typename T>
+void div_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::div_scalar<T>(dest, dest_end, src, scalar);
+        break;
+
+    default:
+        return generic::div_scalar<T>(dest, dest_end, src, scalar);
+    }
+}
+
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::sum<T>(start, end);
+        break;
+
+    default:
+        return generic::sum<T>(start, end);
+    }
+}
+
+template <typename T>
+T sum_product(T const * lhs, T const * lhs_end, T const * rhs)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::sum_product<T>(lhs, lhs_end, rhs);
+        break;
+
+    default:
+        return generic::sum_product<T>(lhs, lhs_end, rhs);
+    }
+}
+
+template <typename T>
+T sum_squared_difference(T const * start, T const * end, T mean)
+{
+    using namespace detail; // FIXME: NOLINT(google-build-using-namespace)
+    switch (detect_simd())
+    {
+    case SIMD_NEON:
+        return neon::sum_squared_difference<T>(start, end, mean);
+        break;
+
+    default:
+        return generic::sum_squared_difference<T>(start, end, mean);
+    }
+}
+
+template <typename T>
 T max(T const * start, T const * end)
 {
     return generic::max<T>(start, end);

@@ -205,20 +205,38 @@ void gemm_blas(ssize_t m,
                float const * rhs,
                float * result)
 {
+    gemm_blas(m, n, k, lhs, rhs, result, false, false, k, n);
+}
+
+void gemm_blas(ssize_t m,
+               ssize_t n,
+               ssize_t k,
+               float const * lhs,
+               float const * rhs,
+               float * result,
+               bool transpose_lhs,
+               bool transpose_rhs,
+               ssize_t lhs_leading_dimension,
+               ssize_t rhs_leading_dimension)
+{
     blas_int_type const bm = to_blas_int(m, "m");
     blas_int_type const bn = to_blas_int(n, "n");
     blas_int_type const bk = to_blas_int(k, "k");
+    blas_int_type const blda = to_blas_int(
+        lhs_leading_dimension, "lhs_leading_dimension");
+    blas_int_type const bldb = to_blas_int(
+        rhs_leading_dimension, "rhs_leading_dimension");
     cblas_sgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
+                to_cblas_transpose(transpose_lhs),
+                to_cblas_transpose(transpose_rhs),
                 bm,
                 bn,
                 bk,
                 1.0F,
                 lhs,
-                bk,
+                blda,
                 rhs,
-                bn,
+                bldb,
                 0.0F,
                 result,
                 bn);
@@ -231,20 +249,38 @@ void gemm_blas(ssize_t m,
                double const * rhs,
                double * result)
 {
+    gemm_blas(m, n, k, lhs, rhs, result, false, false, k, n);
+}
+
+void gemm_blas(ssize_t m,
+               ssize_t n,
+               ssize_t k,
+               double const * lhs,
+               double const * rhs,
+               double * result,
+               bool transpose_lhs,
+               bool transpose_rhs,
+               ssize_t lhs_leading_dimension,
+               ssize_t rhs_leading_dimension)
+{
     blas_int_type const bm = to_blas_int(m, "m");
     blas_int_type const bn = to_blas_int(n, "n");
     blas_int_type const bk = to_blas_int(k, "k");
+    blas_int_type const blda = to_blas_int(
+        lhs_leading_dimension, "lhs_leading_dimension");
+    blas_int_type const bldb = to_blas_int(
+        rhs_leading_dimension, "rhs_leading_dimension");
     cblas_dgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
+                to_cblas_transpose(transpose_lhs),
+                to_cblas_transpose(transpose_rhs),
                 bm,
                 bn,
                 bk,
                 1.0,
                 lhs,
-                bk,
+                blda,
                 rhs,
-                bn,
+                bldb,
                 0.0,
                 result,
                 bn);
@@ -257,22 +293,40 @@ void gemm_blas(ssize_t m,
                Complex<float> const * rhs,
                Complex<float> * result)
 {
+    gemm_blas(m, n, k, lhs, rhs, result, false, false, k, n);
+}
+
+void gemm_blas(ssize_t m,
+               ssize_t n,
+               ssize_t k,
+               Complex<float> const * lhs,
+               Complex<float> const * rhs,
+               Complex<float> * result,
+               bool transpose_lhs,
+               bool transpose_rhs,
+               ssize_t lhs_leading_dimension,
+               ssize_t rhs_leading_dimension)
+{
     blas_int_type const bm = to_blas_int(m, "m");
     blas_int_type const bn = to_blas_int(n, "n");
     blas_int_type const bk = to_blas_int(k, "k");
+    blas_int_type const blda = to_blas_int(
+        lhs_leading_dimension, "lhs_leading_dimension");
+    blas_int_type const bldb = to_blas_int(
+        rhs_leading_dimension, "rhs_leading_dimension");
     std::complex<float> const alpha{1.0F, 0.0F};
     std::complex<float> const beta{0.0F, 0.0F};
     cblas_cgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
+                to_cblas_transpose(transpose_lhs),
+                to_cblas_transpose(transpose_rhs),
                 bm,
                 bn,
                 bk,
                 &alpha,
                 as_std_complex_pointer(lhs),
-                bk,
+                blda,
                 as_std_complex_pointer(rhs),
-                bn,
+                bldb,
                 &beta,
                 as_std_complex_pointer(result),
                 bn);
@@ -285,22 +339,40 @@ void gemm_blas(ssize_t m,
                Complex<double> const * rhs,
                Complex<double> * result)
 {
+    gemm_blas(m, n, k, lhs, rhs, result, false, false, k, n);
+}
+
+void gemm_blas(ssize_t m,
+               ssize_t n,
+               ssize_t k,
+               Complex<double> const * lhs,
+               Complex<double> const * rhs,
+               Complex<double> * result,
+               bool transpose_lhs,
+               bool transpose_rhs,
+               ssize_t lhs_leading_dimension,
+               ssize_t rhs_leading_dimension)
+{
     blas_int_type const bm = to_blas_int(m, "m");
     blas_int_type const bn = to_blas_int(n, "n");
     blas_int_type const bk = to_blas_int(k, "k");
+    blas_int_type const blda = to_blas_int(
+        lhs_leading_dimension, "lhs_leading_dimension");
+    blas_int_type const bldb = to_blas_int(
+        rhs_leading_dimension, "rhs_leading_dimension");
     std::complex<double> const alpha{1.0, 0.0};
     std::complex<double> const beta{0.0, 0.0};
     cblas_zgemm(CblasRowMajor,
-                CblasNoTrans,
-                CblasNoTrans,
+                to_cblas_transpose(transpose_lhs),
+                to_cblas_transpose(transpose_rhs),
                 bm,
                 bn,
                 bk,
                 &alpha,
                 as_std_complex_pointer(lhs),
-                bk,
+                blda,
                 as_std_complex_pointer(rhs),
-                bn,
+                bldb,
                 &beta,
                 as_std_complex_pointer(result),
                 bn);
@@ -407,6 +479,62 @@ void gemm_blas(ssize_t,
                Complex<double> const *,
                Complex<double> const *,
                Complex<double> *)
+{
+    throw_blas_unavailable();
+}
+
+void gemm_blas(ssize_t,
+               ssize_t,
+               ssize_t,
+               float const *,
+               float const *,
+               float *,
+               bool,
+               bool,
+               ssize_t,
+               ssize_t)
+{
+    throw_blas_unavailable();
+}
+
+void gemm_blas(ssize_t,
+               ssize_t,
+               ssize_t,
+               double const *,
+               double const *,
+               double *,
+               bool,
+               bool,
+               ssize_t,
+               ssize_t)
+{
+    throw_blas_unavailable();
+}
+
+void gemm_blas(ssize_t,
+               ssize_t,
+               ssize_t,
+               Complex<float> const *,
+               Complex<float> const *,
+               Complex<float> *,
+               bool,
+               bool,
+               ssize_t,
+               ssize_t)
+{
+    throw_blas_unavailable();
+}
+
+void gemm_blas(ssize_t,
+               ssize_t,
+               ssize_t,
+               Complex<double> const *,
+               Complex<double> const *,
+               Complex<double> *,
+               bool,
+               bool,
+               ssize_t,
+               ssize_t)
 {
     throw_blas_unavailable();
 }

@@ -43,6 +43,18 @@ inline void transform_binary(T * dest, T const * dest_end, T const * src1, T con
     }
 }
 
+template <typename T, std::invocable<T, T> ScalarOp>
+inline void transform_scalar(T * dest, T const * dest_end, T const * src, T scalar, ScalarOp scalar_op)
+{
+    T * ptr = dest;
+    while (ptr < dest_end)
+    {
+        *ptr = scalar_op(*src, scalar);
+        ++ptr;
+        ++src;
+    }
+}
+
 template <typename T>
 inline void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
@@ -65,6 +77,66 @@ template <typename T>
 inline void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
     transform_binary<T>(dest, dest_end, src1, src2, std::divides<T>{});
+}
+
+template <typename T>
+inline void add_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::plus<T>{});
+}
+
+template <typename T>
+inline void sub_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::minus<T>{});
+}
+
+template <typename T>
+inline void mul_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::multiplies<T>{});
+}
+
+template <typename T>
+inline void div_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::divides<T>{});
+}
+
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    T result{};
+    for (T const * ptr = start; ptr < end; ++ptr)
+    {
+        result += *ptr;
+    }
+    return result;
+}
+
+template <typename T>
+T sum_product(T const * lhs, T const * lhs_end, T const * rhs)
+{
+    T result{};
+    while (lhs < lhs_end)
+    {
+        result += *lhs * *rhs;
+        ++lhs;
+        ++rhs;
+    }
+    return result;
+}
+
+template <typename T>
+T sum_squared_difference(T const * start, T const * end, T mean)
+{
+    T result{};
+    for (T const * ptr = start; ptr < end; ++ptr)
+    {
+        T const delta = *ptr - mean;
+        result += delta * delta;
+    }
+    return result;
 }
 
 template <typename T>
