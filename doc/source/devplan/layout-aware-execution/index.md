@@ -52,9 +52,10 @@ struct OperandMapping
 class MappedOffsetCursor;
 class InnerLoopPlan;
 class InnerLoopCursor;
-struct ElementwisePlan;
-struct ReductionPlan;
-struct MatmulPlan;
+class ElementwisePlan;
+class ReductionPlan;
+class ReductionSchedule;
+class MatmulPlan;
 ```
 
 `LoopDomain` defines a runtime-rank coordinate space.  `OperandMapping`
@@ -82,8 +83,10 @@ The implementation is split by responsibility under
 | `loop.hpp` and `loop.cpp` | Runtime-rank domains, operand mappings, shape alignment, mapped cursors, and fixed-stride inner loops |
 | `elementwise_kernel.hpp` | Compile-time scalar, in-place, and contiguous kernel contracts |
 | `elementwise.hpp` | Elementwise planning, alias handling, output allocation, and dense or fixed-stride inner execution |
-| `reduction_plan.hpp` and `reduction_plan.cpp` | Kept/reduced domains plus slice and reduced-offset cursors |
-| `reduction.hpp` | Dense, fixed-stride row, and collecting reduction algorithms |
+| `reduction_plan.hpp` and `reduction_plan.cpp` | Kept/reduced semantic domains plus slice and reduced-offset cursors |
+| `reduction_schedule.hpp` and `reduction_schedule.cpp` | Layout-based selection between sliced and outer-contiguous traversal |
+| `reduction_outer.hpp` | Typed tiled backend for contiguous kept axes |
+| `reduction.hpp` | Reduction facade plus dense, fixed-stride row, and collecting algorithms |
 | `matmul_plan.hpp` and `matmul_plan.cpp` | Matrix roles, contraction strides, and batch broadcasting |
 | `matmul.hpp` | Direct, layout-described BLAS, packed BLAS, or mapped matrix execution |
 | `SimpleArrayExecution.hpp` | The standalone facade used only by the prototype binding |
@@ -104,7 +107,7 @@ control flow and reducer state visible in the family executor.
 | Family | Domains | Mapping rule | Dispatch |
 | --- | --- | --- | --- |
 | Elementwise | one result domain | right-align every operand; use zero stride for broadcast axes | a dense physical span uses SIMD; every other positive-rank layout maps outer axes once and runs a fixed-stride inner loop |
-| Reduction | outer kept domain and inner reduced domain | split input strides by normalized axes; map weights to the inner domain | a dense inner span uses SIMD; one-dimensional and row segments use fixed strides; median retains collection |
+| Reduction | outer kept domain and inner reduced domain | split input strides by normalized axes; map weights to the inner domain | the schedule selects a tiled contiguous-kept-axis route or sliced execution; median retains collection |
 | Matmul | batch domain plus explicit `M`, `N`, and `K` | right-align batch axes only; matrix axes retain row, column, and contraction strides | small rank-one/two work uses the direct kernel; compatible C/F matrix views and batches use BLAS; unsupported matrix strides pack or use mapped execution |
 
 The three plan types deliberately do not inherit from a common base.  The
@@ -169,13 +172,15 @@ layout classification, or traversal.  Unary, ternary, mixed-dtype, and
 mixed-output operations can add an executor adapter over the existing input
 mapping list without adding fields to `ElementwisePlan`.
 
-A new streaming reduction constructs `ReductionPlan` and iterates its outer
-slices with `ReductionSliceCursor`.  Dense inner domains use the SIMD
-accumulator, while other domains map each row once and run its last axis with
-a fixed stride.  A two-pass reducer such as variance and a collector such as
-median keep their algorithm-specific state, but neither recreates axis
-normalization or signed-stride traversal.  Weighted reducers add operand
-mappings to the inner domain rather than multiplying temporary arrays.
+A new streaming reduction constructs `ReductionPlan`, lowers it to
+`ReductionSchedule`, then chooses a backend.  Dense inner domains use the
+SIMD accumulator.  General layouts iterate outer slices with
+`ReductionSliceCursor` and run the reduced last axis with a fixed stride.  A
+contiguous kept axis can instead enter the tiled outer executor.  A two-pass
+reducer such as variance and a collector such as median keep their
+algorithm-specific state, but neither recreates axis normalization or
+signed-stride traversal.  Weighted reducers add operand mappings to the
+inner domain rather than multiplying temporary arrays.
 
 Contractions, gathers, searches, and sorting should not be forced through the
 elementwise executor.  They may define a topology-specific plan while reusing
@@ -211,18 +216,28 @@ backend.
 ### Reduction
 
 `ReductionPlan` splits axes into an outer output domain and an inner reduction
-domain.  Mean, weighted average, variance, and standard deviation stream
-directly from the source.  Median uses the same offset traversal but retains a
-collector because its algorithm needs an ordered value set.
+domain.  It contains semantic topology and mappings, but no inner-loop or
+contiguity decision.  `ReductionSchedule` lowers those facts to sliced or
+outer-contiguous traversal.  Mean, weighted average, variance, and standard
+deviation stream directly from the source.  Median uses the same schedule
+facts and offset traversal but retains a collector because its algorithm
+needs an ordered value set.
 
 Dense inner domains accumulate over one physical span.  The NEON backend has
 typed sum, sum-product, and squared-difference kernels, while the generic
 backend retains compiler-vectorizable loops.  A one-dimensional inner domain
 and a higher-rank row both use `InnerLoopPlan`; the runtime-rank cursor moves
-once per row and stays out of the last-axis loop.  `ReductionPlan` prepares
+once per row and stays out of the last-axis loop.  `ReductionSchedule` prepares
 the single-input inner loop once for all output slices.  Weighted average
 prepares its two-input loop once and computes the weight total once per
 operation rather than once per output slice.
+
+For a rank-two F-layout reduction over axis 1, the kept axis is physically
+contiguous while each logical output row is strided.  The outer-contiguous
+schedule interchanges those loops and processes a 4096-byte output tile.  It
+therefore reads each source column sequentially while retaining several
+output accumulators.  The typed backend is separate from the semantic plan,
+so unsupported shapes and signed strides keep the general sliced route.
 
 Empty kept domains produce empty outputs without entering the loop.  Empty
 reduced domains raise before reading input.  Full reductions use an empty
@@ -367,8 +382,8 @@ Every correct legacy route with a conclusive classification improved or
 reached parity, and no route regressed.  The 13 conclusive NumPy-faster rows
 are eight axis reductions, four full reductions, and one microsecond in-place
 array case.  The 12 reduction rows motivate the tiled multi-output reduction
-recommendation below rather than another common plan layer.  The in-place
-case remains subject to the paired microbenchmark caveat below.
+experiment below rather than another common plan layer.  The in-place case
+remains subject to the paired microbenchmark caveat below.
 
 The matrix includes out-of-place array and scalar arithmetic, shape
 broadcasting, in-place array, scalar, and broadcast operations, axis and full
@@ -461,8 +476,8 @@ Fixed-stride inner loops remove most mapped cursor cost.  Step-two scalar,
 broadcast, and in-place routes move from large NumPy losses to parity or
 planned wins.  NEON accumulation cuts the C-layout axis mean and variance
 costs by about five times; variance reaches parity, while mean and
-F-contiguous axis reductions still favor NumPy.  The tiled multi-output
-recommendation therefore remains useful.
+F-contiguous axis reductions still favor NumPy.  This gap motivates the
+outer-contiguous schedule experiment below.
 
 Batch BLAS removes the scalar-contraction bottleneck.  Compatible contiguous
 batches now reach parity or an interval crossing parity, while negative and
@@ -472,16 +487,40 @@ For large negative and step-two 256 by 256 inputs, packing before Accelerate
 remains roughly 104 to 138 times faster than legacy and 126 to 154 times
 faster than NumPy.
 
+## Outer-contiguous reduction experiment
+
+The next Ubuntu experiment implemented the loop-interchange recommendation
+without changing reduction semantics.  `ReductionPlan` now ends at the
+kept/reduced topology.  `ReductionSchedule` selects the traversal, and
+`OuterReductionExecutor` owns the typed 4096-byte tiled backend.  General
+layouts retain the previous sliced execution.
+
+The before run used the clean `a1643483` revision with 15 samples and five
+warmups.  The after run used the same release environment and CPU with 30
+samples and ten warmups.  These are cross-run medians rather than paired
+samples, so they establish the size and direction of the change.  The
+benchmark still checks each result against NumPy before timing.
+
+| F-layout axis-1 operation | Before ms | After ms | Speedup | After versus NumPy |
+| --- | ---: | ---: | ---: | --- |
+| Mean | 0.1820 | 0.0553 | 3.29x | inconclusive |
+| Variance | 0.3328 | 0.1044 | 3.19x | planned-faster |
+| Standard deviation | 0.3286 | 0.1076 | 3.05x | planned-faster |
+| Weighted average | 0.1929 | 0.0577 | 3.34x | planned-faster |
+
+Median does not use this backend because it must collect values for ordering.
+The optimized macOS notebook above predates this schedule.  It must be rerun
+at the new branch revision before the Apple Silicon result can be updated.
+
 ## Recommendations
 
 1. Keep `LoopDomain`, `OperandMapping`, and fixed-stride inner-loop lowering
    as the shared vocabulary, but keep the three family plans and executors
    separate.  Their measured fast paths depend on different topology and cost
    rules.
-2. Investigate F-contiguous axis reductions with a tiled multi-output kernel.
-   Reducing axis 1 of a 512 by 512 F-layout array currently walks one
-   cache-unfriendly stride at a time.  Loop interchange can read physical
-   memory sequentially while holding several output accumulators.
+2. Reproduce the outer-contiguous reduction result on Apple Silicon.  Keep the
+   schedule and backend split only if Accelerate-era measurements confirm the
+   Ubuntu improvement without harming the other reduction layouts.
 3. Add an x86 SIMD backend only after profiling the remaining elementwise and
    reduction rows.  This Ubuntu machine has AVX2, but the solvcon SIMD facade
    currently falls back to generic loops outside AArch64.
@@ -499,18 +538,18 @@ faster than NumPy.
 
 The prototype currently passes:
 
-- 15 focused Python tests, including float and complex template routes.
+- 16 focused Python tests, including float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
-- 1000 deterministic randomized iterations covering ranks one through four,
+- 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
 
-The existing buffer and matrix test modules and project linters also pass, for
-256 focused and existing tests in the final combined run.  The local
-prime environment does not contain `doxygen` or `sphinx-build`, so the
-documentation source is included but could not be rendered in that
-environment.
+The full Python suite passes with 1405 tests, 315 skips, and three expected
+failures.  All 228 C++ tests, the standalone buffer build, and project linters
+also pass.  The local prime environment does not contain `doxygen` or
+`sphinx-build`, so the documentation source is included but could not be
+rendered in that environment.
 
 ## Out of scope
 
@@ -544,5 +583,8 @@ and reproduce the same correctness matrix and timing protocol.
    skeletons, side-by-side legacy and planned measurements, contiguous and
    non-contiguous correctness checks, reproducible Ubuntu data, and a draft
    pull request that can also be cloned for macOS profiling.
+4. The optimized macOS result identified F-layout axis reduction as the main
+   remaining topology bottleneck.  The follow-up split semantic planning from
+   execution scheduling and validated a tiled kept-axis backend on Ubuntu.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
