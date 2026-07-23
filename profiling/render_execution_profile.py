@@ -159,6 +159,10 @@ def render_reading_guide(lines):
         '- Every ratio shows `median (q10..q90)` from paired samples.',
         '- Faster or slower requires the full interval to clear five',
         '  percent. A crossing interval is `inconclusive`.',
+        '- Existing BLAS is `SimpleArray::matmul_blas()` and is measured',
+        '  only for unbatched rank-1 and rank-2 operations.',
+        '- A control is another planned route measured in the same rotating',
+        '  sample. Its label identifies the compared layout.',
         '- `legacy-incorrect` means planned matched NumPy but legacy did',
         '  not. Incorrect legacy results are not timed.',
         '',
@@ -213,34 +217,88 @@ def format_workload(workload):
 
 def render_family(lines, family, rows):
     has_workload = any(row.get('workload') is not None for row in rows)
-    workload_header = 'Workload | ' if has_workload else ''
-    workload_separator = '--- | ' if has_workload else ''
+    has_blas = any(
+        row.get('blas_seconds') is not None or
+        row.get('blas_correct') is not None
+        for row in rows)
+    has_control = any(row.get('control_label') for row in rows)
+    headers = ['Operation', 'Scenario']
+    separators = ['---', '---']
+    if has_workload:
+        headers.append('Workload')
+        separators.append('---')
+    headers.extend((
+        'Operands', 'Calls/sample', 'NumPy ms', 'Legacy ms'))
+    separators.extend(('---', '---:', '---:', '---:'))
+    if has_blas:
+        headers.append('Existing BLAS ms')
+        separators.append('---:')
+    if has_control:
+        headers.append('Control ms')
+        separators.append('---:')
+    headers.append('Planned ms')
+    separators.append('---:')
+    headers.append('Legacy/planned (q10..q90)')
+    separators.append('---:')
+    if has_blas:
+        headers.append('BLAS/planned (q10..q90)')
+        separators.append('---:')
+    if has_control:
+        headers.append('Control/planned (q10..q90)')
+        separators.append('---:')
+    headers.extend((
+        'NumPy/planned (q10..q90)', 'Legacy status'))
+    separators.extend(('---:', '---'))
+    if has_blas:
+        headers.append('Planned vs BLAS')
+        separators.append('---')
+    if has_control:
+        headers.append('Planned vs control')
+        separators.append('---')
+    headers.append('Planned vs NumPy')
+    separators.append('---')
+
     lines.extend((
         f'### {family}',
         '',
-        f'| Operation | Scenario | {workload_header}Operands | '
-        'Calls/sample | NumPy ms | '
-        'Legacy ms | Planned ms | Legacy/planned (q10..q90) | '
-        'NumPy/planned (q10..q90) | Legacy status | '
-        'Planned vs NumPy |',
-        f'| --- | --- | {workload_separator}--- | ---: | ---: | ---: | '
-        '---: | ---: | '
-        '---: | --- | --- |',
+        '| ' + ' | '.join(headers) + ' |',
+        '| ' + ' | '.join(separators) + ' |',
     ))
     for row in rows:
-        workload = (
-            f"{format_workload(row.get('workload'))} | "
-            if has_workload else '')
-        lines.append(
-            f"| {row['operation']} | {row['layout']} | "
-            f"{workload}{format_operands(row['operands'])} | "
-            f"{row['number']} | "
-            f"{format_seconds(row['numpy_seconds'])} | "
-            f"{format_seconds(row['legacy_seconds'])} | "
-            f"{format_seconds(row['planned_seconds'])} | "
-            f"{format_ratio(row, 'legacy_over_planned')} | "
-            f"{format_ratio(row, 'numpy_over_planned')} | "
-            f"{row['status']} | {row['planned_vs_numpy']} |")
+        cells = [row['operation'], row['layout']]
+        if has_workload:
+            cells.append(format_workload(row.get('workload')))
+        cells.extend((
+            format_operands(row['operands']),
+            str(row['number']),
+            format_seconds(row['numpy_seconds']),
+            format_seconds(row['legacy_seconds']),
+        ))
+        if has_blas:
+            cells.append(format_seconds(row.get('blas_seconds')))
+        if has_control:
+            control = format_seconds(row.get('control_seconds'))
+            if row.get('control_label'):
+                control += f" ({row['control_label']})"
+            cells.append(control)
+        cells.extend((
+            format_seconds(row['planned_seconds']),
+            format_ratio(row, 'legacy_over_planned'),
+        ))
+        if has_blas:
+            cells.append(format_ratio(row, 'blas_over_planned'))
+        if has_control:
+            cells.append(format_ratio(row, 'control_over_planned'))
+        cells.extend((
+            format_ratio(row, 'numpy_over_planned'),
+            row['status'],
+        ))
+        if has_blas:
+            cells.append(row.get('planned_vs_blas', 'not-measured'))
+        if has_control:
+            cells.append(row.get('planned_vs_control', 'not-measured'))
+        cells.append(row['planned_vs_numpy'])
+        lines.append('| ' + ' | '.join(cells) + ' |')
     lines.append('')
 
 

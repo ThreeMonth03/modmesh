@@ -56,12 +56,18 @@ class BenchmarkCase:
     numpy_call: object
     planned_call: object
     legacy_call: object = None
+    blas_call: object = None
+    control_call: object = None
+    control_label: str = ''
     number: int = 1
     note: str = ''
     operands: tuple = ()
     legacy_correct: object = None
     legacy_error_type: str = ''
     legacy_error: str = ''
+    blas_correct: object = None
+    blas_error_type: str = ''
+    blas_error: str = ''
     reset_calls: object = None
     workload: object = None
 
@@ -561,6 +567,8 @@ def matmul_cases(rng, quick):
             layout=layout_name,
             numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
             legacy_call=lambda lhs=lhs_sa, rhs=rhs_sa: lhs.matmul(rhs),
+            blas_call=lambda lhs=lhs_sa,
+            rhs=rhs_sa: lhs.matmul_blas(rhs),
             planned_call=lambda lhs=lhs_sa,
             rhs=rhs_sa: lhs._planned_matmul(rhs),
             number=3 if quick else 7,
@@ -597,6 +605,8 @@ def matmul_cases(rng, quick):
             layout=layout_name,
             numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
             legacy_call=lambda lhs=lhs_sa, rhs=rhs_sa: lhs.matmul(rhs),
+            blas_call=lambda lhs=lhs_sa,
+            rhs=rhs_sa: lhs.matmul_blas(rhs),
             planned_call=lambda lhs=lhs_sa,
             rhs=rhs_sa: lhs._planned_matmul(rhs),
             number=number,
@@ -645,20 +655,36 @@ def matmul_cases(rng, quick):
 
 
 def append_hpc_matmul_case(
-        cases, layout, lhs, rhs, legacy=False, note=''):
+        cases, layout, lhs, rhs, legacy=False, blas=False,
+        control_lhs=None, control_label='', note=''):
     lhs_sa = make_array(lhs)
     rhs_sa = make_array(rhs)
     legacy_call = None
+    blas_call = None
+    control_call = None
     if legacy:
         def run_legacy(lhs=lhs_sa, rhs=rhs_sa):
             return lhs.matmul(rhs)
         legacy_call = run_legacy
+    if blas:
+        def run_blas(lhs=lhs_sa, rhs=rhs_sa):
+            return lhs.matmul_blas(rhs)
+        blas_call = run_blas
+    if control_lhs is not None:
+        control_lhs_sa = make_array(control_lhs)
+
+        def run_control(lhs=control_lhs_sa, rhs=rhs_sa):
+            return lhs._planned_matmul(rhs)
+        control_call = run_control
     cases.append(BenchmarkCase(
         family='matmul-hpc',
         operation='matmul',
         layout=layout,
         numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
         legacy_call=legacy_call,
+        blas_call=blas_call,
+        control_call=control_call,
+        control_label=control_label,
         planned_call=lambda lhs=lhs_sa,
         rhs=rhs_sa: lhs._planned_matmul(rhs),
         number=1,
@@ -679,7 +705,8 @@ def hpc_matmul_cases(rng, include_slow=False):
         lhs_1024,
         rhs_1024,
         legacy=True,
-        note='Large unbatched legacy, planned, and NumPy baseline.',
+        blas=True,
+        note='Large unbatched legacy, BLAS, planned, and NumPy baseline.',
     )
 
     if include_slow:
@@ -794,6 +821,8 @@ def hpc_matmul_cases(rng, include_slow=False):
         'broadcast-negative-lhs-256-b64',
         lhs_strided_256[..., ::-1],
         rhs_batch_256,
+        control_lhs=lhs_strided_256,
+        control_label='dense planned',
         note='A repeated negative-stride lhs must not be repacked 64 times.',
     )
     append_hpc_matmul_case(
@@ -801,6 +830,8 @@ def hpc_matmul_cases(rng, include_slow=False):
         'broadcast-step2-lhs-256-b64',
         make_stepped(lhs_strided_256),
         rhs_batch_256,
+        control_lhs=lhs_strided_256,
+        control_label='dense planned',
         note='A repeated step-two lhs must not be repacked 64 times.',
     )
 
@@ -841,16 +872,22 @@ def check_case(case):
     expected = as_numpy(case.numpy_call())
     planned = as_numpy(case.planned_call())
     np.testing.assert_allclose(planned, expected, rtol=1e-11, atol=1e-12)
-    if case.legacy_call is not None:
+    check_optional_route(case, 'legacy', expected)
+    check_optional_route(case, 'blas', expected)
+
+
+def check_optional_route(case, route, expected):
+    call = getattr(case, f'{route}_call')
+    if call is not None:
         try:
-            legacy = as_numpy(case.legacy_call())
+            result = as_numpy(call())
             np.testing.assert_allclose(
-                legacy, expected, rtol=1e-11, atol=1e-12)
-            case.legacy_correct = True
+                result, expected, rtol=1e-11, atol=1e-12)
+            setattr(case, f'{route}_correct', True)
         except Exception as error:
-            case.legacy_correct = False
-            case.legacy_error_type = type(error).__name__
-            case.legacy_error = str(error).strip()
+            setattr(case, f'{route}_correct', False)
+            setattr(case, f'{route}_error_type', type(error).__name__)
+            setattr(case, f'{route}_error', str(error).strip())
 
 
 def run_correctness(cases, verbose=True):
@@ -863,6 +900,9 @@ def run_correctness(cases, verbose=True):
         if case.legacy_correct is False:
             print(f'  PASS planned, FAIL legacy {case.name}: '
                   f"{case.legacy_error.splitlines()[0]}")
+        elif case.blas_correct is False:
+            print(f'  PASS planned, FAIL BLAS {case.name}: '
+                  f"{case.blas_error.splitlines()[0]}")
         else:
             print(f'  PASS {case.name}')
 
@@ -973,8 +1013,12 @@ def benchmark_case(case, repeat, warmup):
         'numpy': case.numpy_call,
         'planned': case.planned_call,
     }
+    if case.blas_call is not None and case.blas_correct is not False:
+        calls['blas'] = case.blas_call
     if case.legacy_call is not None and case.legacy_correct is not False:
         calls['legacy'] = case.legacy_call
+    if case.control_call is not None:
+        calls['control'] = case.control_call
     timings, samples = measure_calls(
         calls, case.number, repeat, warmup, case.reset_calls)
     numpy_seconds = timings['numpy']
@@ -1005,6 +1049,20 @@ def benchmark_case(case, repeat, warmup):
         'legacy_correct': case.legacy_correct,
         'legacy_error_type': case.legacy_error_type,
         'legacy_error': case.legacy_error,
+        'blas_seconds': None,
+        'blas_samples_seconds': None,
+        'blas_over_planned': None,
+        'blas_correct': case.blas_correct,
+        'blas_error_type': case.blas_error_type,
+        'blas_error': case.blas_error,
+        'planned_vs_blas': (
+            'blas-incorrect'
+            if case.blas_correct is False else 'not-measured'),
+        'control_label': case.control_label,
+        'control_seconds': None,
+        'control_samples_seconds': None,
+        'control_over_planned': None,
+        'planned_vs_control': 'not-measured',
         'status': (
             'legacy-incorrect'
             if case.legacy_correct is False else 'new-only'),
@@ -1021,6 +1079,30 @@ def benchmark_case(case, repeat, warmup):
         row['legacy_over_planned_samples'] = legacy_ratio['samples']
         row['status'] = comparison_status(
             legacy_ratio, 'improved', 'regression')
+    if 'blas' in timings:
+        blas = timings['blas']
+        row['blas_seconds'] = blas
+        row['blas_samples_seconds'] = samples['blas']
+        blas_ratio = ratio_statistics(
+            samples['blas'], samples['planned'])
+        row['blas_over_planned'] = blas_ratio['median']
+        row['blas_over_planned_q10'] = blas_ratio['q10']
+        row['blas_over_planned_q90'] = blas_ratio['q90']
+        row['blas_over_planned_samples'] = blas_ratio['samples']
+        row['planned_vs_blas'] = comparison_status(
+            blas_ratio, 'planned-faster', 'blas-faster')
+    if 'control' in timings:
+        control = timings['control']
+        row['control_seconds'] = control
+        row['control_samples_seconds'] = samples['control']
+        control_ratio = ratio_statistics(
+            samples['control'], samples['planned'])
+        row['control_over_planned'] = control_ratio['median']
+        row['control_over_planned_q10'] = control_ratio['q10']
+        row['control_over_planned_q90'] = control_ratio['q90']
+        row['control_over_planned_samples'] = control_ratio['samples']
+        row['planned_vs_control'] = comparison_status(
+            control_ratio, 'planned-faster', 'control-faster')
     return row
 
 
@@ -1050,22 +1132,34 @@ def comparison_status(ratio, faster, slower):
 
 def print_results(rows):
     print('\n| family | operation | scenario | operands | NumPy ms | '
-          'legacy ms | '
-          'planned ms | legacy / planned (q10..q90) | '
+          'legacy ms | BLAS ms | control ms | planned ms | '
+          'legacy / planned (q10..q90) | '
+          'BLAS / planned (q10..q90) | '
+          'control / planned (q10..q90) | '
           'NumPy / planned (q10..q90) | '
-          'legacy status | planned vs NumPy |')
+          'legacy status | planned vs BLAS | planned vs control | '
+          'planned vs NumPy |')
     print('| --- | --- | --- | --- | ---: | ---: | ---: | ---: | '
-          '---: | --- | --- |')
+          '---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |')
     for row in rows:
         legacy = row['legacy_seconds']
+        blas = row['blas_seconds']
+        control = row['control_seconds']
         legacy_speedup = row['legacy_over_planned']
         legacy_text = 'n/a' if legacy is None else f'{legacy * 1000:.4f}'
+        blas_text = 'n/a' if blas is None else f'{blas * 1000:.4f}'
+        control_text = (
+            'n/a' if control is None else f'{control * 1000:.4f}')
         legacy_speedup_text = 'n/a'
         if legacy_speedup is not None:
             legacy_speedup_text = (
                 f"{legacy_speedup:.3f}x "
                 f"({row['legacy_over_planned_q10']:.3f}.."
                 f"{row['legacy_over_planned_q90']:.3f})")
+        blas_speedup_text = format_optional_ratio(
+            row, 'blas_over_planned')
+        control_speedup_text = format_optional_ratio(
+            row, 'control_over_planned')
         numpy_speedup_text = (
             f"{row['numpy_over_planned']:.3f}x "
             f"({row['numpy_over_planned_q10']:.3f}.."
@@ -1074,10 +1168,16 @@ def print_results(rows):
               f"{row['layout']} | {format_operands(row['operands'])} | "
               f"{row['numpy_seconds'] * 1000:.4f} | "
               f"{legacy_text} | "
+              f"{blas_text} | "
+              f"{control_text} | "
               f"{row['planned_seconds'] * 1000:.4f} | "
               f"{legacy_speedup_text} | "
+              f"{blas_speedup_text} | "
+              f"{control_speedup_text} | "
               f"{numpy_speedup_text} | "
-              f"{row['status']} | {row['planned_vs_numpy']} |")
+              f"{row['status']} | {row['planned_vs_blas']} | "
+              f"{row['planned_vs_control']} | "
+              f"{row['planned_vs_numpy']} |")
 
     counts = {
         status: sum(row['status'] == status for row in rows)
@@ -1094,6 +1194,16 @@ def print_results(rows):
     }
     print('Planned vs NumPy:', ', '.join(
         f'{status}={count}' for status, count in numpy_counts.items()))
+
+
+def format_optional_ratio(row, prefix):
+    median = row[prefix]
+    if median is None:
+        return 'n/a'
+    return (
+        f"{median:.3f}x "
+        f"({row[f'{prefix}_q10']:.3f}.."
+        f"{row[f'{prefix}_q90']:.3f})")
 
 
 def git_revision():
