@@ -10,7 +10,6 @@ set(SOLVCON_BUFFER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/signed_stride_layout.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/loop.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/execution/operation.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/elementwise_kernel.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/elementwise.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_plan.hpp
@@ -31,7 +30,6 @@ set(SOLVCON_BUFFER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/BufferExpander.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SimpleArray.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/loop.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/execution/operation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_plan.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/reduction_schedule.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution/matmul_plan.cpp

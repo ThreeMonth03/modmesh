@@ -67,39 +67,22 @@ public:
     static A planned_matmul(A const & self, A const & other);
 
 private:
-    using add_operation_type = execution::elementwise_operation_type<
-        execution::AddKernel<value_type>>;
-    using subtract_operation_type = execution::elementwise_operation_type<
-        execution::SubtractKernel<value_type>>;
-    using multiply_operation_type = execution::elementwise_operation_type<
-        execution::MultiplyKernel<value_type>>;
-    using divide_operation_type = execution::elementwise_operation_type<
-        execution::DivideKernel<value_type>>;
-    using mean_operation_type =
-        execution::mean_operation_type<value_type>;
-    using average_operation_type =
-        execution::average_operation_type<value_type>;
-    using variance_operation_type =
-        execution::variance_operation_type<real_type>;
-    using collection_operation_type =
-        execution::collection_operation_type;
-
     using add_executor_type = execution::ElementwiseExecutor<
         A,
         value_type,
-        add_operation_type>;
+        execution::AddKernel<value_type>>;
     using subtract_executor_type = execution::ElementwiseExecutor<
         A,
         value_type,
-        subtract_operation_type>;
+        execution::SubtractKernel<value_type>>;
     using multiply_executor_type = execution::ElementwiseExecutor<
         A,
         value_type,
-        multiply_operation_type>;
+        execution::MultiplyKernel<value_type>>;
     using divide_executor_type = execution::ElementwiseExecutor<
         A,
         value_type,
-        divide_operation_type>;
+        execution::DivideKernel<value_type>>;
     using matmul_executor_type =
         execution::MatmulExecutor<A, value_type>;
 
@@ -274,9 +257,8 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_mean(
     A const & self, shape_type const & axes)
 {
-    auto const plan =
-        execution::make_operation_plan<mean_operation_type>(
-            self, axes, false);
+    auto const plan = execution::ReductionPlan::make(
+        self, axes, false);
     return execution::ReductionExecutor<A, value_type>::mean(self, plan);
 }
 
@@ -293,9 +275,8 @@ A SimpleArrayExecution<A, T>::planned_average(
     shape_type const & axes,
     A const & weight)
 {
-    auto const plan =
-        execution::make_operation_plan<average_operation_type>(
-            self, axes, false);
+    auto const plan = execution::ReductionPlan::make(
+        self, axes, false);
     return execution::ReductionExecutor<A, value_type>::average(
         self, weight, plan);
 }
@@ -316,9 +297,8 @@ SimpleArrayExecution<A, T>::planned_var(
     shape_type const & axes,
     size_t ddof)
 {
-    auto const plan =
-        execution::make_operation_plan<variance_operation_type>(
-            self, axes, false);
+    auto const plan = execution::ReductionPlan::make(
+        self, axes, false);
     return execution::ReductionExecutor<A, value_type>::variance(
         self, plan, ddof);
 }
@@ -359,9 +339,8 @@ template <typename A, typename T>
 A SimpleArrayExecution<A, T>::planned_median(
     A const & self, shape_type const & axes)
 {
-    auto const plan =
-        execution::make_operation_plan<collection_operation_type>(
-            self, axes, false);
+    auto const plan = execution::ReductionPlan::make(
+        self, axes, false);
     return execution::ReductionExecutor<A, value_type>::collect(
         self, plan, MedianFinalize(self));
 }
