@@ -168,6 +168,8 @@ private:
     static void execute_into(Array & destination,
                              Array const & rhs,
                              kernel_type kernel);
+    static bool storage_overlaps(Array const & lhs,
+                                 Array const & rhs);
 }; /* end class ElementwiseExecutor */
 
 template <typename Array, typename T, typename Kernel>
@@ -364,14 +366,38 @@ void ElementwiseExecutor<Array, T, Kernel>::transform_into(
         destination.logical_data() == rhs.logical_data() &&
         destination.shape() == rhs.shape() &&
         destination.stride() == rhs.stride();
-    if (destination.data() == rhs.data() && !exact_alias)
+    if (storage_overlaps(destination, rhs) && !exact_alias)
     {
-        // Snapshot a partial alias before writing.
         Array const safe_rhs(rhs); // NOLINT(performance-unnecessary-copy-initialization)
         execute_into(destination, safe_rhs, kernel);
         return;
     }
     execute_into(destination, rhs, kernel);
+}
+
+template <typename Array, typename T, typename Kernel>
+requires ElementwiseKernel<Kernel, T>
+bool ElementwiseExecutor<Array, T, Kernel>::storage_overlaps(
+    Array const & lhs, Array const & rhs)
+{
+    if (lhs.size() == 0 || rhs.size() == 0)
+    {
+        return false;
+    }
+
+    MappingSpan const lhs_span =
+        OperandMapping::span(lhs.shape(), lhs.stride());
+    MappingSpan const rhs_span =
+        OperandMapping::span(rhs.shape(), rhs.stride());
+    std::uintptr_t const lhs_begin = reinterpret_cast<std::uintptr_t>(
+        lhs.logical_data() + lhs_span.minimum());
+    std::uintptr_t const lhs_end = reinterpret_cast<std::uintptr_t>(
+        lhs.logical_data() + lhs_span.maximum() + 1);
+    std::uintptr_t const rhs_begin = reinterpret_cast<std::uintptr_t>(
+        rhs.logical_data() + rhs_span.minimum());
+    std::uintptr_t const rhs_end = reinterpret_cast<std::uintptr_t>(
+        rhs.logical_data() + rhs_span.maximum() + 1);
+    return lhs_begin < rhs_end && rhs_begin < lhs_end;
 }
 
 template <typename Array, typename T, typename Kernel>

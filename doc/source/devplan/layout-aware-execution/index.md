@@ -113,6 +113,33 @@ The implementation is split by responsibility under
 | `matmul.hpp` | Direct, layout-described BLAS, packed BLAS, or mapped matrix execution |
 | `SimpleArrayExecution.hpp` | The standalone facade used only by the prototype binding |
 
+## Evidence for the shared layer
+
+The shared layer is not justified by a future operation list.  Every retained
+primitive has at least two concrete consumers in this prototype:
+
+| Shared primitive | Elementwise | Reduction | Matmul |
+| --- | --- | --- | --- |
+| `LoopDomain` | Result coordinates | Kept and reduced coordinates | Broadcast batch coordinates |
+| `OperandMapping` | Output, exact input, and zero-stride input mappings | Kept, reduced, and weight mappings | Batch and matrix-role mappings |
+| `MappedOffsetCursor` | General strided fallback | Slice and reduced-offset traversal | Broadcast batch traversal |
+| `InnerLoopPlan` | Fixed-stride elementwise rows | Fixed-stride reduction rows | Not used |
+| Common-shape and zero-stride mapping | NumPy-style value broadcasting | Weight alignment | Leading batch broadcasting |
+
+The direct C++ contracts in `gtests/test_nopython_execution.cpp` verify the
+shared behavior independently of Python bindings and numerical kernels.  They
+cover common-shape alignment, zero-stride offsets, negative strides, fixed
+inner-loop lowering, and construction of all three family plans over the same
+layout vocabulary.
+
+This is the bounded reason the common layer is necessary.  Removing
+`LoopDomain`, `OperandMapping`, or mapped traversal would make two or three
+families independently reimplement runtime-rank carry, signed offset
+calculation, empty-domain handling, or broadcasting.  The table does not
+justify a universal executor.  Reduction still owns kept/reduced traversal,
+and matmul still owns contraction and backend policy.  A primitive with only
+one consumer remains in its family.
+
 The facade supplies the object API and calls the plan belonging to that
 operation family.  Each plan remains a small value object with one
 topology-specific responsibility.  Kernels and array types remain templates,
@@ -583,15 +610,16 @@ at the new branch revision before the Apple Silicon result can be updated.
 
 The prototype currently passes:
 
-- 16 focused Python tests, including float and complex outer-contiguous routes.
+- 20 focused Python tests, including partial overlap, invalid axes and matrix
+  shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
 
-The full Python suite passes with 1405 tests, 315 skips, and three expected
-failures.  All 228 C++ tests, the standalone buffer build, and project linters
+The full Python suite passes with 1409 tests, 315 skips, and three expected
+failures.  All 232 C++ tests, the standalone buffer build, and project linters
 also pass.  The local prime environment does not contain `doxygen` or
 `sphinx-build`, so the documentation source is included but could not be
 rendered in that environment.

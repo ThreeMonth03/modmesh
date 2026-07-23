@@ -92,6 +92,26 @@ class PlannedElementwiseTC(unittest.TestCase):
 
         self.assertEqual((0, 3), result.shape)
 
+    def test_inplace_partial_overlap_uses_snapshot(self):
+        cases = (
+            (slice(1, None), slice(None, -1)),
+            (slice(None, -1), slice(1, None)),
+        )
+        for destination_slice, source_slice in cases:
+            with self.subTest(destination=destination_slice):
+                storage = np.arange(8, dtype='float64')
+                destination_values = storage[destination_slice]
+                source_values = storage[source_slice]
+                expected = (
+                    destination_values.copy() + source_values.copy())
+                destination = make_array(destination_values)
+                source = make_array(source_values)
+
+                destination._planned_iadd(source)
+
+                np.testing.assert_array_equal(
+                    destination.ndarray, expected)
+
 
 class PlannedReductionTC(unittest.TestCase):
 
@@ -178,6 +198,16 @@ class PlannedReductionTC(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'empty reduction'):
             values._planned_median((1,))
 
+    def test_invalid_axes_raise(self):
+        values = solvcon.SimpleArrayFloat64(shape=(2, 3), value=0.0)
+
+        with self.assertRaisesRegex(ValueError, 'duplicate'):
+            values._planned_mean((0, 0))
+        with self.assertRaisesRegex(IndexError, 'out of range'):
+            values._planned_mean((2,))
+        with self.assertRaisesRegex(ValueError, 'proper axis'):
+            values._planned_mean((0, 1))
+
 
 class PlannedMatmulTC(unittest.TestCase):
 
@@ -238,6 +268,30 @@ class PlannedMatmulTC(unittest.TestCase):
         result = lhs._planned_matmul(rhs)
 
         self.assertEqual((4, 0, 2, 5), result.shape)
+
+    def test_zero_contraction(self):
+        lhs = solvcon.SimpleArrayFloat64(shape=(2, 0), value=1.0)
+        rhs = solvcon.SimpleArrayFloat64(shape=(0, 3), value=2.0)
+
+        result = lhs._planned_matmul(rhs)
+
+        self.assertEqual((2, 3), result.shape)
+        np.testing.assert_array_equal(
+            result.ndarray, np.zeros((2, 3), dtype='float64'))
+
+    def test_invalid_shapes_raise(self):
+        lhs = solvcon.SimpleArrayFloat64(shape=(2, 3), value=1.0)
+        wrong_inner = solvcon.SimpleArrayFloat64(
+            shape=(4, 2), value=1.0)
+        with self.assertRaisesRegex(IndexError, 'shape mismatch'):
+            lhs._planned_matmul(wrong_inner)
+
+        batch_lhs = solvcon.SimpleArrayFloat64(
+            shape=(2, 3, 4), value=1.0)
+        batch_rhs = solvcon.SimpleArrayFloat64(
+            shape=(5, 4, 6), value=1.0)
+        with self.assertRaisesRegex(ValueError, 'broadcast'):
+            batch_lhs._planned_matmul(batch_rhs)
 
 
 class PlannedTypedExecutionTC(unittest.TestCase):
