@@ -1099,8 +1099,8 @@ def numpy_build_configuration():
     return output.getvalue()
 
 
-def extension_linkage():
-    extension = pathlib.Path(solvcon.core._impl.__file__)
+def shared_object_linkage(extension):
+    extension = pathlib.Path(extension)
     if sys.platform == 'darwin':
         command = ['otool', '-L', str(extension)]
     elif sys.platform.startswith('linux'):
@@ -1123,6 +1123,14 @@ def extension_linkage():
     }
 
 
+def extension_linkage():
+    return shared_object_linkage(solvcon.core._impl.__file__)
+
+
+def numpy_extension_linkage():
+    return shared_object_linkage(np._core._multiarray_umath.__file__)
+
+
 def metadata(args):
     dirty = subprocess.run(
         ['git', 'status', '--porcelain'],
@@ -1138,6 +1146,7 @@ def metadata(args):
         'python': platform.python_version(),
         'numpy': np.__version__,
         'numpy_build_configuration': numpy_build_configuration(),
+        'numpy_extension_linkage': numpy_extension_linkage(),
         'solvcon_extension_linkage': extension_linkage(),
         'seed': SEED,
         'repeat': args.repeat,
