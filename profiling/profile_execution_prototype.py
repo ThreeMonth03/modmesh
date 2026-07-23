@@ -777,6 +777,20 @@ def hpc_matmul_cases(rng, include_slow=False):
         (64, 256, 256), dtype='float64')
     append_hpc_matmul_case(
         cases,
+        'broadcast-dense-lhs-256-b64',
+        lhs_strided_256,
+        rhs_batch_256,
+        note='Dense zero-stride control for repeated strided lhs cases.',
+    )
+    append_hpc_matmul_case(
+        cases,
+        'materialized-dense-lhs-256-b64',
+        np.repeat(lhs_strided_256, 64, axis=0),
+        rhs_batch_256,
+        note='Pre-expanded control; materialization is outside timing.',
+    )
+    append_hpc_matmul_case(
+        cases,
         'broadcast-negative-lhs-256-b64',
         lhs_strided_256[..., ::-1],
         rhs_batch_256,
@@ -794,6 +808,13 @@ def hpc_matmul_cases(rng, include_slow=False):
         (128, 256, 256), dtype='float64')
     rhs_one_256 = rng.random(
         (1, 256, 256), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-dense-axis-256-b128',
+        lhs_batch_256,
+        rhs_one_256,
+        note='Dense batch-axis control for the step-two batch view.',
+    )
     append_hpc_matmul_case(
         cases,
         'large-batch-step2-axis-256-b128',
