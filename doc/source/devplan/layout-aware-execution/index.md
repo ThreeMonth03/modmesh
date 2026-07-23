@@ -550,10 +550,38 @@ runtime-rank carry does not become the dominant cost.
 
 Negative and step-two matrix strides are about 9.4 times slower than the
 dense broadcast control because higher-rank unsupported matrix layouts still
-use mapped scalar contraction.  The next matrix-family optimization should
-pack one repeated broadcast matrix once and reuse it.  It should not change
-`LoopDomain` or `OperandMapping`.  Apple Silicon must also determine whether
-16384 small matrix calls need an Accelerate-specific batched kernel.
+use mapped scalar contraction.  This isolates matrix packing as an executor
+policy problem.  It does not justify changing `LoopDomain` or
+`OperandMapping`.
+
+### Batched pack-once measurement
+
+The [pack-once Ubuntu notebook](ubuntu-matmul-pack-once-results.md) records
+the four equal-work controls, and its
+[machine-readable JSON](ubuntu-matmul-pack-once-results.json) retains the raw
+samples.  The clean run used revision `b66516c8`, five samples, one warmup,
+one thread, and CPU 0.
+
+The executor now keeps every directly describable operand and converts only
+an unsupported matrix layout to row-major storage.  It performs that
+conversion once before the existing batch loop.  A broadcast operand retains
+its extent-one batch dimensions, so the rebuilt plan supplies the same
+zero-stride reuse instead of expanding or repacking it for every output.
+
+| Lhs layout | Baseline ms | Pack-once ms | Cross-run speedup | Difference from pack-once dense |
+| --- | ---: | ---: | ---: | ---: |
+| Dense broadcast | 48.879 | 49.167 | 0.99x | control |
+| Materialized dense | 48.936 | 51.299 | 0.95x | +4.3% |
+| Negative-stride broadcast | 460.702 | 51.149 | 9.01x | +4.0% |
+| Step-two broadcast | 459.865 | 51.019 | 9.01x | +3.8% |
+
+The before and after values are separate clean-revision medians, not paired
+samples.  The two dense controls bound run-to-run movement.  Negative and
+step-two inputs move from about 9.4 times slower than dense to within four
+percent of the same-run dense control.  This supports one executor-local
+pack decision while leaving broadcast planning and the BLAS batch loop
+unchanged.  Apple Silicon still needs to reproduce this batched result and
+determine whether 16384 small matrix calls need an Accelerate-specific kernel.
 
 ### Optimization findings
 
@@ -671,9 +699,9 @@ at the new branch revision before the Apple Silicon result can be updated.
 4. Keep the 4096 matmul threshold as a measured initial policy, not an ABI.
    Offline backend-specific benchmarks may justify separate direct, BLAS, and
    pack thresholds.  Do not benchmark alternatives inside each public call.
-5. Add a matrix-family pack-once route for repeated negative or step-two
-   broadcast operands.  Keep direct descriptors for dense and transposed
-   inputs, whose large-scale throughput already matches.
+5. Retain the matrix-family pack-once route for unsupported matrix strides.
+   Reproduce its equal-work controls on Apple Silicon before tuning its
+   backend-specific threshold.
 6. Use the Apple large-batch result to decide whether small matrices need a
    vendor batched call or a dedicated batch kernel.  Keep that policy inside
    `MatmulExecutor`.
@@ -688,7 +716,7 @@ at the new branch revision before the Apple Silicon result can be updated.
 
 The prototype currently passes:
 
-- 20 focused Python tests, including partial overlap, invalid axes and matrix
+- 21 focused Python tests, including partial overlap, invalid axes and matrix
   shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
