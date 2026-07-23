@@ -65,6 +65,10 @@ private:
                                      BlasMatrixLayout const & rhs_layout);
     static Array execute_packed_blas(Array const & lhs,
                                      Array const & rhs);
+    static Array execute_packed_batch_blas(Array const & lhs,
+                                           Array const & rhs,
+                                           bool pack_lhs,
+                                           bool pack_rhs);
     static bool large_enough_for_blas(Array const & lhs,
                                       Array const & rhs);
     static Array execute_unbatched(Array const & lhs,
@@ -228,6 +232,46 @@ Array MatmulExecutor<Array, T>::execute_packed_blas(
 }
 
 template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_packed_batch_blas(
+    Array const & lhs,
+    Array const & rhs,
+    bool pack_lhs,
+    bool pack_rhs)
+{
+    std::optional<Array> packed_lhs;
+    std::optional<Array> packed_rhs;
+    Array const * ready_lhs = &lhs;
+    Array const * ready_rhs = &rhs;
+    if (pack_lhs)
+    {
+        packed_lhs.emplace(lhs.to_row_major());
+        ready_lhs = &packed_lhs.value();
+    }
+    if (pack_rhs)
+    {
+        packed_rhs.emplace(rhs.to_row_major());
+        ready_rhs = &packed_rhs.value();
+    }
+
+    MatmulPlan const ready_plan =
+        MatmulPlan::make(*ready_lhs, *ready_rhs);
+    std::optional<BlasMatrixLayout> const lhs_layout =
+        lhs_blas_layout(ready_plan);
+    std::optional<BlasMatrixLayout> const rhs_layout =
+        rhs_blas_layout(ready_plan);
+    if (lhs_layout && rhs_layout)
+    {
+        return execute_matrix_blas(
+            ready_plan,
+            *ready_lhs,
+            *ready_rhs,
+            lhs_layout.value(),
+            rhs_layout.value());
+    }
+    return execute_generic(ready_plan, *ready_lhs, *ready_rhs);
+}
+
+template <typename Array, typename T>
 bool MatmulExecutor<Array, T>::large_enough_for_blas(
     Array const & lhs, Array const & rhs)
 {
@@ -316,6 +360,11 @@ Array MatmulExecutor<Array, T>::execute_planned(
                     lhs_layout.value(),
                     rhs_layout.value());
             }
+            return execute_packed_batch_blas(
+                lhs,
+                rhs,
+                !lhs_layout,
+                !rhs_layout);
         }
     }
     return execute_generic(plan, lhs, rhs);

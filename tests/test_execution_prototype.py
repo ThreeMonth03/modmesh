@@ -259,6 +259,22 @@ class PlannedMatmulTC(unittest.TestCase):
                     rhs_strides=case_rhs.strides):
                 self.assert_matmul_equal(case_lhs, case_rhs)
 
+    def test_batched_packed_blas(self):
+        rng = np.random.default_rng(20260723)
+        lhs = rng.random((2, 1, 17, 17), dtype='float64')
+        rhs = rng.random((1, 3, 17, 17), dtype='float64')
+        cases = (
+            (lhs[..., ::-1], rhs),
+            (make_stepped(lhs), rhs),
+            (lhs, make_stepped(rhs)),
+            (make_stepped(lhs), make_stepped(rhs)),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_strides=case_lhs.strides,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
     def test_zero_extent_batch_broadcasting(self):
         lhs = solvcon.SimpleArrayFloat64(
             shape=(1, 0, 2, 3), value=1.0)
