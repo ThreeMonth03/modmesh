@@ -4,6 +4,7 @@
 import argparse
 import json
 import pathlib
+import shlex
 
 
 LEGACY_STATUSES = (
@@ -122,6 +123,8 @@ def render_reproduction(lines, metadata):
         command.append('    --hpc-matmul \\')
     if metadata.get('hpc_matmul_slow', False):
         command.append('    --hpc-matmul-slow \\')
+    for case_filter in metadata.get('case_filters', []):
+        command.append(f'    --filter {shlex.quote(case_filter)} \\')
     command.extend((
         f"    --repeat {metadata['repeat']} \\",
         f"    --warmup {metadata['warmup']}{cpu_option} \\",
