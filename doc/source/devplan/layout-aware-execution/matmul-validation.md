@@ -2,112 +2,122 @@
 
 ## Question
 
-`SimpleArray::matmul()` already has direct rank-1 and rank-2 implementations,
-including an explicit `matmul_blas()` API.  The proposed extension adds NumPy
-batch broadcasting and support for signed-stride matrix views.
+`SimpleArray::matmul()` already has rank-1 and rank-2 implementations,
+including an explicit `matmul_blas()` API.  The prototype adds NumPy-style
+batch broadcasting and signed-stride matrix views.  It must not make the
+existing vector and matrix topologies slower or less correct.
 
-The extension is useful only if it satisfies both requirements:
+The validation therefore covers all of these roles:
 
-1. Existing dot, matrix-vector, vector-matrix, and matrix-matrix calls retain
-   their short direct routes.
-2. Batched and strided calls gain broadcasting, pack-once reuse, and a generic
-   fallback without expanding broadcast operands.
+| Lhs | Rhs | Result | Meaning |
+| --- | --- | --- | --- |
+| `(K)` | `(K)` | scalar | DOT |
+| `(K)` | `(K,N)` | `(N)` | vector-matrix |
+| `(M,K)` | `(K)` | `(M)` | matrix-vector |
+| `(M,K)` | `(K,N)` | `(M,N)` | matrix-matrix |
+| `(K)` | `(...,K,N)` | `(...,N)` | 1D by ND broadcast |
+| `(...,M,K)` | `(K)` | `(...,M)` | ND by 1D broadcast |
+| `(...,M,K)` | `(...,K,N)` | `(...,M,N)` | batch broadcast |
 
-The automatic route is called "planned" in the prototype.  This name does not
-mean that every call constructs a runtime batch plan.  It means that one
-semantic API selects an execution topology internally.
+For every role, the profiler checks dense and applicable non-contiguous
+layouts before timing.  The non-contiguous inventory includes negative
+strides, step-two strides, F-contiguous matrices, and padded leading
+dimensions.
 
 ## Dispatch boundary
 
 ```text
 SimpleArray::matmul(rhs)
 |
-+-- no leading batch axes
-|   |
-|   +-- small work ----------------------> direct typed kernel
-|   +-- C-contiguous float/complex ------> existing DOT/GEMV/GEMM route
-|   +-- BLAS-describable 2D strides -----> transpose/leading-dimension BLAS
-|   +-- unsupported profitable strides --> pack once, then BLAS
-|   `-- remaining case ------------------> generic contraction
++-- validate vector/matrix roles and contracted K
++-- derive common leading batch shape
 |
-`-- one or more leading batch axes
-    |
-    +-- MatmulPlan
-    |   +-- vector and matrix roles
-    |   +-- M, N, and contracted K
-    |   +-- common broadcast batch shape
-    |   `-- signed or zero batch strides
-    |
-    +-- BLAS-describable matrix strides --> one BLAS call per output matrix
-    +-- repeated unsupported operand ----> pack physical operand once
-    `-- remaining case ------------------> generic signed-stride contraction
++-- unbatched
+|   +-- small C-contiguous work ----------> direct typed kernel
+|   +-- positive-stride vectors ----------> DOT/GEMV with increment
+|   +-- BLAS-describable matrix ----------> GEMV/GEMM with descriptor
+|   +-- profitable unsupported operand ---> pack once, then BLAS
+|   `-- remaining signed strides ---------> generic contraction
+|
+`-- batched
+    +-- dense or BLAS-describable matrix --> one BLAS call per output
+    +-- reusable negative vector ---------> pack vector once
+    +-- positive-stride vector -----------> GEMV with increment
+    `-- unsupported batched matrix -------> generic contraction
 ```
 
-The unbatched branch does not construct a batch cursor.  Dense unbatched
-inputs call the same helper and BLAS wrapper as `matmul_blas()`.  The batch
-plan exists only where leading-axis broadcasting needs it.
+The public operation has one semantic entry point.  Internally, it keeps
+short DOT, GEMV, and GEMM routes rather than forcing all matrix topologies
+through one universal loop.
 
-## What is compared
+Whole-batch packing is deliberately absent.  The profiler showed that
+packing every step-two matrix in a batch costs more than signed-stride
+execution.  A repeated vector is different: packing one physical vector once
+can be amortized across all output matrices.
 
-The profiler distinguishes four routes:
+## Correctness finding
 
-| Route | Meaning |
-| --- | --- |
-| NumPy | `numpy.matmul()` correctness reference and external baseline |
-| Legacy | Current `SimpleArray::matmul()` |
-| Existing BLAS | Current `SimpleArray::matmul_blas()` |
-| Planned | Prototype automatic dispatch |
+The expanded tests found an existing bug before measuring performance.
+Legacy rank-1 matmul treated negative and step-two vectors as contiguous:
 
-`matmul_blas()` is measured only where the current API accepts an unbatched
-rank-1 or rank-2 operation.  Batched calls have no existing BLAS API baseline.
+```python
+lhs = np.arange(8.0)[::-1]
+rhs = np.arange(8.0)[::-1]
 
-For repeated negative and step-two matrices, the profiler also measures a
-dense planned control in the same rotating sample.  This comparison answers a
-different question from NumPy/planned: whether pack-once adds unexpected cost
-after both routes reach the same BLAS backend.
+expected = np.matmul(lhs, rhs)  # 140
+actual = to_simple(lhs).matmul(to_simple(rhs))  # 56
+```
 
-Every route is checked against NumPy before timing.  A mismatch prevents that
-route from entering the performance sample.
+The planned route now uses signed-stride traversal for negative DOT and a
+positive BLAS increment for positive step-two DOT.  An incorrect legacy or
+existing-BLAS result is recorded as `legacy-incorrect` and is not timed.
 
-## Reproduce the direct rank-1 and rank-2 comparison
+Every planned result in both benchmark files passed the NumPy comparison.
+
+## Reproduce the standard topology suite
 
 ```console
 $ source /path/to/devenv/scripts/init
 $ devenv use prime
 $ make
 $ python3 profiling/profile_execution_prototype.py \
+    --matmul-only \
     --benchmark-only \
-    --filter matrix-matrix-c \
-    --filter matrix-matrix-small-direct \
-    --filter vector-vector \
-    --filter vector-matrix \
-    --filter matrix-vector \
-    --repeat 31 \
-    --warmup 3 \
-    --output /tmp/solvcon-matmul-direct.json
+    --repeat 15 \
+    --warmup 5 \
+    --cpu 0 \
+    --output /tmp/ubuntu-matmul-topology-results.json
 $ python3 profiling/render_execution_profile.py \
-    /tmp/solvcon-matmul-direct.json \
-    /tmp/solvcon-matmul-direct.md
+    /tmp/ubuntu-matmul-topology-results.json \
+    /tmp/ubuntu-matmul-topology-results.md
 ```
 
-The Ubuntu run used revision `c26a2bbc`, Python 3.12.7, NumPy 2.3.0,
-OpenBLAS for `_solvcon`, one thread, 31 paired samples, and three warmups.
-NumPy on this machine does not use the same BLAS backend, so the existing
-SimpleArray BLAS route is the primary regression baseline.
+The complete 47-row report is
+[Ubuntu matmul topology results](ubuntu-matmul-topology-results.md).
+The JSON file beside it retains the raw samples and environment metadata for
+machine processing.
 
-| Operation | Shape | Legacy | Existing BLAS | Planned | BLAS/planned interval |
-| --- | --- | ---: | ---: | ---: | --- |
-| Matrix-matrix | `(256,256) @ (256,256)` | 7.0845 ms | 0.5689 ms | 0.5742 ms | `0.965x (0.845..1.126)`, inconclusive |
-| Small matrix-matrix | `(8,16) @ (16,8)` | 0.0007 ms | 0.0007 ms | 0.0007 ms | `0.931x (0.737..1.099)`, inconclusive |
-| Vector-vector | `(256) @ (256)` | 0.0005 ms | 0.0004 ms | 0.0005 ms | `0.948x (0.848..0.992)`, inconclusive |
-| Vector-matrix | `(256) @ (256,256)` | 0.0289 ms | 0.0061 ms | 0.0064 ms | `0.939x (0.892..1.065)`, inconclusive |
-| Matrix-vector | `(256,256) @ (256)` | 0.0207 ms | 0.0045 ms | 0.0045 ms | `0.991x (0.861..1.158)`, inconclusive |
+Selected results:
 
-None of the five topologies shows a conclusive planned regression against the
-existing BLAS API.  The sub-microsecond rows should be interpreted with their
-absolute times as well as their ratios.
+| Topology and layout | NumPy | Control | Planned | NumPy/planned |
+| --- | ---: | ---: | ---: | ---: |
+| `(65536) @ (65536)`, negative vectors | 0.0972 ms | 0.0104 ms dense | 0.0254 ms | 3.834x |
+| `(65536) @ (65536)`, step-two vectors | 0.0980 ms | 0.0110 ms dense | 0.0538 ms | 1.835x |
+| `(256) @ (256,256)`, F matrix | 0.1136 ms | 0.0068 ms dense | 0.0063 ms | 17.624x |
+| `(256) @ (256,256)`, padded matrix | 0.1061 ms | 0.0054 ms dense | 0.0061 ms | 17.413x |
+| `(256,256) @ (256)`, F matrix | 0.1036 ms | 0.0052 ms dense | 0.0060 ms | 17.082x |
+| `(256,256) @ (256)`, padded matrix | 0.1028 ms | 0.0054 ms dense | 0.0059 ms | 18.203x |
 
-## Reproduce the large and pack-once comparison
+The standard suite contains:
+
+- 30 unbatched rows, including DOT, GEMV, GEMM, and non-contiguous views.
+- 17 small batch rows, including 1D by ND and ND by 1D broadcasts.
+- 22 conclusive improvements over a correct legacy equivalent.
+- Four legacy-incorrect rows.
+- No measured planned regression.
+- All 47 planned rows faster than NumPy on this Ubuntu environment.
+
+## Reproduce the large 1D by ND and ND by 1D suite
 
 ```console
 $ source /path/to/devenv/scripts/init
@@ -116,89 +126,71 @@ $ make
 $ python3 profiling/profile_execution_prototype.py \
     --hpc-matmul \
     --benchmark-only \
-    --filter large-square-1024-c \
-    --filter broadcast-dense-lhs-256-b64 \
-    --filter broadcast-negative-lhs-256-b64 \
-    --filter broadcast-step2-lhs-256-b64 \
-    --repeat 7 \
-    --warmup 2 \
-    --output /tmp/solvcon-matmul-routes.json
+    --filter vector-batch \
+    --filter batch-matrix-vector-256 \
+    --filter batch-matrix-negative-vector \
+    --filter batch-matrix-step2-vector \
+    --filter batch-step2-matrix-vector \
+    --repeat 15 \
+    --warmup 5 \
+    --cpu 0 \
+    --output /tmp/ubuntu-matmul-vector-broadcast-results.json
 $ python3 profiling/render_execution_profile.py \
-    /tmp/solvcon-matmul-routes.json \
-    /tmp/solvcon-matmul-routes.md
+    /tmp/ubuntu-matmul-vector-broadcast-results.json \
+    /tmp/ubuntu-matmul-vector-broadcast-results.md
 ```
 
-The Ubuntu route run used clean revision `a8dacc01`, one thread, seven paired
-samples, and two warmups.
+The complete report is
+[Ubuntu vector-broadcast results](ubuntu-matmul-vector-broadcast-results.md).
 
-| Operation | NumPy | Legacy | Existing BLAS or dense control | Planned | Paired comparison |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `(1024,1024) @ (1024,1024)` | 5272.865 ms | 3673.318 ms | 33.556 ms BLAS | 32.026 ms | `1.062x (0.995..1.128)`, inconclusive |
-| Dense `(1,256,256) @ (64,256,256)` | 1734.433 ms | n/a | n/a | 47.086 ms | n/a |
-| Negative `(1,256,256) @ (64,256,256)` | 1755.809 ms | n/a | 47.487 ms dense control | 47.856 ms | `0.996x (0.964..1.071)`, inconclusive |
-| Step-two `(1,256,256) @ (64,256,256)` | 1728.480 ms | n/a | 48.533 ms dense control | 51.361 ms | `0.934x (0.882..0.966)`, inconclusive |
+Each row performs 64 contractions with `K=256`:
 
-The 1024-square automatic route remains in the same paired interval as
-`matmul_blas()`.  The repeated negative and step-two routes are also
-inconclusive against their dense planned controls.  Packing one 0.5 MiB
-physical lhs does not create the earlier apparent 30 percent speedup.
+| Topology | Layout | NumPy | Control | Planned | NumPy/planned |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `(256) @ (64,256,256)` | dense | 8.2461 ms | n/a | 1.4244 ms | 6.228x |
+| `(256) @ (64,256,256)` | negative vector | 8.2974 ms | 1.3342 ms dense | 1.5735 ms | 5.444x |
+| `(256) @ (64,256,256)` | step-two vector | 8.1699 ms | 1.3467 ms dense | 1.3556 ms | 6.157x |
+| `(256) @ (64,256,256)` | step-two matrix | 15.6960 ms | 1.2442 ms dense | 12.2780 ms | 1.282x |
+| `(64,256,256) @ (256)` | dense | 6.5715 ms | n/a | 1.3436 ms | 5.023x |
+| `(64,256,256) @ (256)` | negative vector | 9.4817 ms | 3.5481 ms dense | 3.4017 ms | 2.718x |
+| `(64,256,256) @ (256)` | step-two vector | 6.4834 ms | 1.4521 ms dense | 1.5477 ms | 4.183x |
+| `(64,256,256) @ (256)` | step-two matrix | 7.4244 ms | 1.5550 ms dense | 3.8818 ms | 1.893x |
 
-Ubuntu is a portability and same-binary check, not the primary NumPy
-comparison.  The NumPy extension and `_solvcon` use different matrix
-backends on this machine.
+The vector-stride routes are close to their dense controls because positive
+increments are passed to GEMV and a repeated negative vector is packed once.
+The step-two matrix batches remain 2.5 to 9.9 times slower than their dense
+controls.  They still beat NumPy on this Ubuntu run, but they identify the
+remaining non-contiguous bottleneck.
 
-## Existing Apple Silicon evidence and required rerun
+## Reading the Ubuntu comparison
 
-The earlier Apple Silicon run linked both NumPy and `_solvcon` to Accelerate.
-It showed:
+The clean run used revision `ea09ea2a`, Linux 6.6 on WSL2 x86-64, Python
+3.12.7, NumPy 2.3.0, one thread, 15 paired samples, and five warmups.
 
-| Operation | NumPy | Planned | Result |
-| --- | ---: | ---: | --- |
-| Dense `(1,256,256) @ (64,256,256)` | 26.409 ms | 26.760 ms | parity |
-| Negative `(1,256,256) @ (64,256,256)` | 2961.193 ms | 17.748 ms | planned faster |
-| Step-two `(1,256,256) @ (64,256,256)` | 3233.026 ms | 18.894 ms | planned faster |
+NumPy and `_solvcon` use different matrix backends on this machine.  The
+Ubuntu result is useful for correctness, topology coverage, and regression
+testing against legacy `SimpleArray` and `matmul_blas()`.  It is not the
+final same-backend performance claim.
 
-Those NumPy/planned ratios remain valid within each layout, but the run did
-not measure `matmul_blas()` and did not pair the two strided planned routes
-with a dense planned control.  It therefore cannot support a claim that
-packing is faster than dense input.
-
-Rerun both commands above on Apple Silicon.  The new profiler records
-`matmul_blas()` for unbatched inputs and the dense planned control for both
-strided broadcast cases.  Use at least 20 samples for the four focused HPC
-rows when time permits.
-
-## Interpretation
-
-The evidence supports the following architecture:
-
-- Preserve a direct unbatched executor for rank-1 and rank-2 operations.
-- Reuse the existing DOT, GEMV, and GEMM wrappers instead of routing dense
-  calls through a batch cursor.
-- Construct `MatmulPlan` only when leading batch axes exist or a signed-stride
-  2D descriptor is needed.
-- Keep layout classification and packing shared between unbatched and batched
-  execution.
-- Pack each unsupported physical broadcast operand once, then reuse it across
-  every output matrix.
-- Keep backend thresholds internal and revise them only with same-backend
-  measurements.
-
-The design unifies the semantic API and the low-level layout vocabulary.  It
-does not force every matrix topology through one loop nest.
+The final performance statement requires rerunning both commands on Apple
+Silicon, where NumPy and `_solvcon` can both use Accelerate.  A ratio greater
+than one means planned is faster.  Every report includes q10 and q90 paired
+ratio quantiles, so isolated medians are not treated as conclusive.
 
 ## Acceptance boundary
 
 - Rank-1 and rank-2 results retain the existing `SimpleArray` shape contract.
-- Eligible unbatched operations remain within the paired interval of
-  `matmul_blas()`.
-- Small operations retain a direct typed route when BLAS call overhead is not
-  profitable.
-- Leading batch axes follow NumPy broadcasting without materializing expanded
-  operands.
-- Negative and step-two repeated matrices are packed at most once.
-- Packing, planning, allocation, and dispatch remain inside the timed call.
-- Same-backend Apple Silicon data is required before publishing a performance
-  claim upstream.
+- Eligible unbatched operations remain in the paired interval of
+  `matmul_blas()` or improve on it.
+- Small C-contiguous operations keep their direct typed route.
+- Leading batch axes follow NumPy broadcasting without expanded operands.
+- `1D @ ND` and `ND @ 1D` cover contiguous and non-contiguous inputs.
+- Positive vector strides are represented as BLAS increments.
+- A repeated negative vector is packed at most once.
+- Unsupported batched matrix strides remain correct without whole-batch
+  packing.
+- Planning, packing, allocation, and dispatch remain inside the timed call.
+- Same-backend Apple Silicon data is required before publishing an upstream
+  speed claim.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
