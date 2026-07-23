@@ -447,6 +447,8 @@ $ PYTHONPATH=. python3 profiling/profile_execution_prototype.py \
 $ PYTHONPATH=. python3 profiling/render_execution_profile.py \
     /tmp/solvcon-matmul-hpc-macos.json \
     doc/source/devplan/layout-aware-execution/macos-matmul-hpc-results.md
+$ cp /tmp/solvcon-matmul-hpc-macos.json \
+    doc/source/devplan/layout-aware-execution/macos-matmul-hpc-results.json
 ```
 
 The JSON records `platform`, `machine`, Python, NumPy, NumPy's build
@@ -508,7 +510,7 @@ solvcon extension links to the prime environment's OpenBLAS.  NumPy matmul is
 unusually slow in this run, so the 17 planned-faster matrix rows prove that
 the dispatch avoids the prototype's legacy bottlenecks on this machine.  They
 do not prove a universal advantage over tuned NumPy builds.  The Apple
-Accelerate rerun is required for that comparison.
+Accelerate rerun below supplies the same-backend comparison.
 
 ### Large-scale matmul measurement
 
@@ -580,8 +582,8 @@ samples.  The two dense controls bound run-to-run movement.  Negative and
 step-two inputs move from about 9.4 times slower than dense to within four
 percent of the same-run dense control.  This supports one executor-local
 pack decision while leaving broadcast planning and the BLAS batch loop
-unchanged.  Apple Silicon still needs to reproduce this batched result and
-determine whether 16384 small matrix calls need an Accelerate-specific kernel.
+unchanged.  The Apple Silicon measurement below reproduces the pack-once
+result and adds the 16384-call controls.
 
 ### Optimization findings
 
@@ -612,52 +614,81 @@ not from one median.
 The complete 154-row Apple Silicon result is recorded in the
 [macOS benchmark notebook](macos-results.md), with raw samples in the
 [machine-readable JSON](macos-results.json).  The clean run used revision
-`e3a0ba93`, macOS 26.5.1 on an Apple M1 with 8 GB of memory, native arm64
+`72283a19`, macOS 26.5.1 on an Apple M1 with 8 GB of memory, native arm64
 Python 3.11.6, NumPy 2.2.4, 15 paired samples, five warmups, and one thread.
 NumPy and the extension both link to Accelerate.  CPU affinity is not
 available on macOS.
 
 | Comparison | Faster | Parity | Slower | Inconclusive | Not comparable |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Legacy versus planned | 76 planned | 14 | 0 | 3 | 24 legacy incorrect and 37 new only |
-| NumPy versus planned | 59 planned | 28 | 36 NumPy | 31 | 0 |
+| Legacy versus planned | 78 planned | 3 | 0 | 12 | 24 legacy incorrect and 37 new only |
+| NumPy versus planned | 60 planned | 2 | 22 NumPy | 70 | 0 |
 
 Every correct legacy route with a conclusive classification improved or
-reached parity, and none regressed.  Compared with the diagnosis baseline,
-planned-faster NumPy comparisons increased from 30 to 59 and NumPy-faster
-comparisons fell from 91 to 36.
+reached parity, and none regressed.  The wider inconclusive count reflects
+paired sample intervals on sub-millisecond routes rather than a measured
+slowdown.
 
-The following medians show where the optimized implementation changed the
-Apple Silicon result.  Cross-run speedups compare two separately recorded
-medians, so they diagnose the direction and size of the change rather than a
-paired uncertainty interval.
+This run includes the outer-contiguous reduction schedule.  Cross-run
+speedups compare the previous clean `e3a0ba93` Apple result with the current
+clean result, so they establish direction and scale rather than paired
+uncertainty.
 
-| Case | Baseline ms | Optimized ms | Speedup | Optimized versus NumPy |
+| F-layout axis-1 operation | Before ms | Current ms | Speedup | Current versus NumPy |
 | --- | ---: | ---: | ---: | --- |
-| Step-two array add | 6.1408 | 1.1722 | 5.24x | inconclusive |
-| Step-two scalar add | 5.7115 | 0.6023 | 9.48x | planned-faster |
-| Step-two broadcast add | 0.3827 | 0.0529 | 7.24x | planned-faster |
-| Step-two in-place array add | 1.5304 | 0.2016 | 7.59x | parity |
-| Step-two in-place broadcast add | 1.5606 | 0.1797 | 8.68x | planned-faster |
-| C-layout axis mean | 1.0257 | 0.1955 | 5.25x | NumPy-faster |
-| C-layout axis variance | 2.0143 | 0.4117 | 4.89x | parity |
-| Same-shape C batch matmul | 0.1772 | 0.0072 | 24.68x | inconclusive |
-| Broadcast C batch matmul | 1.4008 | 0.0424 | 33.03x | parity |
+| Mean | 0.4504 | 0.2049 | 2.20x | NumPy-faster |
+| Variance | 0.9800 | 0.3257 | 3.01x | planned-faster |
+| Standard deviation | 0.9751 | 0.4865 | 2.00x | planned-faster |
+| Weighted average | 0.5346 | 0.1898 | 2.82x | planned-faster |
 
-Fixed-stride inner loops remove most mapped cursor cost.  Step-two scalar,
-broadcast, and in-place routes move from large NumPy losses to parity or
-planned wins.  NEON accumulation cuts the C-layout axis mean and variance
-costs by about five times; variance reaches parity, while mean and
-F-contiguous axis reductions still favor NumPy.  This gap motivates the
-outer-contiguous schedule experiment below.
+The schedule removes the previous Apple Silicon loss for variance, standard
+deviation, and weighted average.  Mean improves by 2.20 times but remains
+conclusively slower than NumPy at 0.2049 versus 0.1554 ms.  Median retains its
+collecting backend and is not part of this schedule comparison.
 
-Batch BLAS removes the scalar-contraction bottleneck.  Compatible contiguous
-batches now reach parity or an interval crossing parity, while negative and
-step-two matrix batches are planned-faster.  Direct F-layout and mixed C/F
-matrix descriptors also move from NumPy-faster to inconclusive or parity.
-For large negative and step-two 256 by 256 inputs, packing before Accelerate
-remains roughly 104 to 138 times faster than legacy and 126 to 154 times
-faster than NumPy.
+The reproduction also passed 262 focused Python tests, all 232 C++ tests, and
+5000 deterministic stress iterations.  The standalone buffer copied and
+compiled its sources but failed at the final macOS link because its link
+command omitted Accelerate, leaving the ILP64 `cblas_*` symbols unresolved.
+The regular extension links to Accelerate and passed the BLAS tests.
+
+### Apple Silicon large-scale matmul measurement
+
+The [Apple Silicon matmul notebook](macos-matmul-hpc-results.md) records all
+14 rows, and the
+[machine-readable JSON](macos-matmul-hpc-results.json) retains raw samples
+and linkage.  This clean `72283a19` run used five paired samples, one warmup,
+one thread, and the same Accelerate backend for NumPy and solvcon.
+
+| Case | B | R | MxKxN | Logical / expanded input MiB | Output MiB | Planned ms | Effective GMAC/s |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+| Large square | 1 | 0 | 1024x1024x1024 | 16 / 16 | 8 | 18.778 | 57.18 |
+| One-sided broadcast | 8 | 1 | 1024x1024x1024 | 72 / 128 | 64 | 201.156 | 42.70 |
+| Transposed lhs broadcast | 8 | 1 | 1024x1024x1024 | 72 / 128 | 64 | 196.971 | 43.61 |
+| Cross broadcast | 64 | 2 | 512x512x512 | 32 / 256 | 128 | 282.221 | 30.44 |
+| Same-shape batch | 4096 | 1 | 32x32x32 | 64 / 64 | 32 | 7.512 | 17.87 |
+| One-sided batch | 16384 | 1 | 32x32x32 | 128 / 256 | 128 | 36.575 | 14.68 |
+| Cross batch | 16384 | 2 | 32x32x32 | 2 / 256 | 128 | 38.397 | 13.98 |
+| High-rank batch | 16384 | 4 | 32x32x32 | 2 / 256 | 128 | 32.128 | 16.71 |
+| Dense lhs broadcast | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 26.760 | 40.12 |
+| Materialized dense lhs | 64 | 1 | 256x256x256 | 64 / 64 | 32 | 24.534 | 43.77 |
+| Negative-stride lhs | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 17.748 | 60.50 |
+| Step-two lhs | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 18.894 | 56.83 |
+| Dense batch axis | 128 | 1 | 256x256x256 | 64.5 / 128 | 64 | 49.141 | 43.70 |
+| Step-two batch axis | 128 | 1 | 256x256x256 | 64.5 / 128 | 64 | 61.493 | 34.92 |
+
+The equal-work pack-once controls are stronger than the Ubuntu result on this
+backend.  Negative and step-two broadcast inputs complete in 17.748 and
+18.894 ms, compared with 26.760 ms for the dense broadcast control.  NumPy
+takes 2961.193 and 3233.026 ms for those two layouts, so planned execution is
+conclusively 160 and 170 times faster.  Packing once therefore removes the
+strided matrix penalty on Accelerate without expanding the broadcast operand.
+
+All four 32 by 32 large-batch cases are inconclusive against NumPy, and none
+is NumPy-faster.  Their 13.98 through 17.87 effective GMAC/s does not provide
+evidence that this prototype needs an Accelerate-specific batched call.  The
+step-two batch-axis control is 25 percent slower than its dense control, but
+its paired comparison with NumPy is also inconclusive.
 
 ## Outer-contiguous reduction experiment
 
@@ -681,8 +712,11 @@ benchmark still checks each result against NumPy before timing.
 | Weighted average | 0.1929 | 0.0577 | 3.34x | planned-faster |
 
 Median does not use this backend because it must collect values for ordering.
-The optimized macOS notebook above predates this schedule.  It must be rerun
-at the new branch revision before the Apple Silicon result can be updated.
+The current macOS notebook above reproduces this schedule.  Apple variance,
+standard deviation, and weighted average improve by 2.00 through 3.01 times
+and change from NumPy-faster to planned-faster.  Mean improves by 2.20 times
+but remains NumPy-faster, so specialized mean accumulation is the remaining
+reduction target.
 
 ## Recommendations
 
@@ -690,9 +724,9 @@ at the new branch revision before the Apple Silicon result can be updated.
    as the shared vocabulary, but keep the three family plans and executors
    separate.  Their measured fast paths depend on different topology and cost
    rules.
-2. Reproduce the outer-contiguous reduction result on Apple Silicon.  Keep the
-   schedule and backend split only if Accelerate-era measurements confirm the
-   Ubuntu improvement without harming the other reduction layouts.
+2. Retain the outer-contiguous reduction schedule.  Ubuntu and Apple Silicon
+   both confirm the improvement.  Investigate the remaining Apple axis mean
+   gap without changing the semantic reduction plan.
 3. Add an x86 SIMD backend only after profiling the remaining elementwise and
    reduction rows.  This Ubuntu machine has AVX2, but the solvcon SIMD facade
    currently falls back to generic loops outside AArch64.
@@ -700,11 +734,12 @@ at the new branch revision before the Apple Silicon result can be updated.
    Offline backend-specific benchmarks may justify separate direct, BLAS, and
    pack thresholds.  Do not benchmark alternatives inside each public call.
 5. Retain the matrix-family pack-once route for unsupported matrix strides.
-   Reproduce its equal-work controls on Apple Silicon before tuning its
-   backend-specific threshold.
-6. Use the Apple large-batch result to decide whether small matrices need a
-   vendor batched call or a dedicated batch kernel.  Keep that policy inside
-   `MatmulExecutor`.
+   Both OpenBLAS and Accelerate equal-work controls remove the repeated
+   strided-matrix cost.  Treat its 4096-work threshold as backend-tunable.
+6. Do not add an Accelerate-specific batched call from the current evidence.
+   Revisit a vendor batched call or dedicated batch kernel only when a
+   workload is conclusively slower than its same-backend NumPy control.  Keep
+   that policy inside `MatmulExecutor`.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -774,5 +809,8 @@ and reproduce the same correctness matrix and timing protocol.
    elementwise, reduction, and contraction families.  The follow-up removed
    the universal four-slot operation definition, moved topology rules into
    their family plans, and kept CRTP only inside kernels that share code.
+6. The current Apple Silicon rerun confirmed the outer-contiguous schedule,
+   reproduced pack-once matmul against Accelerate, and found no conclusive
+   need for an Apple-specific small-matrix batch kernel.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
