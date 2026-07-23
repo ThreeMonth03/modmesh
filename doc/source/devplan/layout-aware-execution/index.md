@@ -52,6 +52,7 @@ struct OperandMapping
 class MappedOffsetCursor;
 class InnerLoopPlan;
 class InnerLoopCursor;
+class OperationDefinition;
 class ElementwisePlan;
 class ReductionPlan;
 class ReductionSchedule;
@@ -70,6 +71,30 @@ while each typed executor retains an ordinary, compiler-inlineable inner
 loop.  The abstraction therefore removes repeated rank and offset setup
 without introducing a virtual call, callback, or runtime operation object.
 
+`OperationDefinition` composes four compile-time policies:
+
+```cpp
+template <typename BroadcastingRule,
+          typename ReductionRule,
+          typename IterationRule,
+          typename ComputeRule>
+class OperationDefinition;
+```
+
+Every operation therefore names how operands align, whether dimensions are
+reduced, how a runtime plan is constructed, and what computation runs over the
+plan.  `make_operation_plan<Operation>()` delegates to the selected iteration
+rule.  C++ concepts reject a mismatched combination before an executor is
+instantiated.  The policy types are empty or stateless and do not add a
+runtime operation object.
+
+The rules construct family-specific plan types rather than erasing them behind
+one base class.  `CommonBroadcastingRule` creates NumPy-style result domains
+and zero-stride operand mappings.  `AxisReductionRule` partitions exact input
+mappings into kept and reduced domains.  `BatchBroadcastingRule` aligns only
+leading matrix axes, while `ContractionReductionRule` validates the shared
+matrix dimension.
+
 The shared code calculates common shapes, maps axes, walks runtime-rank
 offsets, detects dense layouts, and preserves zero-sized domains.  It does not
 own dtype policy, Python objects, reducers, matrix packing, or backend cost
@@ -81,6 +106,7 @@ The implementation is split by responsibility under
 | File | Responsibility |
 | --- | --- |
 | `loop.hpp` and `loop.cpp` | Runtime-rank domains, operand mappings, shape alignment, mapped cursors, and fixed-stride inner loops |
+| `operation.hpp` and `operation.cpp` | Compile-time operation definitions, broadcasting/reduction/iteration rule contracts, and axis partitioning |
 | `elementwise_kernel.hpp` | Compile-time scalar, in-place, and contiguous kernel contracts |
 | `elementwise.hpp` | Elementwise planning, alias handling, output allocation, and dense or fixed-stride inner execution |
 | `reduction_plan.hpp` and `reduction_plan.cpp` | Kept/reduced semantic domains plus slice and reduced-offset cursors |
@@ -91,10 +117,11 @@ The implementation is split by responsibility under
 | `matmul.hpp` | Direct, layout-described BLAS, packed BLAS, or mapped matrix execution |
 | `SimpleArrayExecution.hpp` | The standalone facade used only by the prototype binding |
 
-The facade supplies the object API, while each plan is a small value object
-with one topology-specific responsibility.  Kernels and array types remain
-templates, so dtype selection and elementwise kernel calls do not require a
-virtual hierarchy, runtime operation enum, or type-erased callback.
+The facade supplies the object API.  An operation definition selects policies,
+and each resulting plan remains a small value object with one
+topology-specific responsibility.  Kernels and array types remain templates,
+so dtype selection and elementwise kernel calls do not require a virtual
+hierarchy, runtime operation enum, or type-erased callback.
 
 The non-template shape and plan support is implemented in `.cpp` files.
 Template kernels and hot cursor advancement remain in headers so the compiler
@@ -104,14 +131,45 @@ control flow and reducer state visible in the family executor.
 
 ## Family composition
 
-| Family | Domains | Mapping rule | Dispatch |
-| --- | --- | --- | --- |
-| Elementwise | one result domain | right-align every operand; use zero stride for broadcast axes | a dense physical span uses SIMD; every other positive-rank layout maps outer axes once and runs a fixed-stride inner loop |
-| Reduction | outer kept domain and inner reduced domain | split input strides by normalized axes; map weights to the inner domain | the schedule selects a tiled contiguous-kept-axis route or sliced execution; median retains collection |
-| Matmul | batch domain plus explicit `M`, `N`, and `K` | right-align batch axes only; matrix axes retain row, column, and contraction strides | small rank-one/two work uses the direct kernel; compatible C/F matrix views and batches use BLAS; unsupported matrix strides pack or use mapped execution |
+| Family | Broadcasting rule | Reduction rule | Iteration rule | Compute rule |
+| --- | --- | --- | --- | --- |
+| Elementwise | `CommonBroadcastingRule` | `NoReductionRule` | `ElementwiseIterationRule` | typed arithmetic kernel |
+| Reduction | `NoBroadcastingRule` | `AxisReductionRule` | `ReductionIterationRule` | mean, weighted mean, variance, or collection |
+| Matmul | `BatchBroadcastingRule` | `ContractionReductionRule` | `MatmulIterationRule` | matrix computation semantics; executor owns direct, mapped, and BLAS backends |
 
-The three plan types deliberately do not inherit from a common base.  The
-shared unit is coordinate-to-offset data, not an operation object.
+For elementwise operations, the resulting plan has one common result domain.
+For reductions, it has an outer kept domain and an inner reduced domain.
+Matmul retains a batch domain plus explicit `M`, `N`, and `K`.  The plans
+deliberately do not inherit from a common base because their runtime topology
+is different.
+
+CRTP remains local to code with a shared implementation.  For example,
+`BinaryKernelBase<Derived, T>` supplies scalar and in-place loops to arithmetic
+kernels.  The four independent operation policies use type composition and
+concepts instead.  A single CRTP operation base would couple unrelated
+families and eventually accumulate family checks.
+
+The end-to-end construction is explicit:
+
+```cpp
+using add_operation_type = elementwise_operation_type<AddKernel<T>>;
+auto add_plan = make_operation_plan<add_operation_type>(
+    output, lhs, rhs);
+
+using mean_operation_type =
+    reduction_operation_type<MeanComputeRule<T>>;
+auto mean_plan = make_operation_plan<mean_operation_type>(
+    input, axes, false);
+
+using matrix_operation_type =
+    matmul_operation_type<MatmulComputeRule>;
+auto matrix_plan = make_operation_plan<matrix_operation_type>(
+    lhs, rhs);
+```
+
+The same entry point chooses different iteration-rule factories at compile
+time.  The returned values remain `ElementwisePlan`, `ReductionPlan`, and
+`MatmulPlan`, so dispatch below the plan stays specialized.
 
 ## Operation routes
 
@@ -162,8 +220,11 @@ struct MaximumKernel
         T * output, size_t count, T const * lhs, T rhs);
 };
 
+using maximum_operation_type =
+    execution::elementwise_operation_type<MaximumKernel<T>>;
+
 return execution::ElementwiseExecutor<
-    Array, MaximumKernel<T>, T>::transform(
+    Array, T, maximum_operation_type>::transform(
         lhs, rhs, MaximumKernel<T>{});
 ```
 
@@ -586,5 +647,9 @@ and reproduce the same correctness matrix and timing protocol.
 4. The optimized macOS result identified F-layout axis reduction as the main
    remaining topology bottleneck.  The follow-up split semantic planning from
    execution scheduling and validated a tiled kept-axis backend on Ubuntu.
+5. The architecture review asked whether each operation should own explicit
+   broadcasting, reduction, and iteration rules.  The follow-up added
+   compile-time policy composition, kept CRTP inside kernels that actually
+   share code, and left measured family backends unchanged.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
