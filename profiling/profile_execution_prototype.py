@@ -63,6 +63,7 @@ class BenchmarkCase:
     legacy_error_type: str = ''
     legacy_error: str = ''
     reset_calls: object = None
+    workload: object = None
 
     @property
     def name(self):
@@ -88,6 +89,51 @@ def describe_operand(name, value):
 def describe_operands(**operands):
     return tuple(
         describe_operand(name, value) for name, value in operands.items())
+
+
+def root_storage(value):
+    root = np.asarray(value, dtype='float64')
+    while isinstance(root.base, np.ndarray):
+        root = root.base
+    return root
+
+
+def matmul_workload(lhs, rhs):
+    lhs_array = np.asarray(lhs, dtype='float64')
+    rhs_array = np.asarray(rhs, dtype='float64')
+    lhs_batch = lhs_array.shape[:-2]
+    rhs_batch = rhs_array.shape[:-2]
+    batch_shape = np.broadcast_shapes(lhs_batch, rhs_batch)
+    batch_matrices = int(np.prod(batch_shape, dtype='int64'))
+    rows = lhs_array.shape[-2]
+    inner_size = lhs_array.shape[-1]
+    columns = rhs_array.shape[-1]
+    itemsize = lhs_array.dtype.itemsize
+    logical_input_bytes = (lhs_array.size + rhs_array.size) * itemsize
+    lhs_storage = root_storage(lhs_array)
+    rhs_storage = root_storage(rhs_array)
+    backing_storages = {
+        id(storage): storage for storage in (lhs_storage, rhs_storage)}
+    backing_input_bytes = sum(
+        storage.nbytes for storage in backing_storages.values())
+    expanded_input_bytes = (
+        batch_matrices * (rows * inner_size + inner_size * columns) *
+        itemsize)
+    output_bytes = batch_matrices * rows * columns * itemsize
+    return {
+        'batch_shape': list(batch_shape),
+        'batch_rank': len(batch_shape),
+        'batch_matrices': batch_matrices,
+        'rows': rows,
+        'inner_size': inner_size,
+        'columns': columns,
+        'multiply_accumulates': (
+            batch_matrices * rows * inner_size * columns),
+        'logical_input_bytes': logical_input_bytes,
+        'backing_input_bytes': backing_input_bytes,
+        'expanded_input_bytes': expanded_input_bytes,
+        'output_bytes': output_bytes,
+    }
 
 
 def format_operands(operands):
@@ -598,8 +644,170 @@ def matmul_cases(rng, quick):
     return cases
 
 
-def make_cases(quick):
+def append_hpc_matmul_case(
+        cases, layout, lhs, rhs, legacy=False, note=''):
+    lhs_sa = make_array(lhs)
+    rhs_sa = make_array(rhs)
+    legacy_call = None
+    if legacy:
+        def run_legacy(lhs=lhs_sa, rhs=rhs_sa):
+            return lhs.matmul(rhs)
+        legacy_call = run_legacy
+    cases.append(BenchmarkCase(
+        family='matmul-hpc',
+        operation='matmul',
+        layout=layout,
+        numpy_call=lambda lhs=lhs, rhs=rhs: np.matmul(lhs, rhs),
+        legacy_call=legacy_call,
+        planned_call=lambda lhs=lhs_sa,
+        rhs=rhs_sa: lhs._planned_matmul(rhs),
+        number=1,
+        note=note,
+        operands=describe_operands(lhs=lhs, rhs=rhs),
+        workload=matmul_workload(lhs, rhs),
+    ))
+
+
+def hpc_matmul_cases(rng, include_slow=False):
+    cases = []
+
+    lhs_1024 = rng.random((1024, 1024), dtype='float64')
+    rhs_1024 = rng.random((1024, 1024), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-square-1024-c',
+        lhs_1024,
+        rhs_1024,
+        legacy=True,
+        note='Large unbatched legacy, planned, and NumPy baseline.',
+    )
+
+    if include_slow:
+        lhs_2048 = rng.random((2048, 2048), dtype='float64')
+        rhs_2048 = rng.random((2048, 2048), dtype='float64')
+        append_hpc_matmul_case(
+            cases,
+            'large-square-2048-c',
+            lhs_2048,
+            rhs_2048,
+            note='Opt-in slow case; the 1024 case measures legacy.',
+        )
+
+    lhs_broadcast_1024 = rng.random(
+        (1, 1024, 1024), dtype='float64')
+    rhs_batch_1024 = rng.random(
+        (8, 1024, 1024), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-broadcast-one-sided-1024-b8',
+        lhs_broadcast_1024,
+        rhs_batch_1024,
+        note='One 1024-square lhs is reused by eight BLAS calls.',
+    )
+    append_hpc_matmul_case(
+        cases,
+        'large-broadcast-transposed-lhs-1024-b8',
+        lhs_broadcast_1024.swapaxes(-1, -2),
+        rhs_batch_1024,
+        note='The broadcast lhs remains directly BLAS-describable.',
+    )
+
+    lhs_cross_512 = rng.random(
+        (8, 1, 512, 512), dtype='float64')
+    rhs_cross_512 = rng.random(
+        (1, 8, 512, 512), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-broadcast-cross-512-b64',
+        lhs_cross_512,
+        rhs_cross_512,
+        note='Two batch axes cross-broadcast into 64 large matrices.',
+    )
+
+    same_lhs_32 = rng.random(
+        (4096, 32, 32), dtype='float64')
+    same_rhs_32 = rng.random(
+        (4096, 32, 32), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-same-32-b4096',
+        same_lhs_32,
+        same_rhs_32,
+        note='Many small independent matrices expose dispatch cost.',
+    )
+
+    lhs_one_32 = rng.random((1, 32, 32), dtype='float64')
+    rhs_many_32 = rng.random(
+        (16384, 32, 32), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-one-sided-32-b16384',
+        lhs_one_32,
+        rhs_many_32,
+        note='One physical lhs is reused by 16384 outputs.',
+    )
+
+    lhs_cross_32 = rng.random(
+        (128, 1, 32, 32), dtype='float64')
+    rhs_cross_32 = rng.random(
+        (1, 128, 32, 32), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-cross-32-b16384',
+        lhs_cross_32,
+        rhs_cross_32,
+        note='Only 256 input matrices produce 16384 outputs.',
+    )
+
+    lhs_rank4_32 = rng.random(
+        (8, 1, 16, 1, 32, 32), dtype='float64')
+    rhs_rank4_32 = rng.random(
+        (1, 8, 1, 16, 32, 32), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-high-rank-32-b16384',
+        lhs_rank4_32,
+        rhs_rank4_32,
+        note='The same output count as cross-b32 with batch rank four.',
+    )
+
+    lhs_strided_256 = rng.random(
+        (1, 256, 256), dtype='float64')
+    rhs_batch_256 = rng.random(
+        (64, 256, 256), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'broadcast-negative-lhs-256-b64',
+        lhs_strided_256[..., ::-1],
+        rhs_batch_256,
+        note='A repeated negative-stride lhs must not be repacked 64 times.',
+    )
+    append_hpc_matmul_case(
+        cases,
+        'broadcast-step2-lhs-256-b64',
+        make_stepped(lhs_strided_256),
+        rhs_batch_256,
+        note='A repeated step-two lhs must not be repacked 64 times.',
+    )
+
+    lhs_batch_256 = rng.random(
+        (128, 256, 256), dtype='float64')
+    rhs_one_256 = rng.random(
+        (1, 256, 256), dtype='float64')
+    append_hpc_matmul_case(
+        cases,
+        'large-batch-step2-axis-256-b128',
+        make_stepped(lhs_batch_256, axis=0),
+        rhs_one_256,
+        note='The matrix blocks are dense but the batch axis is strided.',
+    )
+    return cases
+
+
+def make_cases(quick, hpc_matmul=False, hpc_matmul_slow=False):
     rng = np.random.default_rng(SEED)
+    if hpc_matmul:
+        return hpc_matmul_cases(rng, hpc_matmul_slow)
     cases = []
     cases.extend(elementwise_cases(rng, quick))
     cases.extend(inplace_cases(rng, quick))
@@ -759,6 +967,7 @@ def benchmark_case(case, repeat, warmup):
         'number': case.number,
         'note': case.note,
         'operands': case.operands,
+        'workload': case.workload,
         'numpy_seconds': numpy_seconds,
         'numpy_samples_seconds': samples['numpy'],
         'planned_seconds': planned_seconds,
@@ -934,6 +1143,8 @@ def metadata(args):
         'repeat': args.repeat,
         'warmup': args.warmup,
         'quick': args.quick,
+        'hpc_matmul': args.hpc_matmul,
+        'hpc_matmul_slow': args.hpc_matmul_slow,
         'case_count': args.case_count,
         'case_filters': args.case_filters,
         'requested_cpu': args.cpu,
@@ -954,6 +1165,16 @@ def parse_args():
         description='Compare legacy and planned SimpleArray execution.')
     parser.add_argument('--quick', action='store_true',
                         help='Use smaller arrays and fewer calls.')
+    parser.add_argument(
+        '--hpc-matmul',
+        action='store_true',
+        help='Run the isolated large-matrix and large-batch matmul suite.',
+    )
+    parser.add_argument(
+        '--hpc-matmul-slow',
+        action='store_true',
+        help='Include the optional 2048-square case in the HPC suite.',
+    )
     parser.add_argument('--check-only', action='store_true',
                         help='Run correctness checks without timing.')
     parser.add_argument('--benchmark-only', action='store_true',
@@ -974,6 +1195,8 @@ def parse_args():
                         help='Pin this process to one CPU on supported '
                              'platforms.')
     args = parser.parse_args()
+    if args.hpc_matmul_slow:
+        args.hpc_matmul = True
     if args.check_only and args.benchmark_only:
         parser.error(
             '--check-only and --benchmark-only are mutually exclusive')
@@ -991,7 +1214,8 @@ def set_cpu_affinity(cpu):
 def main():
     args = parse_args()
     set_cpu_affinity(args.cpu)
-    cases = make_cases(args.quick)
+    cases = make_cases(
+        args.quick, args.hpc_matmul, args.hpc_matmul_slow)
     if args.case_filters:
         cases = [
             case for case in cases

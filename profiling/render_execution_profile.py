@@ -94,6 +94,10 @@ def render_environment(lines, metadata):
         f"- NumPy: `{metadata['numpy']}`.",
         f"- Seed: `{metadata['seed']}`.",
         f"- Fixed cases: `{metadata['case_count']}`.",
+        '- HPC matmul suite: '
+        f"`{str(metadata.get('hpc_matmul', False)).lower()}`.",
+        '- Optional slow matmul case: '
+        f"`{str(metadata.get('hpc_matmul_slow', False)).lower()}`.",
         f"- Samples per route: `{metadata['repeat']}`.",
         f"- Warmups per route: `{metadata['warmup']}`.",
         f"- Threads: `{metadata['thread_count']}`.",
@@ -110,17 +114,26 @@ def render_reproduction(lines, metadata):
     cpu = metadata.get('requested_cpu')
     cpu_option = '' if cpu is None else f' --cpu {cpu}'
     revision = metadata['git_revision'][:8]
+    command = [
+        '$ python3 profiling/profile_execution_prototype.py \\',
+        '    --benchmark-only \\',
+    ]
+    if metadata.get('hpc_matmul', False):
+        command.append('    --hpc-matmul \\')
+    if metadata.get('hpc_matmul_slow', False):
+        command.append('    --hpc-matmul-slow \\')
+    command.extend((
+        f"    --repeat {metadata['repeat']} \\",
+        f"    --warmup {metadata['warmup']}{cpu_option} \\",
+        f'    --output /tmp/solvcon-execution-{revision}.json',
+    ))
     lines.extend((
         '## Reproduction',
         '',
         '```console',
         '$ source /path/to/devenv/scripts/init',
         '$ devenv use prime',
-        '$ python3 profiling/profile_execution_prototype.py \\',
-        '    --benchmark-only \\',
-        f"    --repeat {metadata['repeat']} \\",
-        f"    --warmup {metadata['warmup']}{cpu_option} \\",
-        f'    --output /tmp/solvcon-execution-{revision}.json',
+        *command,
         '```',
         '',
         'The profiler silently checks every route against NumPy before',
@@ -170,21 +183,55 @@ def render_inventory(lines, rows, families):
     lines.append('')
 
 
+def format_mib(value):
+    return f'{value / 1024 / 1024:.1f}'
+
+
+def format_workload(workload):
+    if workload is None:
+        return 'n/a'
+    matrix = (
+        f"{workload['rows']}x{workload['inner_size']}x"
+        f"{workload['columns']}")
+    macs = workload['multiply_accumulates'] / 1e9
+    return (
+        f"B={workload['batch_matrices']}, "
+        f"R={workload['batch_rank']}, "
+        f"MxKxN={matrix}<br>"
+        f"MAC={macs:.3f}G, "
+        f"logical input="
+        f"{format_mib(workload['logical_input_bytes'])} MiB, "
+        f"backing input="
+        f"{format_mib(workload['backing_input_bytes'])} MiB, "
+        f"expanded input="
+        f"{format_mib(workload['expanded_input_bytes'])} MiB, "
+        f"output={format_mib(workload['output_bytes'])} MiB")
+
+
 def render_family(lines, family, rows):
+    has_workload = any(row.get('workload') is not None for row in rows)
+    workload_header = 'Workload | ' if has_workload else ''
+    workload_separator = '--- | ' if has_workload else ''
     lines.extend((
         f'### {family}',
         '',
-        '| Operation | Scenario | Operands | Calls/sample | NumPy ms | '
+        f'| Operation | Scenario | {workload_header}Operands | '
+        'Calls/sample | NumPy ms | '
         'Legacy ms | Planned ms | Legacy/planned (q10..q90) | '
         'NumPy/planned (q10..q90) | Legacy status | '
         'Planned vs NumPy |',
-        '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | '
+        f'| --- | --- | {workload_separator}--- | ---: | ---: | ---: | '
+        '---: | ---: | '
         '---: | --- | --- |',
     ))
     for row in rows:
+        workload = (
+            f"{format_workload(row.get('workload'))} | "
+            if has_workload else '')
         lines.append(
             f"| {row['operation']} | {row['layout']} | "
-            f"{format_operands(row['operands'])} | {row['number']} | "
+            f"{workload}{format_operands(row['operands'])} | "
+            f"{row['number']} | "
             f"{format_seconds(row['numpy_seconds'])} | "
             f"{format_seconds(row['legacy_seconds'])} | "
             f"{format_seconds(row['planned_seconds'])} | "
