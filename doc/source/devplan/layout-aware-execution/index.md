@@ -366,6 +366,26 @@ $ python3 profiling/render_execution_profile.py \
     doc/source/devplan/layout-aware-execution/ubuntu-results.md
 ```
 
+Run the isolated large-matrix and large-batch suite separately.  Its five
+paired samples and one warmup keep the single-thread run practical while
+retaining raw samples and ratio quantiles:
+
+```console
+$ python3 profiling/profile_execution_prototype.py \
+    --hpc-matmul --benchmark-only \
+    --repeat 5 --warmup 1 --cpu 0 \
+    --output /tmp/solvcon-matmul-hpc.json
+$ python3 profiling/render_execution_profile.py \
+    /tmp/solvcon-matmul-hpc.json \
+    doc/source/devplan/layout-aware-execution/ubuntu-matmul-hpc-results.md
+```
+
+Pass `--hpc-matmul-slow` to include a 2048 by 2048 case.  It is excluded
+from the standard suite because one NumPy call takes more than two minutes
+in the recorded Ubuntu environment.  The standard suite still includes
+1024 by 1024 matrices with a batch of eight and 512 by 512 matrices with a
+cross-broadcast batch of 64.
+
 Each committed timing records 15 paired samples.  Within every sample, the
 profiler rotates the NumPy, planned, and legacy call order.  Changing machine
 load does not consistently favor one route.  Mutable destinations are reset
@@ -380,8 +400,8 @@ but retains this gate so an incorrect legacy result is never timed as useful
 work.
 
 Use `--filter` to repeat one family, operation, or layout without editing the
-script.  On Linux, `--cpu` pins the process to one CPU and records the effective
-affinity in the JSON:
+script.  On Linux, `--cpu` pins the process to one CPU and records the
+effective affinity in the JSON:
 
 ```console
 $ python3 profiling/profile_execution_prototype.py \
@@ -420,17 +440,25 @@ $ PYTHONPATH=. python3 profiling/render_execution_profile.py \
     doc/source/devplan/layout-aware-execution/macos-results.md
 $ cp /tmp/solvcon-execution-macos.json \
     doc/source/devplan/layout-aware-execution/macos-results.json
+$ PYTHONPATH=. python3 profiling/profile_execution_prototype.py \
+    --hpc-matmul --benchmark-only \
+    --repeat 5 --warmup 1 \
+    --output /tmp/solvcon-matmul-hpc-macos.json
+$ PYTHONPATH=. python3 profiling/render_execution_profile.py \
+    /tmp/solvcon-matmul-hpc-macos.json \
+    doc/source/devplan/layout-aware-execution/macos-matmul-hpc-results.md
 ```
 
 The JSON records `platform`, `machine`, Python, NumPy, NumPy's build
-configuration, `_solvcon` linkage from `otool -L`, Git revision, dirty state,
-seed, sample counts, raw samples, paired ratio quantiles, and all
-thread-control variables.  The benchmark script sets the supported BLAS and
-OpenMP thread controls to one before importing NumPy.  Do not pass `--cpu` on
-macOS because the Linux affinity API is unavailable.  Commit both generated
-files when reporting a new run.  In particular, compare the contiguous,
-F-contiguous, negative, step-two, and batched matmul rows.  They determine
-whether the 4096-work packing threshold is also appropriate for Accelerate.
+configuration, NumPy matmul extension linkage, `_solvcon` linkage from
+`otool -L`, Git revision, dirty state, seed, sample counts, raw samples,
+paired ratio quantiles, and all thread-control variables.  The benchmark
+script sets the supported BLAS and OpenMP thread controls to one before
+importing NumPy.  Do not pass `--cpu` on macOS because the Linux affinity API
+is unavailable.  Commit both generated files when reporting a new run.  In
+particular, compare the contiguous, F-contiguous, negative, step-two, and
+batched matmul rows.  They determine whether the 4096-work packing threshold
+is also appropriate for Accelerate.
 
 ## Ubuntu measurement
 
@@ -481,6 +509,51 @@ unusually slow in this run, so the 17 planned-faster matrix rows prove that
 the dispatch avoids the prototype's legacy bottlenecks on this machine.  They
 do not prove a universal advantage over tuned NumPy builds.  The Apple
 Accelerate rerun is required for that comparison.
+
+### Large-scale matmul measurement
+
+The [large-scale Ubuntu notebook](ubuntu-matmul-hpc-results.md) records all
+14 rows, and the [machine-readable JSON](ubuntu-matmul-hpc-results.json)
+retains the raw samples and backend linkage.  The clean run used revision
+`3804672e`, five paired samples, one warmup, one thread, and CPU 0.  Every
+planned result passed the NumPy differential check before timing.
+
+The NumPy matmul extension has no BLAS dependency in `ldd`, while `_solvcon`
+links to the prime environment's OpenBLAS.  The Ubuntu NumPy speedup ratios
+therefore show a backend mismatch, not a universal advantage.  The planned
+absolute times, within-run layout controls, and memory dimensions are the
+useful architecture evidence:
+
+| Case | B | R | MxKxN | Logical / expanded input MiB | Output MiB | Planned ms | Effective GMAC/s |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: |
+| Large square | 1 | 0 | 1024x1024x1024 | 16 / 16 | 8 | 33.972 | 31.61 |
+| One-sided broadcast | 8 | 1 | 1024x1024x1024 | 72 / 128 | 64 | 271.236 | 31.67 |
+| Transposed lhs broadcast | 8 | 1 | 1024x1024x1024 | 72 / 128 | 64 | 261.330 | 32.87 |
+| Cross broadcast | 64 | 2 | 512x512x512 | 32 / 256 | 128 | 314.942 | 27.27 |
+| Same-shape batch | 4096 | 1 | 32x32x32 | 64 / 64 | 32 | 27.337 | 4.91 |
+| One-sided batch | 16384 | 1 | 32x32x32 | 128 / 256 | 128 | 87.218 | 6.16 |
+| Cross batch | 16384 | 2 | 32x32x32 | 2 / 256 | 128 | 81.414 | 6.59 |
+| High-rank batch | 16384 | 4 | 32x32x32 | 2 / 256 | 128 | 86.080 | 6.24 |
+| Dense lhs broadcast | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 48.879 | 21.97 |
+| Materialized dense lhs | 64 | 1 | 256x256x256 | 64 / 64 | 32 | 48.936 | 21.94 |
+| Negative-stride lhs | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 460.702 | 2.33 |
+| Step-two lhs | 64 | 1 | 256x256x256 | 32.5 / 64 | 32 | 459.865 | 2.33 |
+| Dense batch axis | 128 | 1 | 256x256x256 | 64.5 / 128 | 64 | 92.880 | 23.12 |
+| Step-two batch axis | 128 | 1 | 256x256x256 | 64.5 / 128 | 64 | 94.389 | 22.75 |
+
+The dense broadcast and pre-expanded controls have the same throughput, but
+the broadcast form stores one lhs matrix instead of 64.  A step-two batch
+axis is within two percent of the dense batch-axis control, so mapped batch
+offsets remain outside the matrix kernel.  Raising batch rank from two to
+four at the same 16384 outputs changes the median from 81.414 to 86.080 ms;
+runtime-rank carry does not become the dominant cost.
+
+Negative and step-two matrix strides are about 9.4 times slower than the
+dense broadcast control because higher-rank unsupported matrix layouts still
+use mapped scalar contraction.  The next matrix-family optimization should
+pack one repeated broadcast matrix once and reuse it.  It should not change
+`LoopDomain` or `OperandMapping`.  Apple Silicon must also determine whether
+16384 small matrix calls need an Accelerate-specific batched kernel.
 
 ### Optimization findings
 
@@ -598,10 +671,16 @@ at the new branch revision before the Apple Silicon result can be updated.
 4. Keep the 4096 matmul threshold as a measured initial policy, not an ABI.
    Offline backend-specific benchmarks may justify separate direct, BLAS, and
    pack thresholds.  Do not benchmark alternatives inside each public call.
-5. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
+5. Add a matrix-family pack-once route for repeated negative or step-two
+   broadcast operands.  Keep direct descriptors for dense and transposed
+   inputs, whose large-scale throughput already matches.
+6. Use the Apple large-batch result to decide whether small matrices need a
+   vendor batched call or a dedicated batch kernel.  Keep that policy inside
+   `MatmulExecutor`.
+7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
-6. Keep CallProfiler probes temporary.  Insert them around a suspected plan,
+8. Keep CallProfiler probes temporary.  Insert them around a suspected plan,
    dispatch, or kernel boundary for diagnosis, then remove them before final
    microbenchmarks so probe overhead does not enter the result.
 
@@ -613,6 +692,9 @@ The prototype currently passes:
   shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
+- 14 large-scale matmul cases covering 1024-square matrices, 16384 outputs,
+  batch ranks zero through four, zero-stride broadcasting, and strided
+  matrix and batch axes.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.

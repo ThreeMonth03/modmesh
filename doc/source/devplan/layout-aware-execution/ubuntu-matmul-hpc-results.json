@@ -1,0 +1,1454 @@
+{
+  "metadata": {
+    "git_revision": "3804672ef7b68d1651cfe5c30881ac8263871b45",
+    "git_dirty": false,
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "python": "3.12.7",
+    "numpy": "2.3.0",
+    "numpy_build_configuration": {
+      "Compilers": {
+        "c": {
+          "name": "gcc",
+          "linker": "ld.bfd",
+          "version": "13.3.0",
+          "commands": "cc",
+          "args": "-g, -O0, -fno-omit-frame-pointer",
+          "linker args": "-g, -O0, -fno-omit-frame-pointer"
+        },
+        "cython": {
+          "name": "cython",
+          "linker": "cython",
+          "version": "3.1.4",
+          "commands": "cython"
+        },
+        "c++": {
+          "name": "gcc",
+          "linker": "ld.bfd",
+          "version": "13.3.0",
+          "commands": "c++",
+          "args": "-g, -O0, -fno-omit-frame-pointer",
+          "linker args": "-g, -O0, -fno-omit-frame-pointer"
+        }
+      },
+      "Machine Information": {
+        "host": {
+          "cpu": "x86_64",
+          "family": "x86_64",
+          "endian": "little",
+          "system": "linux"
+        },
+        "build": {
+          "cpu": "x86_64",
+          "family": "x86_64",
+          "endian": "little",
+          "system": "linux"
+        }
+      },
+      "Build Dependencies": {
+        "blas": {
+          "name": "auto"
+        },
+        "lapack": {
+          "name": "lapack"
+        }
+      },
+      "Python Information": {
+        "path": "/home/threemonth03/devenv/flavors/prime/usr/bin/python3",
+        "version": "3.12"
+      },
+      "SIMD Extensions": {
+        "baseline": [
+          "SSE",
+          "SSE2",
+          "SSE3"
+        ],
+        "found": [
+          "SSSE3",
+          "SSE41",
+          "POPCNT",
+          "SSE42",
+          "AVX",
+          "F16C",
+          "FMA3",
+          "AVX2"
+        ],
+        "not found": [
+          "AVX512F",
+          "AVX512CD",
+          "AVX512_KNL",
+          "AVX512_KNM",
+          "AVX512_SKX",
+          "AVX512_CLX",
+          "AVX512_CNL",
+          "AVX512_ICL",
+          "AVX512_SPR"
+        ]
+      }
+    },
+    "numpy_extension_linkage": {
+      "extension": "/home/threemonth03/devenv/flavors/prime/usr/lib/python3.12/site-packages/numpy/_core/_multiarray_umath.cpython-312-x86_64-linux-gnu.so",
+      "command": [
+        "ldd",
+        "/home/threemonth03/devenv/flavors/prime/usr/lib/python3.12/site-packages/numpy/_core/_multiarray_umath.cpython-312-x86_64-linux-gnu.so"
+      ],
+      "returncode": 0,
+      "output": "linux-vdso.so.1 (0x00007fffc07d0000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007704ba400000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007704ba717000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007704bb2d7000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007704ba000000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007704bb31c000)",
+      "error": ""
+    },
+    "solvcon_extension_linkage": {
+      "extension": "/home/threemonth03/Downloads/modmesh-execution-prototype/_solvcon.cpython-312-x86_64-linux-gnu.so",
+      "command": [
+        "ldd",
+        "/home/threemonth03/Downloads/modmesh-execution-prototype/_solvcon.cpython-312-x86_64-linux-gnu.so"
+      ],
+      "returncode": 0,
+      "output": "linux-vdso.so.1 (0x00007ffc015a6000)\n\tlibopenblas.so.0 => /home/threemonth03/devenv/flavors/prime/usr/lib/libopenblas.so.0 (0x00007bfa6b800000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007bfa6b400000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007bfa6b717000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007bfa6d4a0000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007bfa6b000000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007bfa6d4e5000)\n\tlibgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007bfa6ac00000)",
+      "error": ""
+    },
+    "seed": 20260722,
+    "repeat": 5,
+    "warmup": 1,
+    "quick": false,
+    "hpc_matmul": true,
+    "hpc_matmul_slow": false,
+    "case_count": 14,
+    "case_filters": [],
+    "requested_cpu": 0,
+    "cpu_affinity": [
+      0
+    ],
+    "thread_count": "1",
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "BLIS_NUM_THREADS": "1"
+    }
+  },
+  "results": [
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-square-1024-c",
+      "number": 1,
+      "note": "Large unbatched legacy, planned, and NumPy baseline.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1024,
+            1024
+          ],
+          "strides": [
+            1024,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1024,
+            1024
+          ],
+          "strides": [
+            1024,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [],
+        "batch_rank": 0,
+        "batch_matrices": 1,
+        "rows": 1024,
+        "inner_size": 1024,
+        "columns": 1024,
+        "multiply_accumulates": 1073741824,
+        "logical_input_bytes": 16777216,
+        "backing_input_bytes": 16777216,
+        "expanded_input_bytes": 16777216,
+        "output_bytes": 8388608
+      },
+      "numpy_seconds": 4.442407077993266,
+      "numpy_samples_seconds": [
+        4.4838527719984995,
+        4.246726190001937,
+        4.442407077993266,
+        4.430578751998837,
+        4.629366487992229
+      ],
+      "planned_seconds": 0.03397206099180039,
+      "planned_samples_seconds": [
+        0.03494625398889184,
+        0.03237440199882258,
+        0.03793903300538659,
+        0.03397206099180039,
+        0.03154148599423934
+      ],
+      "numpy_over_planned": 130.41830912373013,
+      "numpy_over_planned_q10": 121.57883103397822,
+      "numpy_over_planned_q90": 140.5326027660915,
+      "numpy_over_planned_samples": [
+        128.30710763516328,
+        131.1754326815484,
+        117.09331329985486,
+        130.41830912373013,
+        146.7707161557869
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": 3.0746906389977084,
+      "legacy_samples_seconds": [
+        3.226185716004693,
+        3.0746906389977084,
+        2.922774851991562,
+        2.9705076469981577,
+        3.0761254000099143
+      ],
+      "legacy_over_planned": 92.3184990594466,
+      "legacy_correct": true,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "improved",
+      "legacy_over_planned_q10": 81.1991266415525,
+      "legacy_over_planned_q90": 96.504956009422,
+      "legacy_over_planned_samples": [
+        92.3184990594466,
+        94.97289368030741,
+        77.03872820313016,
+        87.43972429918601,
+        97.5263308954984
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-broadcast-one-sided-1024-b8",
+      "number": 1,
+      "note": "One 1024-square lhs is reused by eight BLAS calls.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            1024,
+            1024
+          ],
+          "strides": [
+            1048576,
+            1024,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            1024,
+            1024
+          ],
+          "strides": [
+            1048576,
+            1024,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          8
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 8,
+        "rows": 1024,
+        "inner_size": 1024,
+        "columns": 1024,
+        "multiply_accumulates": 8589934592,
+        "logical_input_bytes": 75497472,
+        "backing_input_bytes": 75497472,
+        "expanded_input_bytes": 134217728,
+        "output_bytes": 67108864
+      },
+      "numpy_seconds": 34.83109453700308,
+      "numpy_samples_seconds": [
+        41.867807208007434,
+        43.338441428000806,
+        34.83109453700308,
+        25.582319551002,
+        26.509381002993905
+      ],
+      "planned_seconds": 0.27123564599605743,
+      "planned_samples_seconds": [
+        0.2900030960008735,
+        0.29464523600472603,
+        0.27123564599605743,
+        0.2710069840104552,
+        0.2673934220074443
+      ],
+      "numpy_over_planned": 128.41636064866404,
+      "numpy_over_planned_q10": 96.29435797179056,
+      "numpy_over_planned_q90": 146.00019674492594,
+      "numpy_over_planned_samples": [
+        144.3702077162698,
+        147.08685609736338,
+        128.41636064866404,
+        94.39727040397992,
+        99.13998932350653
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-broadcast-transposed-lhs-1024-b8",
+      "number": 1,
+      "note": "The broadcast lhs remains directly BLAS-describable.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            1024,
+            1024
+          ],
+          "strides": [
+            1048576,
+            1,
+            1024
+          ],
+          "c_contiguous": false,
+          "f_contiguous": true,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            1024,
+            1024
+          ],
+          "strides": [
+            1048576,
+            1024,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          8
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 8,
+        "rows": 1024,
+        "inner_size": 1024,
+        "columns": 1024,
+        "multiply_accumulates": 8589934592,
+        "logical_input_bytes": 75497472,
+        "backing_input_bytes": 75497472,
+        "expanded_input_bytes": 134217728,
+        "output_bytes": 67108864
+      },
+      "numpy_seconds": 37.7890564249974,
+      "numpy_samples_seconds": [
+        37.908451893003075,
+        38.344379960006336,
+        37.7890564249974,
+        33.74212439400435,
+        33.71622220700374
+      ],
+      "planned_seconds": 0.26132983500428963,
+      "planned_samples_seconds": [
+        0.26276216200494673,
+        0.2700479330087546,
+        0.2583397580019664,
+        0.2578666420013178,
+        0.26132983500428963
+      ],
+      "numpy_over_planned": 141.9910144572862,
+      "numpy_over_planned_q10": 129.7511555713396,
+      "numpy_over_planned_q90": 145.47357504519522,
+      "numpy_over_planned_samples": [
+        144.26906676270008,
+        141.9910144572862,
+        146.27658056685863,
+        130.85106368210245,
+        129.0178834974977
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-broadcast-cross-512-b64",
+      "number": 1,
+      "note": "Two batch axes cross-broadcast into 64 large matrices.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            8,
+            1,
+            512,
+            512
+          ],
+          "strides": [
+            262144,
+            262144,
+            512,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            8,
+            512,
+            512
+          ],
+          "strides": [
+            2097152,
+            262144,
+            512,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          8,
+          8
+        ],
+        "batch_rank": 2,
+        "batch_matrices": 64,
+        "rows": 512,
+        "inner_size": 512,
+        "columns": 512,
+        "multiply_accumulates": 8589934592,
+        "logical_input_bytes": 33554432,
+        "backing_input_bytes": 33554432,
+        "expanded_input_bytes": 268435456,
+        "output_bytes": 134217728
+      },
+      "numpy_seconds": 14.91075611699489,
+      "numpy_samples_seconds": [
+        14.91075611699489,
+        14.730790963993059,
+        15.211752121002064,
+        14.929443258006359,
+        14.577728192001814
+      ],
+      "planned_seconds": 0.3149424080038443,
+      "planned_samples_seconds": [
+        0.2918650999927195,
+        0.2925794170005247,
+        0.3149424080038443,
+        0.32468513200001325,
+        0.31815750600071624
+      ],
+      "numpy_over_planned": 48.30010736698369,
+      "numpy_over_planned_q10": 45.88404944402795,
+      "numpy_over_planned_q90": 50.79190448142487,
+      "numpy_over_planned_samples": [
+        51.08783515866349,
+        50.34800846556694,
+        48.30010736698369,
+        45.981296297872206,
+        45.81921820813178
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-same-32-b4096",
+      "number": 1,
+      "note": "Many small independent matrices expose dispatch cost.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            4096,
+            32,
+            32
+          ],
+          "strides": [
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4096,
+            32,
+            32
+          ],
+          "strides": [
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          4096
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 4096,
+        "rows": 32,
+        "inner_size": 32,
+        "columns": 32,
+        "multiply_accumulates": 134217728,
+        "logical_input_bytes": 67108864,
+        "backing_input_bytes": 67108864,
+        "expanded_input_bytes": 67108864,
+        "output_bytes": 33554432
+      },
+      "numpy_seconds": 0.22610597299353685,
+      "numpy_samples_seconds": [
+        0.22681684501003474,
+        0.22610597299353685,
+        0.228882755007362,
+        0.22366394200071227,
+        0.22528527000395115
+      ],
+      "planned_seconds": 0.02733666899439413,
+      "planned_samples_seconds": [
+        0.027772804998676293,
+        0.026994118001312017,
+        0.02733666899439413,
+        0.028419153997674584,
+        0.025668018002761528
+      ],
+      "numpy_over_planned": 8.37273755095394,
+      "numpy_over_planned_q10": 7.9888571673519015,
+      "numpy_over_planned_q90": 8.616579669770417,
+      "numpy_over_planned_samples": [
+        8.166868453540983,
+        8.376120048913887,
+        8.37273755095394,
+        7.87018297655918,
+        8.776886083674771
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-one-sided-32-b16384",
+      "number": 1,
+      "note": "One physical lhs is reused by 16384 outputs.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            32,
+            32
+          ],
+          "strides": [
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16384,
+            32,
+            32
+          ],
+          "strides": [
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          16384
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 16384,
+        "rows": 32,
+        "inner_size": 32,
+        "columns": 32,
+        "multiply_accumulates": 536870912,
+        "logical_input_bytes": 134225920,
+        "backing_input_bytes": 134225920,
+        "expanded_input_bytes": 268435456,
+        "output_bytes": 134217728
+      },
+      "numpy_seconds": 0.8359291249944363,
+      "numpy_samples_seconds": [
+        0.8454340070020407,
+        0.8336882889998378,
+        0.8674703459982993,
+        0.8359291249944363,
+        0.8331072790024336
+      ],
+      "planned_seconds": 0.0872182979946956,
+      "planned_samples_seconds": [
+        0.08729704200231936,
+        0.08630602600169368,
+        0.0872182979946956,
+        0.08760450400586706,
+        0.08612009399803355
+      ],
+      "numpy_over_planned": 9.67378506369787,
+      "numpy_over_planned_q10": 9.589118174932047,
+      "numpy_over_planned_q90": 9.841407015546492,
+      "numpy_over_planned_samples": [
+        9.684566482557093,
+        9.659676474774512,
+        9.945967370872758,
+        9.542079308370404,
+        9.67378506369787
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-cross-32-b16384",
+      "number": 1,
+      "note": "Only 256 input matrices produce 16384 outputs.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            128,
+            1,
+            32,
+            32
+          ],
+          "strides": [
+            1024,
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            128,
+            32,
+            32
+          ],
+          "strides": [
+            131072,
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          128,
+          128
+        ],
+        "batch_rank": 2,
+        "batch_matrices": 16384,
+        "rows": 32,
+        "inner_size": 32,
+        "columns": 32,
+        "multiply_accumulates": 536870912,
+        "logical_input_bytes": 2097152,
+        "backing_input_bytes": 2097152,
+        "expanded_input_bytes": 268435456,
+        "output_bytes": 134217728
+      },
+      "numpy_seconds": 0.805737329996191,
+      "numpy_samples_seconds": [
+        0.8008325380069437,
+        0.7971371320018079,
+        0.8242766320036026,
+        0.805737329996191,
+        0.8099835649918532
+      ],
+      "planned_seconds": 0.08141371099918615,
+      "planned_samples_seconds": [
+        0.08141371099918615,
+        0.08089131698943675,
+        0.08356851500866469,
+        0.08127029999741353,
+        0.08304528800363187
+      ],
+      "numpy_over_planned": 9.854421483901698,
+      "numpy_over_planned_q10": 9.786742020916991,
+      "numpy_over_planned_q90": 9.893967278249638,
+      "numpy_over_planned_samples": [
+        9.836580696032259,
+        9.854421483901698,
+        9.863483058399908,
+        9.914290091482792,
+        9.753516237506814
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-high-rank-32-b16384",
+      "number": 1,
+      "note": "The same output count as cross-b32 with batch rank four.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            8,
+            1,
+            16,
+            1,
+            32,
+            32
+          ],
+          "strides": [
+            16384,
+            16384,
+            1024,
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            8,
+            1,
+            16,
+            32,
+            32
+          ],
+          "strides": [
+            131072,
+            16384,
+            16384,
+            1024,
+            32,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          8,
+          8,
+          16,
+          16
+        ],
+        "batch_rank": 4,
+        "batch_matrices": 16384,
+        "rows": 32,
+        "inner_size": 32,
+        "columns": 32,
+        "multiply_accumulates": 536870912,
+        "logical_input_bytes": 2097152,
+        "backing_input_bytes": 2097152,
+        "expanded_input_bytes": 268435456,
+        "output_bytes": 134217728
+      },
+      "numpy_seconds": 0.8320731990097556,
+      "numpy_samples_seconds": [
+        0.8039087090000976,
+        0.8316706539917504,
+        0.8759302620019298,
+        0.8378799009951763,
+        0.8320731990097556
+      ],
+      "planned_seconds": 0.0860804200056009,
+      "planned_samples_seconds": [
+        0.08448546699946746,
+        0.0828359629958868,
+        0.08703976999095175,
+        0.08745044199167751,
+        0.0860804200056009
+      ],
+      "numpy_over_planned": 9.666230705607804,
+      "numpy_over_planned_q10": 9.541688183584409,
+      "numpy_over_planned_q90": 10.054126507552848,
+      "numpy_over_planned_samples": [
+        9.515349060036147,
+        10.039970852189487,
+        10.063563611128423,
+        9.5811968689068,
+        9.666230705607804
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "broadcast-dense-lhs-256-b64",
+      "number": 1,
+      "note": "Dense zero-stride control for repeated strided lhs cases.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 1073741824,
+        "logical_input_bytes": 34078720,
+        "backing_input_bytes": 34078720,
+        "expanded_input_bytes": 67108864,
+        "output_bytes": 33554432
+      },
+      "numpy_seconds": 1.686423257997376,
+      "numpy_samples_seconds": [
+        1.6454812120064162,
+        1.6405155760003254,
+        1.6987189659994328,
+        1.6885694619995775,
+        1.686423257997376
+      ],
+      "planned_seconds": 0.048879152003792115,
+      "planned_samples_seconds": [
+        0.047092981010791846,
+        0.04679744198801927,
+        0.04902036499697715,
+        0.0501942229893757,
+        0.048879152003792115
+      ],
+      "numpy_over_planned": 34.65333165316465,
+      "numpy_over_planned_q10": 33.985185027726025,
+      "numpy_over_planned_q90": 35.009846174135724,
+      "numpy_over_planned_samples": [
+        34.94111387064958,
+        35.05566770979315,
+        34.65333165316465,
+        33.64071324217901,
+        34.501892706046554
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "materialized-dense-lhs-256-b64",
+      "number": 1,
+      "note": "Pre-expanded control; materialization is outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 1073741824,
+        "logical_input_bytes": 67108864,
+        "backing_input_bytes": 67108864,
+        "expanded_input_bytes": 67108864,
+        "output_bytes": 33554432
+      },
+      "numpy_seconds": 1.698012540990021,
+      "numpy_samples_seconds": [
+        1.698012540990021,
+        1.789128039003117,
+        1.7461658239917597,
+        1.6733414549962617,
+        1.6812555549986428
+      ],
+      "planned_seconds": 0.04893607599660754,
+      "planned_samples_seconds": [
+        0.051781431000563316,
+        0.05138822201115545,
+        0.048848724996787496,
+        0.04893607599660754,
+        0.04856827200273983
+      ],
+      "numpy_over_planned": 34.616334608400315,
+      "numpy_over_planned_q10": 33.35292585720187,
+      "numpy_over_planned_q90": 35.37420360222071,
+      "numpy_over_planned_samples": [
+        32.791919963964475,
+        34.815916351702725,
+        35.746395102566034,
+        34.19443469705795,
+        34.616334608400315
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "broadcast-negative-lhs-256-b64",
+      "number": 1,
+      "note": "A repeated negative-stride lhs must not be repacked 64 times.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": true,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 1073741824,
+        "logical_input_bytes": 34078720,
+        "backing_input_bytes": 34078720,
+        "expanded_input_bytes": 67108864,
+        "output_bytes": 33554432
+      },
+      "numpy_seconds": 1.5772502869949676,
+      "numpy_samples_seconds": [
+        1.56174799099972,
+        1.5727964300021995,
+        1.5772502869949676,
+        1.6461021559953224,
+        1.6422423990006791
+      ],
+      "planned_seconds": 0.46070248300384264,
+      "planned_samples_seconds": [
+        0.4359405580034945,
+        0.4351523169898428,
+        0.46413337100239005,
+        0.46070248300384264,
+        0.4619717710011173
+      ],
+      "numpy_over_planned": 3.573026447052148,
+      "numpy_over_planned_q10": 3.4609034848508924,
+      "numpy_over_planned_q90": 3.601606725712344,
+      "numpy_over_planned_samples": [
+        3.582479221828222,
+        3.614358394968425,
+        3.398269518066706,
+        3.573026447052148,
+        3.5548544350271722
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "broadcast-step2-lhs-256-b64",
+      "number": 1,
+      "note": "A repeated step-two lhs must not be repacked 64 times.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 1073741824,
+        "logical_input_bytes": 34078720,
+        "backing_input_bytes": 34603008,
+        "expanded_input_bytes": 67108864,
+        "output_bytes": 33554432
+      },
+      "numpy_seconds": 1.654910026001744,
+      "numpy_samples_seconds": [
+        1.6553850909986068,
+        1.643378060995019,
+        1.6544965259963647,
+        1.6563816650013905,
+        1.654910026001744
+      ],
+      "planned_seconds": 0.4598651310079731,
+      "planned_samples_seconds": [
+        0.45690472300339025,
+        0.45652146100474056,
+        0.46106209899880923,
+        0.4598651310079731,
+        0.47666340999421664
+      ],
+      "numpy_over_planned": 3.5997827076478974,
+      "numpy_over_planned_q10": 3.5184962318211643,
+      "numpy_over_planned_q90": 3.6145796199575537,
+      "numpy_over_planned_samples": [
+        3.6230421960123267,
+        3.5997827076478974,
+        3.5884461758819124,
+        3.6018857558753945,
+        3.4718629357806656
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-dense-axis-256-b128",
+      "number": 1,
+      "note": "Dense batch-axis control for the step-two batch view.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          128
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 128,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 2147483648,
+        "logical_input_bytes": 67633152,
+        "backing_input_bytes": 67633152,
+        "expanded_input_bytes": 134217728,
+        "output_bytes": 67108864
+      },
+      "numpy_seconds": 3.312934394009062,
+      "numpy_samples_seconds": [
+        3.358541358000366,
+        3.312934394009062,
+        3.3170598080032505,
+        3.3026390529994387,
+        3.2990165329974843
+      ],
+      "planned_seconds": 0.09288013300101738,
+      "planned_samples_seconds": [
+        0.09499208099441603,
+        0.09247221700206865,
+        0.09288013300101738,
+        0.09371038699464407,
+        0.09180371199909132
+      ],
+      "numpy_over_planned": 35.71334041874075,
+      "numpy_over_planned_q10": 35.28823052157104,
+      "numpy_over_planned_q90": 35.891834763469426,
+      "numpy_over_planned_samples": [
+        35.35601413130209,
+        35.82626762300887,
+        35.71334041874075,
+        35.243041448417,
+        35.93554619044313
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "large-batch-step2-axis-256-b128",
+      "number": 1,
+      "note": "The matrix blocks are dense but the batch axis is strided.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            256,
+            1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          128
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 128,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 2147483648,
+        "logical_input_bytes": 67633152,
+        "backing_input_bytes": 134742016,
+        "expanded_input_bytes": 134217728,
+        "output_bytes": 67108864
+      },
+      "numpy_seconds": 3.30465051200008,
+      "numpy_samples_seconds": [
+        3.30465051200008,
+        3.3178029990085633,
+        3.3029920920089353,
+        3.3121250340045663,
+        3.2834674769983394
+      ],
+      "planned_seconds": 0.09438874300394673,
+      "planned_samples_seconds": [
+        0.09266998698876705,
+        0.09438874300394673,
+        0.09325218200683594,
+        0.09650754800532013,
+        0.09474688400223386
+      ],
+      "numpy_over_planned": 35.150409820266745,
+      "numpy_over_planned_q10": 34.453972875452386,
+      "numpy_over_planned_q90": 35.56425022346522,
+      "numpy_over_planned_samples": [
+        35.6604184308416,
+        35.150409820266745,
+        35.41999791240066,
+        34.31985479334715,
+        34.65514999861024
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "status": "new-only"
+    }
+  ]
+}
