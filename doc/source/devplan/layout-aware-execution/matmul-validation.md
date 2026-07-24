@@ -469,6 +469,48 @@ This supports testing the extension on Accelerate, but it does not change
 automatic dispatch yet.  The common plan and execution routes remain frozen;
 only the private vector packing predicate is under review.
 
+The clean Apple Silicon rerun used revision `aee484b6`, 15 samples, five
+warmups, and one thread.  NumPy and `_solvcon` both link to Accelerate.  All
+270 cases and every explicit route match NumPy.  The
+[complete report](macos-matmul-vector-pack-rectangular-results.md) and
+[raw JSON](macos-matmul-vector-pack-rectangular-results.json) retain every
+sample, operand shape, predicate result, and linkage record.
+
+| Apple selection | Rows | Pack faster | Parity | Inconclusive | Generic faster |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Current portable predicate | 108 | 108 | 0 | 0 | 0 |
+| Reuse-aware extension only | 72 | 72 | 0 | 0 | 0 |
+| Combined predicate | 180 | 180 | 0 | 0 | 0 |
+| All measured rows | 270 | 249 | 6 | 4 | 11 |
+
+The 72 extension-only rows have a median pack/generic ratio of 0.514, with
+q10 and q90 values of 0.389 and 0.811.  The worst individual q90 is 0.849,
+still below the 0.95 pack-faster boundary.  Both vector directions pass in
+36 of 36 rows, and each negative, negative-step-two, and zero-stride class
+passes in 24 of 24 rows.
+
+All 11 conclusive generic wins remain outside the combined predicate.  The
+strict two-backend gate therefore passes.  The reuse-aware extension can be
+implemented as a private logical-OR predicate without modifying
+`MatmulPlan`, the execution routes, or the common layer.
+
+Reproduce the Apple gate without CPU affinity:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_vector_pack_rectangular.py \
+    --dimension-pairs \
+    8x72,24x24,72x8,8x128,32x32,128x8,16x256,64x64,256x16 \
+    --batches 1,2,4,8,16 \
+    --repeat 15 \
+    --warmup 5 \
+    --output /tmp/matmul-vector-pack-rectangular.json
+$ PYTHONPATH=.:profiling python3 \
+    profiling/render_matmul_vector_pack_rectangular.py \
+    /tmp/matmul-vector-pack-rectangular.json \
+    /tmp/matmul-vector-pack-rectangular.md
+```
+
 ## Reproduce the large 1D by ND and ND by 1D suite
 
 ```console
@@ -676,8 +718,8 @@ direct-GEMV route and the bounded negative or zero vector pack-once policy.
 Leave non-describable matrices generic for vector-batch work because the
 explicit in-call packing control rejects a broad matrix policy.  The current
 portable threshold is safe on both measured backends.  The rectangular
-Ubuntu gate supports a reuse-aware extension without changing the common
-layer, but automatic dispatch should remain unchanged until the same 270
-rows run on Accelerate.
+OpenBLAS and Accelerate gates both accept the reuse-aware extension.  Add it
+only as a private predicate combined with the current rule using logical OR.
+Freeze `MatmulPlan`, the execution routes, and the common layer.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

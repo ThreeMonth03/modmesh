@@ -751,10 +751,24 @@ adds 72 rows, with 41 pack-faster, 31 inconclusive, and no generic-faster
 results.  All seven generic-faster rows in the notebook stay outside the
 combined predicate.
 
-This freezes the matrix common layer but leaves one private dispatch decision
-open.  Run the same rectangular gate on Accelerate before adding the
-reuse-aware extension.  Do not replace the current predicate, add matrix
-packing, or introduce an Apple-specific route.
+This froze the matrix common layer while leaving one private dispatch
+decision for Accelerate.  The current predicate remains the base rule; the
+extension must not replace it, add matrix packing, or introduce an
+Apple-specific route.
+
+The clean `aee484b6`
+[Apple rectangular gate](macos-matmul-vector-pack-rectangular-results.md)
+completes that decision.  All 270 cases and every explicit route match
+NumPy; both libraries link to Accelerate.  The reuse-aware extension selects
+72 new rows, and all 72 are pack-faster.  Their median pack/generic ratio is
+0.514, and the worst individual q90 is 0.849.  The combined predicate selects
+180 rows, all pack-faster, while all 11 conclusive generic wins remain
+outside it.
+
+The strict OpenBLAS and Accelerate gate therefore passes.  Implement the
+extension only as a private logical-OR addition to the existing predicate.
+Keep `MatmulPlan`, matrix packing policy, execution routes, and the common
+layer frozen.
 
 ## Outer-contiguous reduction experiment
 
@@ -806,9 +820,10 @@ reduction target.
    positive-stride direct-GEMV route and the measured negative or zero vector
    pack-once policy for a directly describable matrix.  The explicit Ubuntu
    control rejects wider vector-batch matrix packing, and the focused
-   Accelerate run confirms the portable vector boundary.  Evaluate only the
-   private reuse-aware extension with the rectangular Accelerate gate.  Do
-   not add a platform-specific batched call or another common abstraction.
+   Accelerate run confirms the portable vector boundary.  Both rectangular
+   gates accept the private reuse-aware extension.  Add only that predicate
+   change; do not add a platform-specific batched call or another common
+   abstraction.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -835,6 +850,8 @@ The prototype currently passes:
   unsupported vector strides, three matrix sides, and four batch sizes.
 - 270 Ubuntu rectangular vector rows separating inner size, output extent,
   packing volume, and batch reuse at three equal-work levels.
+- 270 Apple rectangular vector rows covering the same factorization and
+  predicate matrix with Accelerate for both NumPy and `_solvcon`.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
@@ -898,5 +915,8 @@ and reproduce the same correctness matrix and timing protocol.
 9. The explicit 72-row Accelerate boundary confirmed the portable pack-once
    rule and showed that its threshold is conservative for Apple without
    justifying wider matrix packing.
+10. The rectangular Accelerate gate accepted all 72 reuse-aware extension
+    rows and kept every conclusive generic win outside the combined
+    predicate.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
