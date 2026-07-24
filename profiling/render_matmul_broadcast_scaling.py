@@ -65,6 +65,26 @@ def platform_name(metadata):
     return metadata['machine']
 
 
+def backend_libraries(linkage):
+    output = linkage.get('output') or ''
+    keywords = ('accelerate', 'blas', 'blis', 'mkl')
+    libraries = []
+    for line in output.splitlines():
+        name = line.strip().split()[0]
+        if any(keyword in name.lower() for keyword in keywords):
+            libraries.append(name)
+    return ', '.join(libraries) if libraries else 'none visible'
+
+
+def numpy_blas_name(metadata):
+    configuration = metadata['numpy_build_configuration']
+    if not isinstance(configuration, dict):
+        return 'not available'
+    dependencies = configuration.get('Build Dependencies', {})
+    blas = dependencies.get('blas', {})
+    return blas.get('name', 'not available')
+
+
 def render_environment(lines, metadata):
     affinity = metadata.get('cpu_affinity')
     affinity_text = (
@@ -88,10 +108,22 @@ def render_environment(lines, metadata):
         f"- Warmups per route: `{metadata['warmup']}`.",
         f"- Threads: `{metadata['thread_count']}`.",
         f"- CPU affinity: `{affinity_text}`.",
+        f"- NumPy configured BLAS: `{numpy_blas_name(metadata)}`.",
+        '- NumPy linked math libraries: `'
+        + backend_libraries(metadata['numpy_extension_linkage'])
+        + '`.',
+        '- `_solvcon` linked math libraries: `'
+        + backend_libraries(metadata['solvcon_extension_linkage'])
+        + '`.',
         '',
         'The JSON also retains every timing sample, NumPy build',
         'configuration, extension linkage, thread-control variables,',
         'source layouts, and planned batch mappings.',
+        '',
+        'A NumPy/planned ratio is an external speed comparison only when',
+        'the two linkage records identify comparable math backends. The',
+        'planned/control ratios remain valid for testing dispatch within',
+        'the `_solvcon` build.',
         '',
     ))
 

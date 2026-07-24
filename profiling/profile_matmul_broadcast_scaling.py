@@ -337,6 +337,15 @@ def trace_case(case):
         raise RuntimeError(
             'matmul probes are disabled; rebuild with '
             'SOLVCON_PROFILE=ON')
+    expected_pack = int(case.plan['expected_pack_lhs'])
+    expected_gemm = case.plan['expected_gemm_calls']
+    if (
+            counts['execution.matmul.pack_lhs'] != expected_pack or
+            counts['execution.matmul.gemm'] != expected_gemm or
+            counts['execution.matmul.generic'] != 0):
+        raise RuntimeError(
+            f'unexpected dispatch counts for B={case.batch} '
+            f'{case.route}: {counts}')
     return {
         'batch': case.batch,
         'route': case.route,
