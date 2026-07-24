@@ -742,6 +742,20 @@ safe but conservative on Apple.  A lower Apple-specific threshold is a
 backend tuning option, not evidence for widening matrix packing or changing
 the common plan.
 
+The square boundary does not distinguish contraction work from vector copy
+volume.  The clean `f73266ab`
+[Ubuntu rectangular gate](ubuntu-matmul-vector-pack-rectangular-results.md)
+adds 270 equal-work factorizations.  The existing predicate selects 108 rows,
+with 97 pack-faster and 11 inconclusive results.  A reuse-aware extension
+adds 72 rows, with 41 pack-faster, 31 inconclusive, and no generic-faster
+results.  All seven generic-faster rows in the notebook stay outside the
+combined predicate.
+
+This freezes the matrix common layer but leaves one private dispatch decision
+open.  Run the same rectangular gate on Accelerate before adding the
+reuse-aware extension.  Do not replace the current predicate, add matrix
+packing, or introduce an Apple-specific route.
+
 ## Outer-contiguous reduction experiment
 
 The next Ubuntu experiment implemented the loop-interchange recommendation
@@ -792,9 +806,9 @@ reduction target.
    positive-stride direct-GEMV route and the measured negative or zero vector
    pack-once policy for a directly describable matrix.  The explicit Ubuntu
    control rejects wider vector-batch matrix packing, and the focused
-   Accelerate run confirms the portable vector boundary.  Do not add a
-   platform-specific batched call or another common abstraction.  Treat a
-   lower Apple vector threshold only as later backend tuning.
+   Accelerate run confirms the portable vector boundary.  Evaluate only the
+   private reuse-aware extension with the rectangular Accelerate gate.  Do
+   not add a platform-specific batched call or another common abstraction.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -819,6 +833,8 @@ The prototype currently passes:
   control covering forced generic and forced BLAS dispatch.
 - 72 Apple vector pack-boundary rows covering both directions, three
   unsupported vector strides, three matrix sides, and four batch sizes.
+- 270 Ubuntu rectangular vector rows separating inner size, output extent,
+  packing volume, and batch reuse at three equal-work levels.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.

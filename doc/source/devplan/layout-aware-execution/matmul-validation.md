@@ -344,8 +344,7 @@ output batch contains at least four contractions
 
 The rule does not enable matrix packing for vector-batch work.  It also leaves
 smaller reusable vectors generic even when an isolated Ubuntu row improves.
-The exact boundary needs the same focused rerun on Accelerate before the
-portable policy freezes.
+The focused Accelerate rerun below confirms this exact portable boundary.
 
 ## Reproduce the pack-once crossover
 
@@ -418,6 +417,57 @@ than current generic dispatch, including side 24 and batch 2.  This does not
 invalidate the portable rule, which is bounded by the Ubuntu crossover.  It
 shows that a lower Accelerate-specific threshold could be measured later
 without changing the common plan or the current cross-platform policy.
+
+## Rectangular reuse gate
+
+The square sweep ties vector packing volume, output extent, and contraction
+work to one side length.  It cannot distinguish equal-work cases such as:
+
+```text
+K = 8,   output extent = 128, core work = 1024, packed values = 8
+K = 32,  output extent = 32,  core work = 1024, packed values = 32
+K = 128, output extent = 8,   core work = 1024, packed values = 128
+```
+
+The [Ubuntu rectangular report](ubuntu-matmul-vector-pack-rectangular-results.md)
+and its
+[raw JSON](ubuntu-matmul-vector-pack-rectangular-results.json) separate
+these quantities.  All 270 rows pass NumPy correctness before timing.  They
+cover both vector directions, three unsupported vector strides, three equal
+work levels, three factorizations per work level, and batches 1 through 16.
+The matrix core remains C layout so no matrix packing enters the comparison.
+
+The current portable predicate remains unchanged:
+
+```text
+core work >= 1024
+batch >= 4
+```
+
+The report evaluates this additional reuse-aware condition:
+
+```text
+core work >= 576
+reuse intensity = batch * output extent
+reuse intensity >= 128
+```
+
+The extension is combined with the current predicate using logical OR.  It
+never disables a current pack-once selection.  Because core work is
+`K * output extent`, reuse intensity compares the total contracted work with
+the `K` values copied once from the vector.
+
+| Ubuntu selection | Rows | Pack faster | Inconclusive | Generic faster |
+| --- | ---: | ---: | ---: | ---: |
+| Current portable predicate | 108 | 97 | 11 | 0 |
+| Reuse-aware extension only | 72 | 41 | 31 | 0 |
+| Combined predicate | 180 | 138 | 42 | 0 |
+| All measured rows | 270 | 157 | 106 | 7 |
+
+All seven conclusive generic wins remain outside the combined predicate.
+This supports testing the extension on Accelerate, but it does not change
+automatic dispatch yet.  The common plan and execution routes remain frozen;
+only the private vector packing predicate is under review.
 
 ## Reproduce the large 1D by ND and ND by 1D suite
 
@@ -625,8 +675,9 @@ The focused Accelerate decision gate is complete.  Keep the positive-stride
 direct-GEMV route and the bounded negative or zero vector pack-once policy.
 Leave non-describable matrices generic for vector-batch work because the
 explicit in-call packing control rejects a broad matrix policy.  The current
-portable threshold is safe on both measured backends, although Accelerate
-could support a lower backend-specific threshold.  Freeze portable dispatch
-and the common layer at this boundary.
+portable threshold is safe on both measured backends.  The rectangular
+Ubuntu gate supports a reuse-aware extension without changing the common
+layer, but automatic dispatch should remain unchanged until the same 270
+rows run on Accelerate.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
