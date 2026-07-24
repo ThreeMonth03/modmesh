@@ -41,19 +41,22 @@ SimpleArray::matmul(rhs)
 |
 `-- batched
     +-- dense or BLAS-describable matrix --> one BLAS call per output
+    +-- repeated unsupported matrix ------> pack physical matrix once
+    +-- other unsupported matrices ------> pack supplied operand once
     +-- reusable negative vector ---------> pack vector once
     +-- positive-stride vector -----------> GEMV with increment
-    `-- unsupported batched matrix -------> generic contraction
+    `-- unsupported vector topology ------> generic contraction
 ```
 
 The public operation has one semantic entry point.  Internally, it keeps
 short DOT, GEMV, and GEMM routes rather than forcing all matrix topologies
 through one universal loop.
 
-Whole-batch packing is deliberately absent.  The profiler showed that
-packing every step-two matrix in a batch costs more than signed-stride
-execution.  A repeated vector is different: packing one physical vector once
-can be amortized across all output matrices.
+Packing follows the supplied physical operand, not the broadcast result.  An
+extent-one matrix or vector is packed once and reused through a zero batch
+stride.  A non-broadcast strided batch currently packs the supplied batch
+once.  The profiler measures these cases separately because their useful
+packing granularity differs.
 
 ## Correctness finding
 
@@ -162,15 +165,86 @@ The step-two matrix batches remain 2.5 to 9.9 times slower than their dense
 controls.  They still beat NumPy on this Ubuntu run, but they identify the
 remaining non-contiguous bottleneck.
 
+## Reproduce matrix broadcast scaling
+
+The focused benchmark answers why a broadcast matrix can remain close to a
+dense batch even though its stored batch stride is large.  It compares:
+
+- one dense lhs reused through a zero batch stride with `B` materialized lhs
+  matrices;
+- one negative-stride lhs with the same logical matrix prepacked outside the
+  timed call;
+- one step-two lhs with the same logical matrix prepacked outside the timed
+  call.
+
+All routes compute `(1, 256, 256) @ (B, 256, 256)`.  The sweep uses
+`B=1,2,4,8,16,32,64,128`.
+
+```console
+$ source /path/to/devenv/scripts/init
+$ devenv use prime
+$ export CMAKE_PREFIX_PATH="$DEVENVPREFIX"
+$ export CMAKE_ARGS="-Dpybind11_DIR=$(python3 -m pybind11 --cmakedir)"
+$ make BUILD_PATH_EXT=_benchmark BUILD_QT=OFF SOLVCON_PROFILE=OFF
+$ python3 profiling/profile_matmul_broadcast_scaling.py \
+    --batches 1,2,4,8,16,32,64,128 \
+    --side 256 \
+    --repeat 7 \
+    --warmup 2 \
+    --cpu 0 \
+    --output /tmp/matmul-broadcast.json
+$ make BUILD_PATH_EXT=_profile BUILD_QT=OFF SOLVCON_PROFILE=ON
+$ python3 profiling/profile_matmul_broadcast_scaling.py \
+    --batches 1,2,4,8,16,32,64,128 \
+    --side 256 \
+    --repeat 7 \
+    --warmup 2 \
+    --cpu 0 \
+    --trace-only \
+    --output /tmp/matmul-broadcast-trace.json
+$ python3 profiling/render_matmul_broadcast_scaling.py \
+    /tmp/matmul-broadcast.json \
+    /tmp/matmul-broadcast.md \
+    --trace /tmp/matmul-broadcast-trace.json
+```
+
+The complete timing samples, source strides, planned strides, paired
+quantiles, backend linkage, and dispatch counts are in
+[Ubuntu matmul broadcast scaling](ubuntu-matmul-broadcast-scaling-results.md).
+
+The ratio below is tested route divided by its matching control.  One means
+parity.
+
+| B | Broadcast/materialized | Negative/prepacked | Step-two/prepacked |
+| ---: | ---: | ---: | ---: |
+| 1 | 1.104x | 1.399x | 1.456x |
+| 8 | 0.956x | 0.934x | 0.977x |
+| 64 | 1.045x | 1.016x | 1.020x |
+| 128 | 0.980x | 1.011x | 1.010x |
+
+For `B > 1`, the lhs batch mapping is zero.  The stored stride of 65,536
+elements is not used to advance between outputs.  The separate
+profile-enabled run confirms that dense and prepacked routes perform zero
+packs, negative and step-two routes pack lhs once, and every route performs
+exactly `B` GEMM calls.
+
+The one-time copy is visible at `B=1` and amortized by larger batches.  The
+experiment does not show that broadcasting reduces arithmetic.  Broadcast
+and materialized routes both perform `B` contractions.
+
 ## Reading the Ubuntu comparison
 
-The clean run used revision `ea09ea2a`, Linux 6.6 on WSL2 x86-64, Python
-3.12.7, NumPy 2.3.0, one thread, 15 paired samples, and five warmups.
+The topology and vector-broadcast reports used revision `ea09ea2a`.  The
+broadcast-scaling report used clean revision `c17db004`, Linux 6.6 on WSL2
+x86-64, Python 3.12.7, NumPy 2.3.0, one thread, seven paired samples, and two
+warmups.
 
 NumPy and `_solvcon` use different matrix backends on this machine.  The
-Ubuntu result is useful for correctness, topology coverage, and regression
-testing against legacy `SimpleArray` and `matmul_blas()`.  It is not the
-final same-backend performance claim.
+broadcast-scaling linkage records show no BLAS library attached to NumPy's
+core extension and OpenBLAS attached to `_solvcon`.  The Ubuntu result is
+useful for correctness, topology coverage, dispatch validation, and
+regression testing against legacy `SimpleArray` and `matmul_blas()`.  It is
+not the final same-backend performance claim.
 
 The final performance statement requires rerunning both commands on Apple
 Silicon, where NumPy and `_solvcon` can both use Accelerate.  A ratio greater
@@ -187,8 +261,8 @@ ratio quantiles, so isolated medians are not treated as conclusive.
 - `1D @ ND` and `ND @ 1D` cover contiguous and non-contiguous inputs.
 - Positive vector strides are represented as BLAS increments.
 - A repeated negative vector is packed at most once.
-- Unsupported batched matrix strides remain correct without whole-batch
-  packing.
+- Repeated strided matrix operands are packed once rather than once per output
+  matrix.
 - Planning, packing, allocation, and dispatch remain inside the timed call.
 - Same-backend Apple Silicon data is required before publishing an upstream
   speed claim.
