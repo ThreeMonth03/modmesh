@@ -6,6 +6,8 @@ import itertools
 import json
 import pathlib
 
+import profile_benchmark_environment  # noqa: F401
+
 import numpy as np
 
 from profile_execution_prototype import BenchmarkCase

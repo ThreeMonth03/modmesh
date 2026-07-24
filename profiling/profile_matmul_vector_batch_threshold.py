@@ -5,6 +5,8 @@ import argparse
 import json
 import pathlib
 
+import profile_benchmark_environment  # noqa: F401
+
 import numpy as np
 
 from profile_execution_prototype import describe_operands

@@ -14,19 +14,10 @@ import subprocess
 import sys
 import timeit
 
+from profile_benchmark_environment import THREAD_COUNT
+from profile_benchmark_environment import THREAD_VARIABLES
 
-THREAD_COUNT = os.environ.get('SOLVCON_BENCHMARK_THREADS', '1')
-THREAD_VARIABLES = (
-    'OPENBLAS_NUM_THREADS',
-    'OMP_NUM_THREADS',
-    'MKL_NUM_THREADS',
-    'VECLIB_MAXIMUM_THREADS',
-    'BLIS_NUM_THREADS',
-)
-for thread_variable in THREAD_VARIABLES:
-    os.environ[thread_variable] = THREAD_COUNT
-
-import numpy as np  # noqa: E402
+import numpy as np
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
