@@ -99,6 +99,7 @@ Array MatmulExecutor<Array, T>::execute_generic(
     Array const & lhs,
     Array const & rhs)
 {
+    SOLVCON_PROFILE_SCOPE("execution.matmul.generic");
     Array output(plan.output_shape());
     value_type * output_data = output.logical_data();
     value_type const * lhs_data = lhs.logical_data();
@@ -205,6 +206,7 @@ Array MatmulExecutor<Array, T>::execute_matrix_blas(
     for (MappedOffsetCursor cursor(plan.batch(), batch_mappings); cursor;
          cursor.advance())
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.gemm");
         gemm_blas(
             plan.rows(),
             plan.columns(),
@@ -338,11 +340,13 @@ Array MatmulExecutor<Array, T>::execute_packed_blas(
     Array const * ready_rhs = &rhs;
     if (!lhs.is_c_contiguous())
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_lhs");
         packed_lhs.emplace(lhs.to_row_major());
         ready_lhs = &packed_lhs.value();
     }
     if (!rhs.is_c_contiguous())
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_rhs");
         packed_rhs.emplace(rhs.to_row_major());
         ready_rhs = &packed_rhs.value();
     }
@@ -387,11 +391,13 @@ Array MatmulExecutor<Array, T>::execute_vector_blas_dispatch(
     Array const * ready_rhs = &rhs;
     if (pack_lhs)
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_lhs");
         packed_lhs.emplace(lhs.to_row_major());
         ready_lhs = &packed_lhs.value();
     }
     if (pack_rhs)
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_rhs");
         packed_rhs.emplace(rhs.to_row_major());
         ready_rhs = &packed_rhs.value();
     }
@@ -419,11 +425,13 @@ Array MatmulExecutor<Array, T>::execute_packed_batch_blas(
     Array const * ready_rhs = &rhs;
     if (pack_lhs)
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_lhs");
         packed_lhs.emplace(lhs.to_row_major());
         ready_lhs = &packed_lhs.value();
     }
     if (pack_rhs)
     {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_rhs");
         packed_rhs.emplace(rhs.to_row_major());
         ready_rhs = &packed_rhs.value();
     }
@@ -560,6 +568,7 @@ template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::multiply(
     Array const & lhs, Array const & rhs)
 {
+    SOLVCON_PROFILE_SCOPE("execution.matmul");
     if (lhs.ndim() <= 2 && rhs.ndim() <= 2)
     {
         return execute_unbatched(lhs, rhs);
