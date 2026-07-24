@@ -35,8 +35,8 @@ VECTOR_LAYOUTS = (
     ('negative-step2-vector', 'stride-minus-2'),
     ('zero-vector', 'stride-0'),
 )
-CURRENT_MINIMUM_CORE_WORK = 1024
-CURRENT_MINIMUM_BATCHES = 4
+BASELINE_MINIMUM_CORE_WORK = 1024
+BASELINE_MINIMUM_BATCHES = 4
 REUSE_MINIMUM_CORE_WORK = 576
 REUSE_MINIMUM_INTENSITY = 128
 
@@ -68,10 +68,10 @@ def make_operands(topology, inner_size, output_extent, batch,
     return matrix, vector
 
 
-def current_policy(core_work, batch):
+def baseline_policy(core_work, batch):
     return (
-        core_work >= CURRENT_MINIMUM_CORE_WORK and
-        batch >= CURRENT_MINIMUM_BATCHES
+        core_work >= BASELINE_MINIMUM_CORE_WORK and
+        batch >= BASELINE_MINIMUM_BATCHES
     )
 
 
@@ -122,7 +122,7 @@ def benchmark_case(topology, layout, vector_layout, inner_size,
         'numpy_view_over_current': ratio_statistics(
             samples['numpy_view'], samples['current']),
     }
-    current_selected = current_policy(core_work, batch)
+    baseline_selected = baseline_policy(core_work, batch)
     reuse_selected = reuse_policy(
         core_work, output_extent, batch)
     return {
@@ -136,10 +136,10 @@ def benchmark_case(topology, layout, vector_layout, inner_size,
         'batch': batch,
         'reuse_intensity': reuse_intensity,
         'number': number,
-        'current_policy_selected': current_selected,
+        'baseline_policy_selected': baseline_selected,
         'reuse_policy_selected': reuse_selected,
         'combined_policy_selected': (
-            current_selected or reuse_selected),
+            baseline_selected or reuse_selected),
         'pack': pack_metadata(topology, lhs, rhs),
         'operands': describe_operands(lhs=lhs, rhs=rhs),
         'medians_seconds': medians,
@@ -233,14 +233,15 @@ def main():
     run_metadata['vector_layouts'] = [
         list(layout) for layout in VECTOR_LAYOUTS]
     run_metadata['matrix_layout'] = 'c'
-    run_metadata['current_policy'] = {
-        'minimum_core_work': CURRENT_MINIMUM_CORE_WORK,
-        'minimum_batches': CURRENT_MINIMUM_BATCHES,
+    run_metadata['baseline_policy'] = {
+        'minimum_core_work': BASELINE_MINIMUM_CORE_WORK,
+        'minimum_batches': BASELINE_MINIMUM_BATCHES,
     }
     run_metadata['reuse_extension'] = {
         'minimum_core_work': REUSE_MINIMUM_CORE_WORK,
         'minimum_reuse_intensity': REUSE_MINIMUM_INTENSITY,
     }
+    run_metadata['automatic_policy'] = 'combined'
     payload = {'metadata': run_metadata, 'results': rows}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

@@ -60,6 +60,13 @@ def count_statuses(rows):
     return counts
 
 
+def baseline_selected(row):
+    return row.get(
+        'baseline_policy_selected',
+        row.get('current_policy_selected', False),
+    )
+
+
 def render_environment(lines, metadata):
     pairs = ', '.join(
         f'{inner_size}x{output_extent}'
@@ -91,16 +98,20 @@ def render_environment(lines, metadata):
 
 
 def render_policy(lines, metadata):
-    current = metadata['current_policy']
+    baseline = metadata.get(
+        'baseline_policy', metadata.get('current_policy'))
     reuse = metadata['reuse_extension']
+    automatic = metadata.get('automatic_policy', 'baseline')
+    combined = (
+        'implemented' if automatic == 'combined' else 'candidate')
     lines.extend((
         '## Predicates under test',
         '',
-        'The current portable predicate is:',
+        'The portable baseline before the reuse-aware extension is:',
         '',
         '```text',
-        f"core_work >= {current['minimum_core_work']}",
-        f"batch >= {current['minimum_batches']}",
+        f"core_work >= {baseline['minimum_core_work']}",
+        f"batch >= {baseline['minimum_batches']}",
         '```',
         '',
         'The reuse-aware extension is:',
@@ -116,27 +127,35 @@ def render_policy(lines, metadata):
         'equivalent to comparing total contracted work with the `K` values',
         'copied by vector packing.',
         '',
-        'The extension adds work to the current predicate.  It does not',
+        'The extension adds work to the baseline predicate.  It does not',
         'disable an existing pack-once selection.',
+        '',
+        f'The combined predicate was the **{combined}** policy for this',
+        f'run.  The measured automatic route used the `{automatic}`',
+        'policy.',
         '',
     ))
 
 
-def render_summary(lines, rows):
+def render_summary(lines, rows, automatic):
+    combined = (
+        'Implemented combined predicate'
+        if automatic == 'combined'
+        else 'Candidate combined predicate')
     policies = (
         (
-            'Current portable predicate',
+            'Portable baseline predicate',
             [row for row in rows
-             if row['current_policy_selected']],
+             if baseline_selected(row)],
         ),
         (
             'Reuse-aware extension only',
             [row for row in rows
              if row['reuse_policy_selected']
-             and not row['current_policy_selected']],
+             and not baseline_selected(row)],
         ),
         (
-            'Combined predicate',
+            combined,
             [row for row in rows
              if row['combined_policy_selected']],
         ),
@@ -171,11 +190,11 @@ def render_rows(lines, rows):
         '## Detailed rectangular crossover',
         '',
         '| Topology | Vector layout | K | O | Core work | B | '
-        'Reuse intensity | Current | Extension | Combined | '
+        'Reuse intensity | Baseline | Extension | Combined | '
         'Supplied operands | '
-        'Number | Current us | Generic us | Pack us | Prepacked us | '
-        'NumPy us | Pack/generic | Generic/current | Pack/current | '
-        'NumPy/current | Result |',
+        'Number | Automatic us | Generic us | Pack us | Prepacked us | '
+        'NumPy us | Pack/generic | Generic/automatic | Pack/automatic | '
+        'NumPy/automatic | Result |',
         '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | '
         '--- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | '
         '---: | ---: | ---: | ---: | --- |',
@@ -184,7 +203,7 @@ def render_rows(lines, rows):
         medians = row['medians_seconds']
         ratios = row['ratios']
         status = classify(ratios['pack_once_over_generic'])
-        current = 'pack' if row['current_policy_selected'] else 'generic'
+        baseline = 'pack' if baseline_selected(row) else 'generic'
         reuse = (
             'pack' if row['reuse_policy_selected'] else 'generic')
         combined = (
@@ -193,7 +212,7 @@ def render_rows(lines, rows):
             f"| `{row['topology']}` | `{row['layout']}` | "
             f"{row['inner_size']} | {row['output_extent']} | "
             f"{row['core_work']} | {row['batch']} | "
-            f"{row['reuse_intensity']} | {current} | {reuse} | "
+            f"{row['reuse_intensity']} | {baseline} | {reuse} | "
             f"{combined} | "
             f"{format_strides(row)} | {row['number']} | "
             f"{format_seconds(medians['current'])} | "
@@ -252,10 +271,11 @@ def main():
         args.benchmark.read_text(encoding='utf-8'))
     metadata = payload['metadata']
     rows = payload['results']
+    automatic = metadata.get('automatic_policy', 'baseline')
     lines = ['# Rectangular vector packing crossover', '']
     render_environment(lines, metadata)
     render_policy(lines, metadata)
-    render_summary(lines, rows)
+    render_summary(lines, rows, automatic)
     render_rows(lines, rows)
     render_reproduction(lines, metadata)
     lines.append(
