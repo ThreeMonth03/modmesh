@@ -46,6 +46,8 @@ private:
     static constexpr size_t DIRECT_VECTOR_BLAS_MINIMUM_WORK = 512;
     static constexpr size_t PACKED_VECTOR_BLAS_MINIMUM_WORK = 1024;
     static constexpr size_t PACKED_VECTOR_BLAS_MINIMUM_BATCHES = 4;
+    static constexpr size_t REUSED_VECTOR_BLAS_MINIMUM_WORK = 576;
+    static constexpr size_t REUSED_VECTOR_BLAS_MINIMUM_INTENSITY = 128;
 
     class BlasMatrixLayout
     {
@@ -621,8 +623,27 @@ bool MatmulExecutor<Array, T>::use_small_batched_vector_blas(
     {
         return matrix_work >= DIRECT_VECTOR_BLAS_MINIMUM_WORK;
     }
-    return matrix_work >= PACKED_VECTOR_BLAS_MINIMUM_WORK &&
-           plan.batch().size() >= PACKED_VECTOR_BLAS_MINIMUM_BATCHES;
+    size_t const batch_size = plan.batch().size();
+    if (matrix_work >= PACKED_VECTOR_BLAS_MINIMUM_WORK &&
+        batch_size >= PACKED_VECTOR_BLAS_MINIMUM_BATCHES)
+    {
+        return true;
+    }
+    if (matrix_work < REUSED_VECTOR_BLAS_MINIMUM_WORK)
+    {
+        return false;
+    }
+
+    size_t const output_extent = static_cast<size_t>(
+        plan.lhs_vector() ? plan.columns() : plan.rows());
+    if (output_extent == 0)
+    {
+        return false;
+    }
+    size_t const minimum_batches =
+        REUSED_VECTOR_BLAS_MINIMUM_INTENSITY / output_extent +
+        (REUSED_VECTOR_BLAS_MINIMUM_INTENSITY % output_extent != 0);
+    return batch_size >= minimum_batches;
 }
 
 template <typename Array, typename T>
