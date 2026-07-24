@@ -766,11 +766,12 @@ The strict OpenBLAS and Accelerate gate therefore passed.  Revision
 to the baseline.  It does not change `MatmulPlan`, matrix packing policy,
 execution routes, or the common layer.
 
-The clean `048c8d61` post-implementation Ubuntu rerun measures the complete
-automatic route.  The 72 added rows contain 50 conclusive pack wins, 22
-inconclusive results, and no generic win.  Across all 198 automatic pack
-rows, 162 are pack-faster and 36 are inconclusive.  All five conclusive
-generic wins in the 270-row notebook stay outside automatic packing.
+The clean `ead53b73` post-implementation Ubuntu rerun measures the complete
+automatic route after moving thread initialization before NumPy import.  The
+72 added rows contain 57 conclusive pack wins, 15 inconclusive results, and no
+generic win.  Across all 198 automatic pack rows, 174 are pack-faster and 24
+are inconclusive.  All nine conclusive generic wins in the 270-row notebook
+stay outside automatic packing.
 
 ## Outer-contiguous reduction experiment
 

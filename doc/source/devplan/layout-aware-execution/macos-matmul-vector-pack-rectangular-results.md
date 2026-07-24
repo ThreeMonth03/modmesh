@@ -14,6 +14,13 @@
 - Dimension pairs `(K, O)`: `8x72, 24x24, 72x8, 8x128, 32x32, 128x8, 16x256, 64x64, 256x16`.
 - Batch sizes: `1, 2, 4, 8, 16`.
 
+This run predates the benchmark initialization correction.  The environment
+variables recorded below were assigned after NumPy import, so this timing
+report must be repeated before it is used as strict single-thread threshold
+evidence.  Its correctness checks and route comparisons remain recorded.  The
+separate broadcast-scaling benchmark initialized threads before NumPy and is
+not affected.
+
 `O` is the output extent: `N` for `1D @ ND` and `M` for
 `ND @ 1D`.  The matrix core is always C layout so this notebook
 isolates vector packing from matrix packing.

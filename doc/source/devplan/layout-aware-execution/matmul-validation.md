@@ -467,25 +467,33 @@ vector.
 
 | Ubuntu selection | Rows | Pack faster | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: |
-| Portable baseline predicate | 108 | 97 | 11 | 0 |
-| Reuse-aware extension only | 72 | 50 | 22 | 0 |
-| Combined small-vector predicate | 180 | 147 | 33 | 0 |
-| General BLAS gate only | 18 | 15 | 3 | 0 |
-| Implemented automatic pack range | 198 | 162 | 36 | 0 |
-| Automatic generic range | 72 | 4 | 63 | 5 |
-| All measured rows | 270 | 166 | 99 | 5 |
+| Portable baseline predicate | 108 | 103 | 5 | 0 |
+| Reuse-aware extension only | 72 | 57 | 15 | 0 |
+| Combined small-vector predicate | 180 | 160 | 20 | 0 |
+| General BLAS gate only | 18 | 14 | 4 | 0 |
+| Implemented automatic pack range | 198 | 174 | 24 | 0 |
+| Automatic generic range | 72 | 10 | 53 | 9 |
+| All measured rows | 270 | 184 | 77 | 9 |
 
-All five conclusive generic wins remain outside automatic packing.  The
-clean post-implementation run used revision `048c8d61`.  All 270 automatic
-and explicit-route results match NumPy.  The common plan and execution
-routes remain unchanged.
+All nine conclusive generic wins remain outside automatic packing.  The clean
+post-implementation run used revision `ead53b73`, after benchmark thread
+initialization was moved before NumPy import.  All 270 automatic and
+explicit-route results match NumPy.  The common plan and execution routes
+remain unchanged.
 
-The clean post-implementation Apple Silicon rerun used revision `2cb65320`,
-15 samples, five warmups, and one thread.  NumPy and `_solvcon` both link to
-Accelerate.  All 270 automatic and explicit-route results match NumPy.  The
+The post-implementation Apple Silicon run used revision `2cb65320`, 15
+samples, and five warmups.  NumPy and `_solvcon` both link to Accelerate.  All
+270 automatic and explicit-route results match NumPy.  The
 [complete report](macos-matmul-vector-pack-rectangular-results.md) and
 [raw JSON](macos-matmul-vector-pack-rectangular-results.json) retain every
 sample, operand shape, predicate result, and linkage record.
+
+This Apple timing run predates the benchmark initialization correction.
+Although its metadata records all thread variables as one, NumPy was imported
+before those variables were assigned.  Treat the result as correctness and
+route-selection evidence until it is repeated from `ead53b73` or later.  The
+separate broadcast-scaling benchmark initialized threads before NumPy and is
+not affected.
 
 | Apple selection | Rows | Pack faster | Parity | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -508,10 +516,11 @@ general gate selects another 18 rows beyond the combined small-vector
 predicate, and all 18 are pack-faster.  Across all 198 automatic pack rows,
 explicit pack/automatic has a median of 0.992; 196 rows are at parity and
 two are inconclusive.  Generic/automatic is slower in all 198 rows, with a
-median of 2.414.  The strict post-implementation gate therefore passes on
-both backends.  Revision `b38d3f40` implements the extension as a private
-logical-OR predicate without modifying `MatmulPlan`, the execution routes,
-or the common layer.
+median of 2.414.  These recorded Apple results support the predicate, but the
+strict single-thread cross-backend gate requires the corrected rerun described
+above.  Revision `b38d3f40` implements the extension as a private logical-OR
+predicate without modifying `MatmulPlan`, the execution routes, or the common
+layer.
 
 Reproduce the Apple gate without CPU affinity:
 
