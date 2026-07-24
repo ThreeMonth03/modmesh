@@ -25,6 +25,7 @@ endif () # APPLE
 add_executable(
     test_nopython
     test_nopython_buffer.cpp
+    test_nopython_execution.cpp
     test_nopython_solvcon.cpp
     test_nopython_inout.cpp
     test_nopython_toggle.cpp

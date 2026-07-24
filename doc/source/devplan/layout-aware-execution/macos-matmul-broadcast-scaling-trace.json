@@ -1,0 +1,2922 @@
+{
+  "metadata": {
+    "git_revision": "0d906a8fb8f1b6e9ea57b5bae650c14e28a8b519",
+    "git_dirty": false,
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "python": "3.11.6",
+    "numpy": "2.2.4",
+    "numpy_build_configuration": {
+      "Compilers": {
+        "c": {
+          "name": "clang",
+          "linker": "ld64",
+          "version": "17.0.0",
+          "commands": "cc"
+        },
+        "cython": {
+          "name": "cython",
+          "linker": "cython",
+          "version": "3.1.2",
+          "commands": "cython"
+        },
+        "c++": {
+          "name": "clang",
+          "linker": "ld64",
+          "version": "17.0.0",
+          "commands": "c++"
+        }
+      },
+      "Machine Information": {
+        "host": {
+          "cpu": "aarch64",
+          "family": "aarch64",
+          "endian": "little",
+          "system": "darwin"
+        },
+        "build": {
+          "cpu": "aarch64",
+          "family": "aarch64",
+          "endian": "little",
+          "system": "darwin"
+        }
+      },
+      "Build Dependencies": {
+        "blas": {
+          "name": "accelerate",
+          "found": true,
+          "version": "unknown",
+          "detection method": "system",
+          "include directory": "unknown",
+          "lib directory": "unknown",
+          "openblas configuration": "unknown",
+          "pc file directory": "unknown"
+        },
+        "lapack": {
+          "name": "accelerate",
+          "found": true,
+          "version": "unknown",
+          "detection method": "system",
+          "include directory": "unknown",
+          "lib directory": "unknown",
+          "openblas configuration": "unknown",
+          "pc file directory": "unknown"
+        }
+      },
+      "Python Information": {
+        "path": "/Users/abao/vscode/devenv/flavors/prime/usr/bin/python3",
+        "version": "3.11"
+      },
+      "SIMD Extensions": {
+        "baseline": [
+          "NEON",
+          "NEON_FP16",
+          "NEON_VFPV4",
+          "ASIMD"
+        ],
+        "found": [
+          "ASIMDHP"
+        ],
+        "not found": [
+          "ASIMDFHM",
+          "SVE"
+        ]
+      }
+    },
+    "numpy_extension_linkage": {
+      "extension": "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so",
+      "command": [
+        "otool",
+        "-L",
+        "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so"
+      ],
+      "returncode": 0,
+      "output": "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so:\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)",
+      "error": ""
+    },
+    "solvcon_extension_linkage": {
+      "extension": "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so",
+      "command": [
+        "otool",
+        "-L",
+        "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so"
+      ],
+      "returncode": 0,
+      "output": "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so:\n\t/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5026.5.4)\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore (compatibility version 1.2.0, current version 1195.14.4)\n\t/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 373.2.0)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 2100.43.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)",
+      "error": ""
+    },
+    "seed": 20260724,
+    "side": 256,
+    "batches": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "repeat": 20,
+    "warmup": 5,
+    "trace_only": true,
+    "thread_count": "1",
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "BLIS_NUM_THREADS": "1"
+    },
+    "requested_cpu": null,
+    "cpu_affinity": null
+  },
+  "results": [],
+  "comparisons": [],
+  "traces": [
+    {
+      "batch": 1,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.15525,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.154167,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.158792,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.158,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.188708,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.037709,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.149375,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.153208,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.152542,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          131072
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.19025,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.040083,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.149,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 1,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.169375,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.168792,
+                "count": 1,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.330209,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.329,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.34275,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.341833,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.348,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.038792,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.307625,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.321666,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.320875,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.361625,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.05225,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.308084,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 2,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.314041,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.313084,
+                "count": 2,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.706959,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.705249,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.69,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.688749,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.659541,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.056417,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.601249,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.6265,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.625792,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.676125,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.075459,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.599166,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 4,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 0.615292,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 0.614499,
+                "count": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.466375,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.462834,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.397416,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.396249,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.270791,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.041458,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.226957,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.241917,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.240872,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.317875,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.07425,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.241042,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 8,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 1.243584,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 1.242665,
+                "count": 8,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 2.871875,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 2.868209,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 3.002792,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 3.00096,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 2.788709,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.065042,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 2.719249,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 2.585167,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 2.582876,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 2.65975,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.079666,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 2.576293,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 16,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 2.626541,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 2.623832,
+                "count": 16,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 5.722792,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 5.717206,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 6.286125,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 6.280583,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 5.83625,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.063916,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 5.763753,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 5.677,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 5.672544,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 5.712291,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.084,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 5.618836,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 32,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 5.654625,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 5.650625,
+                "count": 32,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 11.499375,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 11.491505,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 12.552083,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 12.543165,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 11.45975,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.066583,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 11.379041,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 11.464375,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 11.456869,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 11.564708,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.09525,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 11.459415,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 64,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 11.837125,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 11.82904,
+                "count": 64,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-dense",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 23.176416,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 23.160549,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "materialized-dense",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 25.159041,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 25.146251,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-negative",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 22.895833,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.06525,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 22.815042,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "prepacked-negative",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 23.204542,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 23.19329,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-step2",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 1,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 23.595042,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.pack_lhs",
+                "total_time": 0.094917,
+                "count": 1,
+                "children": []
+              },
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 23.48583,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "prepacked-step2",
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "counts": {
+        "execution.matmul": 1,
+        "execution.matmul.gemm": 128,
+        "execution.matmul.generic": 0,
+        "execution.matmul.pack_lhs": 0,
+        "execution.matmul.pack_rhs": 0
+      },
+      "profile_tree": {
+        "name": "",
+        "total_time": 0.0,
+        "count": 0,
+        "current_node": true,
+        "children": [
+          {
+            "name": "execution.matmul",
+            "total_time": 23.449209,
+            "count": 1,
+            "children": [
+              {
+                "name": "execution.matmul.gemm",
+                "total_time": 23.436121,
+                "count": 128,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

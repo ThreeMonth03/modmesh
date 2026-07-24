@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <functional>
+#include <type_traits>
 
 #include <solvcon/simd/neon/neon_alias.hpp>
 #include <solvcon/simd/neon/neon_type.hpp>
@@ -151,6 +152,43 @@ void transform_binary(T * dest, T const * dest_end, T const * src1, T const * sr
     }
 }
 
+template <typename T, std::invocable<T, T> ScalarOp, typename VecOp>
+void transform_scalar(T * dest, T const * dest_end, T const * src, T scalar, ScalarOp scalar_op, VecOp vec_op)
+{
+    if constexpr (!type::has_vectype<T>)
+    {
+        generic::transform_scalar<T>(dest, dest_end, src, scalar, scalar_op);
+    }
+    else
+    {
+        using vec_t = type::vector_t<T>;
+        if constexpr (!std::invocable<VecOp, vec_t, vec_t>)
+        {
+            generic::transform_scalar<T>(dest, dest_end, src, scalar, scalar_op);
+        }
+        else
+        {
+            constexpr size_t N_lane = type::vector_lane<T>;
+            vec_t const scalar_vec = vdupq(scalar);
+            size_t const blocks = static_cast<size_t>(dest_end - dest) / N_lane;
+            T * ptr = dest;
+            for (size_t i = 0; i < blocks; ++i)
+            {
+                vec_t const value_vec = vld1q(src);
+                vst1q(ptr, vec_op(value_vec, scalar_vec));
+                ptr += N_lane;
+                src += N_lane;
+            }
+            while (ptr < dest_end)
+            {
+                *ptr = scalar_op(*src, scalar);
+                ++ptr;
+                ++src;
+            }
+        }
+    }
+}
+
 template <typename T>
 inline void add(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
@@ -173,6 +211,118 @@ template <typename T>
 inline void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
     transform_binary<T>(dest, dest_end, src1, src2, std::divides<T>{}, vec_div{});
+}
+
+template <typename T>
+inline void add_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::plus<T>{}, vec_add{});
+}
+
+template <typename T>
+inline void sub_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::minus<T>{}, vec_sub{});
+}
+
+template <typename T>
+inline void mul_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::multiplies<T>{}, vec_mul{});
+}
+
+template <typename T>
+inline void div_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    transform_scalar<T>(dest, dest_end, src, scalar, std::divides<T>{}, vec_div{});
+}
+
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    if constexpr (!std::is_floating_point_v<T>)
+    {
+        return generic::sum(start, end);
+    }
+    else
+    {
+        using vec_t = type::vector_t<T>;
+        constexpr size_t N_lane = type::vector_lane<T>;
+        vec_t total = vdupq(T{});
+        size_t const blocks = static_cast<size_t>(end - start) / N_lane;
+        T const * ptr = start;
+        for (size_t block = 0; block < blocks; ++block)
+        {
+            total = vaddq(total, vld1q(ptr));
+            ptr += N_lane;
+        }
+
+        T lanes[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+        vst1q(lanes, total);
+        T result = generic::sum(lanes, lanes + N_lane);
+        return result + generic::sum(ptr, end);
+    }
+}
+
+template <typename T>
+T sum_product(T const * lhs, T const * lhs_end, T const * rhs)
+{
+    if constexpr (!std::is_floating_point_v<T>)
+    {
+        return generic::sum_product(lhs, lhs_end, rhs);
+    }
+    else
+    {
+        using vec_t = type::vector_t<T>;
+        constexpr size_t N_lane = type::vector_lane<T>;
+        vec_t total = vdupq(T{});
+        size_t const blocks = static_cast<size_t>(lhs_end - lhs) / N_lane;
+        T const * lhs_ptr = lhs;
+        T const * rhs_ptr = rhs;
+        for (size_t block = 0; block < blocks; ++block)
+        {
+            total = vaddq(
+                total, vmulq(vld1q(lhs_ptr), vld1q(rhs_ptr)));
+            lhs_ptr += N_lane;
+            rhs_ptr += N_lane;
+        }
+
+        T lanes[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+        vst1q(lanes, total);
+        T result = generic::sum(lanes, lanes + N_lane);
+        return result +
+               generic::sum_product(lhs_ptr, lhs_end, rhs_ptr);
+    }
+}
+
+template <typename T>
+T sum_squared_difference(T const * start, T const * end, T mean)
+{
+    if constexpr (!std::is_floating_point_v<T>)
+    {
+        return generic::sum_squared_difference(start, end, mean);
+    }
+    else
+    {
+        using vec_t = type::vector_t<T>;
+        constexpr size_t N_lane = type::vector_lane<T>;
+        vec_t const mean_vec = vdupq(mean);
+        vec_t total = vdupq(T{});
+        size_t const blocks = static_cast<size_t>(end - start) / N_lane;
+        T const * ptr = start;
+        for (size_t block = 0; block < blocks; ++block)
+        {
+            vec_t const delta = vsubq(vld1q(ptr), mean_vec);
+            total = vaddq(total, vmulq(delta, delta));
+            ptr += N_lane;
+        }
+
+        T lanes[N_lane] = {}; // NOLINT(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+        vst1q(lanes, total);
+        T result = generic::sum(lanes, lanes + N_lane);
+        return result +
+               generic::sum_squared_difference(ptr, end, mean);
+    }
 }
 
 template <typename T>
@@ -273,6 +423,48 @@ template <typename T>
 void div(T * dest, T const * dest_end, T const * src1, T const * src2)
 {
     generic::div<T>(dest, dest_end, src1, src2);
+}
+
+template <typename T>
+void add_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    generic::add_scalar<T>(dest, dest_end, src, scalar);
+}
+
+template <typename T>
+void sub_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    generic::sub_scalar<T>(dest, dest_end, src, scalar);
+}
+
+template <typename T>
+void mul_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    generic::mul_scalar<T>(dest, dest_end, src, scalar);
+}
+
+template <typename T>
+void div_scalar(T * dest, T const * dest_end, T const * src, T scalar)
+{
+    generic::div_scalar<T>(dest, dest_end, src, scalar);
+}
+
+template <typename T>
+T sum(T const * start, T const * end)
+{
+    return generic::sum(start, end);
+}
+
+template <typename T>
+T sum_product(T const * lhs, T const * lhs_end, T const * rhs)
+{
+    return generic::sum_product(lhs, lhs_end, rhs);
+}
+
+template <typename T>
+T sum_squared_difference(T const * start, T const * end, T mean)
+{
+    return generic::sum_squared_difference(start, end, mean);
 }
 
 #endif /* defined(__aarch64__) */

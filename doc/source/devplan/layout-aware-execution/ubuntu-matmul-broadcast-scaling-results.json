@@ -1,0 +1,5710 @@
+{
+  "metadata": {
+    "git_revision": "c17db00400ef3024becbddf5fe0bdea8c4aac331",
+    "git_dirty": false,
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "python": "3.12.7",
+    "numpy": "2.3.0",
+    "numpy_build_configuration": {
+      "Compilers": {
+        "c": {
+          "name": "gcc",
+          "linker": "ld.bfd",
+          "version": "13.3.0",
+          "commands": "cc",
+          "args": "-g, -O0, -fno-omit-frame-pointer",
+          "linker args": "-g, -O0, -fno-omit-frame-pointer"
+        },
+        "cython": {
+          "name": "cython",
+          "linker": "cython",
+          "version": "3.1.4",
+          "commands": "cython"
+        },
+        "c++": {
+          "name": "gcc",
+          "linker": "ld.bfd",
+          "version": "13.3.0",
+          "commands": "c++",
+          "args": "-g, -O0, -fno-omit-frame-pointer",
+          "linker args": "-g, -O0, -fno-omit-frame-pointer"
+        }
+      },
+      "Machine Information": {
+        "host": {
+          "cpu": "x86_64",
+          "family": "x86_64",
+          "endian": "little",
+          "system": "linux"
+        },
+        "build": {
+          "cpu": "x86_64",
+          "family": "x86_64",
+          "endian": "little",
+          "system": "linux"
+        }
+      },
+      "Build Dependencies": {
+        "blas": {
+          "name": "auto"
+        },
+        "lapack": {
+          "name": "lapack"
+        }
+      },
+      "Python Information": {
+        "path": "/home/threemonth03/devenv/flavors/prime/usr/bin/python3",
+        "version": "3.12"
+      },
+      "SIMD Extensions": {
+        "baseline": [
+          "SSE",
+          "SSE2",
+          "SSE3"
+        ],
+        "found": [
+          "SSSE3",
+          "SSE41",
+          "POPCNT",
+          "SSE42",
+          "AVX",
+          "F16C",
+          "FMA3",
+          "AVX2"
+        ],
+        "not found": [
+          "AVX512F",
+          "AVX512CD",
+          "AVX512_KNL",
+          "AVX512_KNM",
+          "AVX512_SKX",
+          "AVX512_CLX",
+          "AVX512_CNL",
+          "AVX512_ICL",
+          "AVX512_SPR"
+        ]
+      }
+    },
+    "numpy_extension_linkage": {
+      "extension": "/home/threemonth03/devenv/flavors/prime/usr/lib/python3.12/site-packages/numpy/_core/_multiarray_umath.cpython-312-x86_64-linux-gnu.so",
+      "command": [
+        "ldd",
+        "/home/threemonth03/devenv/flavors/prime/usr/lib/python3.12/site-packages/numpy/_core/_multiarray_umath.cpython-312-x86_64-linux-gnu.so"
+      ],
+      "returncode": 0,
+      "output": "linux-vdso.so.1 (0x00007ffc67767000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000079da9f200000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000079daa01b9000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000079daa018b000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000079da9ee00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000079daa02b9000)",
+      "error": ""
+    },
+    "solvcon_extension_linkage": {
+      "extension": "/home/threemonth03/Downloads/modmesh-execution-prototype/_solvcon.cpython-312-x86_64-linux-gnu.so",
+      "command": [
+        "ldd",
+        "/home/threemonth03/Downloads/modmesh-execution-prototype/_solvcon.cpython-312-x86_64-linux-gnu.so"
+      ],
+      "returncode": 0,
+      "output": "linux-vdso.so.1 (0x00007fff2f2ce000)\n\tlibopenblas.so.0 => /home/threemonth03/devenv/flavors/prime/usr/lib/libopenblas.so.0 (0x000075fa36e00000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000075fa36a00000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000075fa38a39000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000075fa37dd2000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000075fa36600000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000075fa38b39000)\n\tlibgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x000075fa36200000)",
+      "error": ""
+    },
+    "seed": 20260724,
+    "side": 256,
+    "batches": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "repeat": 7,
+    "warmup": 2,
+    "trace_only": false,
+    "thread_count": "1",
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "BLIS_NUM_THREADS": "1"
+    },
+    "requested_cpu": 0,
+    "cpu_affinity": [
+      0
+    ]
+  },
+  "results": [
+    {
+      "batch": 1,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.02617943601217121,
+      "numpy_samples_seconds": [
+        0.024814978009089828,
+        0.025007627991726622,
+        0.02617943601217121,
+        0.03689034897251986,
+        0.027281900984235108,
+        0.025883575988700613,
+        0.03287558801821433
+      ],
+      "planned_seconds": 0.0008119600242935121,
+      "planned_samples_seconds": [
+        0.0006682899838779122,
+        0.0007138189976103604,
+        0.000773759005824104,
+        0.000978522002696991,
+        0.0008119600242935121,
+        0.0008574709936510772,
+        0.0008959289989434183
+      ],
+      "numpy_over_planned": {
+        "median": 35.033570240417006,
+        "q10": 32.23441238049154,
+        "q90": 37.359259218191326,
+        "samples": [
+          37.13205136652654,
+          35.033570240417006,
+          33.834095390319106,
+          37.700070995688506,
+          33.600054396733555,
+          30.185949356128518,
+          36.694412232425755
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.02709744797903113,
+      "numpy_samples_seconds": [
+        0.024508339003659785,
+        0.03323843999532983,
+        0.02709744797903113,
+        0.035116581013426185,
+        0.025920523999957368,
+        0.025970666989451274,
+        0.03322336098062806
+      ],
+      "planned_seconds": 0.000686773011693731,
+      "planned_samples_seconds": [
+        0.000686773011693731,
+        0.0008839329821057618,
+        0.0006603669899050146,
+        0.0005668699741363525,
+        0.0006796590168960392,
+        0.0007764110050629824,
+        0.0011174760002177209
+      ],
+      "numpy_over_planned": {
+        "median": 37.602895998005515,
+        "q10": 31.962068925134325,
+        "q90": 49.39963815877315,
+        "samples": [
+          35.68622905436676,
+          37.602895998005515,
+          41.03392264190666,
+          61.94821143407287,
+          38.137541554785514,
+          33.449637910972854,
+          29.730715446376532
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.030793690006248653,
+      "numpy_samples_seconds": [
+        0.025329683994641528,
+        0.031132315983995795,
+        0.02590291202068329,
+        0.025440849014557898,
+        0.034241515008034185,
+        0.03263057899312116,
+        0.030793690006248653
+      ],
+      "planned_seconds": 0.001101936009945348,
+      "planned_samples_seconds": [
+        0.001013383996905759,
+        0.001101936009945348,
+        0.0011237949947826564,
+        0.0009211369906552136,
+        0.0011807900154963136,
+        0.0009189440170302987,
+        0.0035396909806877375
+      ],
+      "numpy_over_planned": {
+        "median": 27.618963598955652,
+        "q10": 17.309516380852184,
+        "q90": 31.602802083858712,
+        "samples": [
+          24.99514899779604,
+          28.252380994010576,
+          23.049499366824417,
+          27.618963598955652,
+          28.998818213788567,
+          35.50877788896393,
+          8.699541901893834
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.029382467997493222,
+      "numpy_samples_seconds": [
+        0.03516036499058828,
+        0.03384020100929774,
+        0.02696548801031895,
+        0.025030724005773664,
+        0.029382467997493222,
+        0.025241597992135212,
+        0.030703358992468566
+      ],
+      "planned_seconds": 0.0007792469987180084,
+      "planned_samples_seconds": [
+        0.0012657079787459224,
+        0.0012183489743620157,
+        0.0006882699963171035,
+        0.00066812799195759,
+        0.0007792469987180084,
+        0.0006567460077349097,
+        0.0009855270036496222
+      ],
+      "numpy_over_planned": {
+        "median": 37.463965448348574,
+        "q10": 27.777707976174547,
+        "q90": 38.73206201054931,
+        "samples": [
+          27.77920782756348,
+          27.77545819909115,
+          39.17864813897142,
+          37.463965448348574,
+          37.70623184411656,
+          38.434337924934574,
+          31.154254402738136
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          131072
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.028669638006249443,
+      "numpy_samples_seconds": [
+        0.03675158301484771,
+        0.028886067011626437,
+        0.02621710899984464,
+        0.028669638006249443,
+        0.027119570993818343,
+        0.02605456701712683,
+        0.032810272998176515
+      ],
+      "planned_seconds": 0.0012552309781312943,
+      "planned_samples_seconds": [
+        0.0022647719888482243,
+        0.0012552309781312943,
+        0.0010167789878323674,
+        0.0010185770224779844,
+        0.0011497570085339248,
+        0.0014836940099485219,
+        0.001293103996431455
+      ],
+      "numpy_over_planned": {
+        "median": 23.58721955380727,
+        "q10": 17.027363255150817,
+        "q90": 26.729385039722914,
+        "samples": [
+          16.227498042104518,
+          23.012551088111387,
+          25.784471663538113,
+          28.14675510400011,
+          23.58721955380727,
+          17.56060673051502,
+          25.373267029351204
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 524288
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          1
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 1
+      },
+      "numpy_seconds": 0.026833518990315497,
+      "numpy_samples_seconds": [
+        0.03219474802608602,
+        0.025536715984344482,
+        0.026521633000811562,
+        0.03504528698977083,
+        0.026833518990315497,
+        0.025774671987164766,
+        0.031114136974792928
+      ],
+      "planned_seconds": 0.0007898150070104748,
+      "planned_samples_seconds": [
+        0.001692277000984177,
+        0.0007225630106404424,
+        0.0007926560065243393,
+        0.0008684390049893409,
+        0.0007898150070104748,
+        0.0007385560020338744,
+        0.0007751859957352281
+      ],
+      "numpy_over_planned": {
+        "median": 34.89873742300532,
+        "q10": 27.685323565696557,
+        "q90": 40.224322316292216,
+        "samples": [
+          19.024514312587435,
+          35.341853386198196,
+          33.45919640110264,
+          40.354344736278826,
+          33.974435471773226,
+          34.89873742300532,
+          40.137640702967815
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.05428906899760477,
+      "numpy_samples_seconds": [
+        0.04922223000903614,
+        0.05428906899760477,
+        0.05436631498741917,
+        0.05518698299420066,
+        0.06337758299196139,
+        0.04950098699191585,
+        0.049955370981479064
+      ],
+      "planned_seconds": 0.0014745079970452935,
+      "planned_samples_seconds": [
+        0.0014166400069370866,
+        0.0015060370205901563,
+        0.0014745079970452935,
+        0.0022283800062723458,
+        0.001882424985524267,
+        0.0013061040081083775,
+        0.001302816002862528
+      ],
+      "numpy_over_planned": {
+        "median": 36.04763246545628,
+        "q10": 30.107038232878434,
+        "q90": 38.07749657321842,
+        "samples": [
+          34.74575740343475,
+          36.04763246545628,
+          36.87081731422388,
+          24.765517029798676,
+          33.66805236826494,
+          37.89972826406668,
+          38.34414903694602
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 1048576
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.056131111981812865,
+      "numpy_samples_seconds": [
+        0.06469522800762206,
+        0.05432830800418742,
+        0.0490534580021631,
+        0.05517251801211387,
+        0.06343655599630438,
+        0.057731213979423046,
+        0.056131111981812865
+      ],
+      "planned_seconds": 0.0015229939890559763,
+      "planned_samples_seconds": [
+        0.0013231099874246866,
+        0.0012358099920675159,
+        0.0013254360237624496,
+        0.0015229939890559763,
+        0.0016347859927918762,
+        0.0015910690126474947,
+        0.0015460569993592799
+      ],
+      "numpy_over_planned": {
+        "median": 37.00929891954911,
+        "q10": 36.26126778321349,
+        "q90": 45.93555358321819,
+        "samples": [
+          48.896334108659744,
+          43.96169989959048,
+          37.00929891954911,
+          36.22635309697605,
+          38.80419594736548,
+          36.284544240705124,
+          36.305978372773346
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.06845832598628476,
+      "numpy_samples_seconds": [
+        0.07094140199478716,
+        0.047955704998457804,
+        0.07192434000899084,
+        0.06845832598628476,
+        0.048594124004011974,
+        0.06920064802397974,
+        0.047653283982072026
+      ],
+      "planned_seconds": 0.0017382120131514966,
+      "planned_samples_seconds": [
+        0.0018528139917179942,
+        0.001253766007721424,
+        0.0017382120131514966,
+        0.002250870020361617,
+        0.001265080994926393,
+        0.003607036982430145,
+        0.001286668993998319
+      ],
+      "numpy_over_planned": {
+        "median": 38.249326192541936,
+        "q10": 25.922457813507616,
+        "q90": 39.59845955243298,
+        "samples": [
+          38.28846409401723,
+          38.249326192541936,
+          41.37834709736421,
+          30.414162242600966,
+          38.411867855812154,
+          19.184901169867587,
+          37.036164082877
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.059236791013972834,
+      "numpy_samples_seconds": [
+        0.06317766499705613,
+        0.0517570769879967,
+        0.059236791013972834,
+        0.0635496370086912,
+        0.049980877025518566,
+        0.0557036790123675,
+        0.07625229901168495
+      ],
+      "planned_seconds": 0.0016868110105860978,
+      "planned_samples_seconds": [
+        0.0017605599714443088,
+        0.0016868110105860978,
+        0.001244930987013504,
+        0.002954259980469942,
+        0.0013260120176710188,
+        0.0014096679806243628,
+        0.002423472993541509
+      ],
+      "numpy_over_planned": {
+        "median": 35.88498319953687,
+        "q10": 27.014507440902296,
+        "q90": 42.74223189667875,
+        "samples": [
+          35.88498319953687,
+          30.683388158589995,
+          47.58238941106081,
+          21.511186364370747,
+          37.692627487120355,
+          39.515460220424046,
+          31.464059725400407
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.06557963299565017,
+      "numpy_samples_seconds": [
+        0.05237850500270724,
+        0.06775555200874805,
+        0.05098879901925102,
+        0.0701193510030862,
+        0.06557963299565017,
+        0.05491218500537798,
+        0.06917229399550706
+      ],
+      "planned_seconds": 0.0017436709895264357,
+      "planned_samples_seconds": [
+        0.0015262780070770532,
+        0.0017436709895264357,
+        0.0013942420191597193,
+        0.0020231269882060587,
+        0.0017609679780434817,
+        0.0021786570141557604,
+        0.0017032219911925495
+      ],
+      "numpy_over_planned": {
+        "median": 36.57098144982096,
+        "q10": 30.672521813358223,
+        "q90": 39.55983956202054,
+        "samples": [
+          34.31780105579609,
+          38.85799122410691,
+          36.57098144982096,
+          34.65889754417355,
+          37.24067320549022,
+          25.204602949701425,
+          40.61261206889098
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            2,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 1048576
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          2
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 2
+      },
+      "numpy_seconds": 0.053738638991490006,
+      "numpy_samples_seconds": [
+        0.053646540007321164,
+        0.059726551990024745,
+        0.05084065400296822,
+        0.05464693397516385,
+        0.06075123097980395,
+        0.053738638991490006,
+        0.05221769100171514
+      ],
+      "planned_seconds": 0.0014929820026736706,
+      "planned_samples_seconds": [
+        0.0014929820026736706,
+        0.0016201449907384813,
+        0.0014615879917982966,
+        0.0015321970277000219,
+        0.0015423650038428605,
+        0.0013177010114304721,
+        0.0013947850093245506
+      ],
+      "numpy_over_planned": {
+        "median": 36.86494253998877,
+        "q10": 35.31325404660316,
+        "q90": 39.94586460975243,
+        "samples": [
+          35.932476018632215,
+          36.86494253998877,
+          34.78453181625782,
+          35.66573553350006,
+          39.38836191721153,
+          40.782118648563774,
+          37.43780629460771
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.11579833901487291,
+      "numpy_samples_seconds": [
+        0.11579833901487291,
+        0.12040488800266758,
+        0.09844248800072819,
+        0.13764424601686187,
+        0.10178221500245854,
+        0.13220013401587494,
+        0.1011098439921625
+      ],
+      "planned_seconds": 0.0023884509864728898,
+      "planned_samples_seconds": [
+        0.005089093989226967,
+        0.0023884509864728898,
+        0.002372250979533419,
+        0.0034848230134230107,
+        0.002326468995306641,
+        0.0032094609923660755,
+        0.0023780589981470257
+      ],
+      "numpy_over_planned": {
+        "median": 41.49750125515393,
+        "q10": 32.800607682585984,
+        "q90": 46.41430753809998,
+        "samples": [
+          22.754215044957867,
+          50.41128693223625,
+          41.49750125515393,
+          39.498202774338054,
+          43.749654608675804,
+          41.19075892504133,
+          42.51780299435249
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 2097152,
+          "logical_bytes": 2097152
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.11807948799105361,
+      "numpy_samples_seconds": [
+        0.13373945897910744,
+        0.10087359699537046,
+        0.13001873702160083,
+        0.11807948799105361,
+        0.10319098201580346,
+        0.12167970501468517,
+        0.11178590802592225
+      ],
+      "planned_seconds": 0.0031040140020195395,
+      "planned_samples_seconds": [
+        0.0031488730164710432,
+        0.002308576978975907,
+        0.003724976006196812,
+        0.0022012789850123227,
+        0.0031040140020195395,
+        0.0026299789897166193,
+        0.0035975459904875606
+      ],
+      "numpy_over_planned": {
+        "median": 42.47216647973626,
+        "q10": 32.375749465897854,
+        "q90": 49.21637420556127,
+        "samples": [
+          42.47216647973626,
+          43.69514116878977,
+          34.9045837625004,
+          53.641309799899176,
+          33.244367437990014,
+          46.26641714266933,
+          31.07282250775962
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.10614720801822841,
+      "numpy_samples_seconds": [
+        0.10511814200435765,
+        0.1096240520128049,
+        0.10614720801822841,
+        0.12963525400846265,
+        0.09826560798683204,
+        0.10297154198633507,
+        0.12212540200562216
+      ],
+      "planned_seconds": 0.0028729689947795123,
+      "planned_samples_seconds": [
+        0.0027142500039190054,
+        0.0033829370222520083,
+        0.0025554750172886997,
+        0.0035045979893766344,
+        0.002717821014812216,
+        0.0031833569810260087,
+        0.0028729689947795123
+      ],
+      "numpy_over_planned": {
+        "median": 36.99004975789562,
+        "q10": 32.38173244806041,
+        "q90": 41.92567591341613,
+        "samples": [
+          38.72824605418862,
+          32.40499343964393,
+          41.53717305006103,
+          36.99004975789562,
+          36.156026261950714,
+          32.346840960685135,
+          42.508430208448786
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.10926281899446622,
+      "numpy_samples_seconds": [
+        0.10926281899446622,
+        0.13059305000933819,
+        0.10133484099060297,
+        0.12484737002523616,
+        0.10599337899475358,
+        0.1402815199980978,
+        0.10189661799813621
+      ],
+      "planned_seconds": 0.0031686389993410558,
+      "planned_samples_seconds": [
+        0.0023598740226589143,
+        0.003062778996536508,
+        0.0033198559831362218,
+        0.0036247409880161285,
+        0.003235606011003256,
+        0.0031686389993410558,
+        0.0030491710058413446
+      ],
+      "numpy_over_planned": {
+        "median": 34.44311481509935,
+        "q10": 31.86460572765257,
+        "q90": 45.08322227295471,
+        "samples": [
+          46.30027617802994,
+          42.63874414608991,
+          30.523866548835457,
+          34.44311481509935,
+          32.75843184686398,
+          44.27185300290455,
+          33.41781021888614
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.12252077800803818,
+      "numpy_samples_seconds": [
+        0.13192775199422613,
+        0.11969958498957567,
+        0.12850990201695822,
+        0.11756171702290885,
+        0.12252077800803818,
+        0.11024661801639013,
+        0.13229390399646945
+      ],
+      "planned_seconds": 0.003525100997649133,
+      "planned_samples_seconds": [
+        0.006341822008835152,
+        0.0028419099980965257,
+        0.0040153570007532835,
+        0.0029266630008351058,
+        0.0031273750064428896,
+        0.003525100997649133,
+        0.0039372640021611005
+      ],
+      "numpy_over_planned": {
+        "median": 33.6004656847637,
+        "q10": 27.085970268154124,
+        "q90": 40.94928692305032,
+        "samples": [
+          20.802815312449656,
+          42.11941443245877,
+          32.00460183063416,
+          40.16920191677802,
+          39.176874457212804,
+          31.274740238623767,
+          33.6004656847637
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            4,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 2097152
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          4
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 4
+      },
+      "numpy_seconds": 0.11784568001166917,
+      "numpy_samples_seconds": [
+        0.11784568001166917,
+        0.1009352300025057,
+        0.12140943401027471,
+        0.10189696401357651,
+        0.12347230900195427,
+        0.10555597199709155,
+        0.1206583809980657
+      ],
+      "planned_seconds": 0.002543312992202118,
+      "planned_samples_seconds": [
+        0.002733418979914859,
+        0.0023509679886046797,
+        0.002600361010991037,
+        0.002525310992496088,
+        0.0027111669769510627,
+        0.002378119999775663,
+        0.002543312992202118
+      ],
+      "numpy_over_planned": {
+        "median": 44.386310197571625,
+        "q10": 41.900191591099784,
+        "q90": 46.99024016549741,
+        "samples": [
+          43.112922269728244,
+          42.933476972781605,
+          46.68945330940942,
+          40.35026351857705,
+          45.54212634325067,
+          44.386310197571625,
+          47.4414204496294
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.2184956969867926,
+      "numpy_samples_seconds": [
+        0.2330521609983407,
+        0.2444274050067179,
+        0.20245619901106693,
+        0.20569091200013645,
+        0.2184956969867926,
+        0.22745894599938765,
+        0.2141186080116313
+      ],
+      "planned_seconds": 0.005989211989799514,
+      "planned_samples_seconds": [
+        0.006565224000951275,
+        0.007619292999152094,
+        0.005989211989799514,
+        0.00490941500174813,
+        0.0073778320220299065,
+        0.00498982600402087,
+        0.004467835009563714
+      ],
+      "numpy_over_planned": {
+        "median": 35.497975539687964,
+        "q10": 31.094103388746653,
+        "q90": 46.52051324646086,
+        "samples": [
+          35.497975539687964,
+          32.08006373214926,
+          33.80347854707411,
+          41.89723458434348,
+          29.61516287364274,
+          45.58454459456064,
+          47.92446622431119
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 4194304,
+          "logical_bytes": 4194304
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.24007949701626785,
+      "numpy_samples_seconds": [
+        0.21646540600340813,
+        0.24007949701626785,
+        0.21968967199791223,
+        0.25097327399998903,
+        0.2458272149960976,
+        0.21845116102485918,
+        0.24548050900921226
+      ],
+      "planned_seconds": 0.00514840500545688,
+      "planned_samples_seconds": [
+        0.004691122972872108,
+        0.004980263009201735,
+        0.006265649979468435,
+        0.006741582998074591,
+        0.00514840500545688,
+        0.007515612000133842,
+        0.004892383003607392
+      ],
+      "numpy_over_planned": {
+        "median": 46.1436221679089,
+        "q10": 32.664057413854,
+        "q90": 48.994137534151015,
+        "samples": [
+          46.1436221679089,
+          48.20618842271729,
+          35.06255100712636,
+          37.22764728575877,
+          47.74822779784055,
+          29.066317023945473,
+          50.1760612013016
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.2346454180078581,
+      "numpy_samples_seconds": [
+        0.25055047700880095,
+        0.2323147080023773,
+        0.23469669598853216,
+        0.27650055900448933,
+        0.19686863501556218,
+        0.2346454180078581,
+        0.20949629100505263
+      ],
+      "planned_seconds": 0.005327992985257879,
+      "planned_samples_seconds": [
+        0.005010196997318417,
+        0.005327992985257879,
+        0.004893771023489535,
+        0.005851748981513083,
+        0.007619504991453141,
+        0.0053904039959888905,
+        0.005215328012127429
+      ],
+      "numpy_over_planned": {
+        "median": 43.60266776723864,
+        "q10": 34.436587718833316,
+        "q90": 48.778193777366795,
+        "samples": [
+          50.00810889130744,
+          43.60266776723864,
+          47.95825036807304,
+          47.250926155242354,
+          25.83745731991662,
+          43.53021001440013,
+          40.16934131811111
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.24004388900357299,
+      "numpy_samples_seconds": [
+        0.2074365750013385,
+        0.2261766759911552,
+        0.24360913599957712,
+        0.22310669801663607,
+        0.2517870230076369,
+        0.24004388900357299,
+        0.24538169300649315
+      ],
+      "planned_seconds": 0.005782033025752753,
+      "planned_samples_seconds": [
+        0.0053623460116796196,
+        0.004812197003047913,
+        0.005782033025752753,
+        0.006119591009337455,
+        0.004719141987152398,
+        0.009407538978848606,
+        0.0068371539819054306
+      ],
+      "numpy_over_planned": {
+        "median": 38.68392202769553,
+        "q10": 31.740117548702294,
+        "q90": 49.54218888568606,
+        "samples": [
+          38.68392202769553,
+          47.00071003907386,
+          42.132090030368175,
+          36.4577792333202,
+          53.35440715560436,
+          25.516119523211593,
+          35.88944956569609
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.22715839199372567,
+      "numpy_samples_seconds": [
+        0.22715839199372567,
+        0.25335949801956303,
+        0.21086460701189935,
+        0.23237381700892001,
+        0.2047688819875475,
+        0.24051418498856947,
+        0.21878907500649802
+      ],
+      "planned_seconds": 0.0050520619843155146,
+      "planned_samples_seconds": [
+        0.0050520619843155146,
+        0.006731311994371936,
+        0.004870901990216225,
+        0.0048286960227414966,
+        0.005274969997117296,
+        0.00520807399880141,
+        0.004802722978638485
+      ],
+      "numpy_over_planned": {
+        "median": 44.96350058628636,
+        "q10": 38.34695867170578,
+        "q90": 46.9580190825595,
+        "samples": [
+          44.96350058628636,
+          37.638947389661546,
+          43.2906692508791,
+          48.12351324550547,
+          38.818966193068604,
+          46.18102297392886,
+          45.55521440225189
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            8,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 4194304
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          8
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 8
+      },
+      "numpy_seconds": 0.23986231099115685,
+      "numpy_samples_seconds": [
+        0.2104885570006445,
+        0.20486962198629044,
+        0.23986231099115685,
+        0.24954389498452656,
+        0.2612160609860439,
+        0.22576468999614008,
+        0.24676891800481826
+      ],
+      "planned_seconds": 0.004985170002328232,
+      "planned_samples_seconds": [
+        0.01004283397924155,
+        0.004970946989487857,
+        0.004985170002328232,
+        0.00472894700942561,
+        0.004928767011733726,
+        0.005331035994458944,
+        0.005900727992411703
+      ],
+      "numpy_over_planned": {
+        "median": 42.349121302275755,
+        "q10": 33.1116712850602,
+        "q90": 52.86096802293086,
+        "samples": [
+          20.95907962191972,
+          41.213399060487184,
+          48.11517177531229,
+          52.7694420104819,
+          52.9982570416043,
+          42.349121302275755,
+          41.82008022097637
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.42571324500022456,
+      "numpy_samples_seconds": [
+        0.39003873299225233,
+        0.38649400998838246,
+        0.38660818501375616,
+        0.42571324500022456,
+        0.4283900869777426,
+        0.43103850199258886,
+        0.46529341899440624
+      ],
+      "planned_seconds": 0.009733103011967614,
+      "planned_samples_seconds": [
+        0.008868409000569955,
+        0.00874535899492912,
+        0.008828883990645409,
+        0.009742603986524045,
+        0.009733103011967614,
+        0.010092963988427073,
+        0.010908525990089402
+      ],
+      "numpy_over_planned": {
+        "median": 43.78902083472663,
+        "q10": 42.685740502609576,
+        "q90": 44.08590685137502,
+        "samples": [
+          43.98068841515827,
+          44.19418461980644,
+          43.78902083472663,
+          43.69604323331529,
+          44.01372167242074,
+          42.70683046990278,
+          42.654105551669765
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 8388608,
+          "logical_bytes": 8388608
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.43125550798140466,
+      "numpy_samples_seconds": [
+        0.388255387020763,
+        0.38909267299459316,
+        0.3870061000052374,
+        0.4321434090088587,
+        0.43125550798140466,
+        0.43552795198047534,
+        0.4636356139963027
+      ],
+      "planned_seconds": 0.00908742198953405,
+      "planned_samples_seconds": [
+        0.008996041986392811,
+        0.008925047994125634,
+        0.00908742198953405,
+        0.008714422991033643,
+        0.010091231990372762,
+        0.009760290005942807,
+        0.011102974007371813
+      ],
+      "numpy_over_planned": {
+        "median": 43.15846764699725,
+        "q10": 42.25531839577415,
+        "q90": 46.609242234687194,
+        "samples": [
+          43.15846764699725,
+          43.595583267528596,
+          42.58700657358609,
+          49.58944607732438,
+          42.73566482197923,
+          44.62243967292906,
+          41.75778612905624
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.4245378290070221,
+      "numpy_samples_seconds": [
+        0.39166247300454415,
+        0.38953250501072034,
+        0.38480088801588863,
+        0.4245378290070221,
+        0.43337879597675055,
+        0.4334438430087175,
+        0.4646857969928533
+      ],
+      "planned_seconds": 0.009784421999938786,
+      "planned_samples_seconds": [
+        0.008985831984318793,
+        0.009089135011890903,
+        0.009500490996288136,
+        0.010013267979957163,
+        0.009784421999938786,
+        0.009996875014621764,
+        0.010560610011452809
+      ],
+      "numpy_over_planned": {
+        "median": 43.357933591722215,
+        "q10": 41.6398232737268,
+        "q90": 44.118170406192704,
+        "samples": [
+          43.586667732941784,
+          42.85693902677347,
+          40.50326326989113,
+          42.39752994295058,
+          44.29273348793234,
+          43.357933591722215,
+          44.00179501836628
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.4264846669975668,
+      "numpy_samples_seconds": [
+        0.3878168409864884,
+        0.38719698798377067,
+        0.38540078699588776,
+        0.4264846669975668,
+        0.42993739899247885,
+        0.4329310519970022,
+        0.45155546398018487
+      ],
+      "planned_seconds": 0.00973074699868448,
+      "planned_samples_seconds": [
+        0.008878424006979913,
+        0.008701982005732134,
+        0.008796242997050285,
+        0.009732661012094468,
+        0.00973074699868448,
+        0.009771901008207351,
+        0.010540428978856653
+      ],
+      "numpy_over_planned": {
+        "median": 43.81994466545048,
+        "q10": 43.34462431423478,
+        "q90": 44.38030609209619,
+        "samples": [
+          43.68082000607316,
+          44.495264151168996,
+          43.814249688773636,
+          43.81994466545048,
+          44.18339096172195,
+          44.30366738604766,
+          42.8403307764772
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.4269011440046597,
+      "numpy_samples_seconds": [
+        0.38878502999432385,
+        0.3855108569841832,
+        0.39001312098116614,
+        0.43367501799366437,
+        0.4269011440046597,
+        0.43742187300813384,
+        0.4636904310027603
+      ],
+      "planned_seconds": 0.010151226015295833,
+      "planned_samples_seconds": [
+        0.009152496000751853,
+        0.008857282984536141,
+        0.009078825009055436,
+        0.010151226015295833,
+        0.010264201002428308,
+        0.010483716003363952,
+        0.010891626996453851
+      ],
+      "numpy_over_planned": {
+        "median": 42.57310970654163,
+        "q10": 41.670867871635885,
+        "q90": 43.185019843115725,
+        "samples": [
+          42.47857960958259,
+          43.52473073935241,
+          42.95854591229127,
+          42.72144244844951,
+          41.5912689067238,
+          41.72393384824394,
+          42.57310970654163
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            16,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 8388608
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          16
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 16
+      },
+      "numpy_seconds": 0.4288190059887711,
+      "numpy_samples_seconds": [
+        0.3866604139911942,
+        0.3852302980085369,
+        0.386736733984435,
+        0.4288190059887711,
+        0.43018804301391356,
+        0.437909728003433,
+        0.46373381998273544
+      ],
+      "planned_seconds": 0.0096831799892243,
+      "planned_samples_seconds": [
+        0.008985638007288799,
+        0.0096831799892243,
+        0.008976701996289194,
+        0.01011691801249981,
+        0.009615078975912184,
+        0.009710496990010142,
+        0.010381735977716744
+      ],
+      "numpy_over_planned": {
+        "median": 43.082273884585334,
+        "q10": 41.34517647613974,
+        "q90": 44.883199557763355,
+        "samples": [
+          43.03093599781678,
+          39.783449077393115,
+          43.082273884585334,
+          42.386328075304164,
+          44.740978632793976,
+          45.09653094521742,
+          44.66823477095634
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8605008439917583,
+      "numpy_samples_seconds": [
+        0.8674045889929403,
+        0.854631149006309,
+        0.8676124489866197,
+        0.8605008439917583,
+        0.8688133970135823,
+        0.8528549670008942,
+        0.7884950109873898
+      ],
+      "planned_seconds": 0.019591588992625475,
+      "planned_samples_seconds": [
+        0.020073413994396105,
+        0.019842497975332662,
+        0.019573041005060077,
+        0.01925008901162073,
+        0.019888136012014,
+        0.019591588992625475,
+        0.01828863998525776
+      ],
+      "numpy_over_planned": {
+        "median": 43.53168940619976,
+        "q10": 43.096651199847244,
+        "q90": 44.47660101136289,
+        "samples": [
+          43.211612595400744,
+          43.07074391887299,
+          44.32691112036817,
+          44.701135847854964,
+          43.68500881574575,
+          43.53168940619976,
+          43.113922720496745
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 16777216,
+          "logical_bytes": 16777216
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8555251020006835,
+      "numpy_samples_seconds": [
+        0.8625143030076288,
+        0.8555251020006835,
+        0.8552681950095575,
+        0.8594699779932853,
+        0.8642689459957182,
+        0.7837638530181721,
+        0.7865239749953616
+      ],
+      "planned_seconds": 0.0196138950122986,
+      "planned_samples_seconds": [
+        0.020307180006057024,
+        0.01937159599037841,
+        0.019697186013218015,
+        0.0196138950122986,
+        0.019628765992820263,
+        0.018078513006912544,
+        0.018410441000014544
+      ],
+      "numpy_over_planned": {
+        "median": 43.42083150535413,
+        "q10": 42.62232228254228,
+        "q90": 44.08399693351166,
+        "samples": [
+          42.47336669839764,
+          44.16389348743441,
+          43.42083150535413,
+          43.81944419781831,
+          44.03073256422983,
+          43.353336235037155,
+          42.721626005305374
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8569282919925172,
+      "numpy_samples_seconds": [
+        0.861506635992555,
+        0.8555438820039853,
+        0.8610717380070128,
+        0.8569282919925172,
+        0.8662982060050126,
+        0.7870161150058266,
+        0.7936849870020524
+      ],
+      "planned_seconds": 0.01974151801550761,
+      "planned_samples_seconds": [
+        0.019881566986441612,
+        0.019615283992607147,
+        0.019803981005679816,
+        0.01971593502094038,
+        0.01974151801550761,
+        0.019760693976422772,
+        0.019298378989333287
+      ],
+      "numpy_over_planned": {
+        "median": 43.46374093251829,
+        "q10": 40.6071580387224,
+        "q90": 43.722530300181226,
+        "samples": [
+          43.3319283424725,
+          43.61618635378582,
+          43.479729543269904,
+          43.46374093251829,
+          43.88204621977434,
+          39.82735201227473,
+          41.12702872302086
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8635421719809528,
+      "numpy_samples_seconds": [
+        0.8601046850089915,
+        0.8613350529922172,
+        0.8709831929882057,
+        0.8635421719809528,
+        0.8792678380268626,
+        0.8689801199943759,
+        0.7880785589804873
+      ],
+      "planned_seconds": 0.019640240003354847,
+      "planned_samples_seconds": [
+        0.01994579000165686,
+        0.021072023984743282,
+        0.019583262008382007,
+        0.019341662991791964,
+        0.020824214996537194,
+        0.019640240003354847,
+        0.01754892698954791
+      ],
+      "numpy_over_planned": {
+        "median": 44.24488294674307,
+        "q10": 41.684307024009726,
+        "q90": 44.75104590892567,
+        "samples": [
+          43.12211674431267,
+          40.875762746656285,
+          44.47589950108457,
+          44.64673861536182,
+          42.223336542245356,
+          44.24488294674307,
+          44.90750684927145
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8646740220137872,
+      "numpy_samples_seconds": [
+        0.8580234459950589,
+        0.853161719016498,
+        0.8710213320155162,
+        0.8646740220137872,
+        0.8696485980181023,
+        0.8675829260027967,
+        0.7885666729998775
+      ],
+      "planned_seconds": 0.020059403992490843,
+      "planned_samples_seconds": [
+        0.020224014995619655,
+        0.019874007004546,
+        0.020216322998749092,
+        0.02016804800950922,
+        0.020059403992490843,
+        0.019456545007415116,
+        0.018201995000708848
+      ],
+      "numpy_over_planned": {
+        "median": 43.08505221594509,
+        "q10": 42.69446451828702,
+        "q90": 43.84851691246687,
+        "samples": [
+          42.425969629714935,
+          42.92852059583882,
+          43.08505221594509,
+          42.873461110668416,
+          43.353660873655656,
+          44.59080097068369,
+          43.323090296924484
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            32,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 16777216
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          32
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 32
+      },
+      "numpy_seconds": 0.8644172520143911,
+      "numpy_samples_seconds": [
+        0.8644172520143911,
+        0.8620010789891239,
+        0.8654099949926604,
+        0.8653317069984041,
+        0.8777058129780926,
+        0.8555693259986583,
+        0.789723301975755
+      ],
+      "planned_seconds": 0.019548577984096482,
+      "planned_samples_seconds": [
+        0.01973271300084889,
+        0.0193274789780844,
+        0.019548577984096482,
+        0.019938289013225585,
+        0.01970687400898896,
+        0.019333368021762,
+        0.017776577005861327
+      ],
+      "numpy_over_planned": {
+        "median": 44.269715970987995,
+        "q10": 43.64398313109945,
+        "q90": 44.56273943445643,
+        "samples": [
+          43.80630539638439,
+          44.59976802802655,
+          44.269715970987995,
+          43.40049973317205,
+          44.53805370540968,
+          44.253506426589176,
+          44.42493634828381
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.5881512459891383,
+      "numpy_samples_seconds": [
+        1.5787854729860555,
+        1.5881512459891383,
+        1.590582758974051,
+        1.581660723022651,
+        1.5807047389971558,
+        1.66681732001598,
+        2.1082847170182504
+      ],
+      "planned_seconds": 0.050851995998527855,
+      "planned_samples_seconds": [
+        0.044751344015821815,
+        0.051936870004283264,
+        0.050851995998527855,
+        0.045434272004058585,
+        0.047274796990677714,
+        0.059406867978395894,
+        0.07649968299665488
+      ],
+      "numpy_over_planned": {
+        "median": 31.278669160205588,
+        "q10": 27.858348747135743,
+        "q90": 34.998862677980604,
+        "samples": [
+          35.27906273447065,
+          30.57849357995895,
+          31.278669160205588,
+          34.812062640320576,
+          33.43652092908745,
+          28.057653546423968,
+          27.559391548203404
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 33554432,
+          "logical_bytes": 33554432
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.6022517749806866,
+      "numpy_samples_seconds": [
+        1.6022517749806866,
+        1.6254873170109931,
+        1.591651764989365,
+        1.5948169410112314,
+        1.5944617289933376,
+        2.048829770006705,
+        2.149566214007791
+      ],
+      "planned_seconds": 0.046218015981139615,
+      "planned_samples_seconds": [
+        0.04617542898631655,
+        0.046878344990545884,
+        0.046218015981139615,
+        0.04487195602268912,
+        0.04524616300477646,
+        0.08288954000454396,
+        0.06910665100440383
+      ],
+      "numpy_over_planned": {
+        "median": 34.67458839126703,
+        "q10": 28.550069798304445,
+        "q90": 35.36042969361509,
+        "samples": [
+          34.699228792340875,
+          34.67458839126703,
+          34.437907625435,
+          35.5415070429474,
+          35.23971146072688,
+          24.717591265368217,
+          31.1050554869286
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.604094297013944,
+      "numpy_samples_seconds": [
+        1.618576547014527,
+        1.604094297013944,
+        1.5883238660171628,
+        1.6007524369924795,
+        1.6000384179933462,
+        1.9886454030056484,
+        2.1072552499826998
+      ],
+      "planned_seconds": 0.046536205016309395,
+      "planned_samples_seconds": [
+        0.04641174498829059,
+        0.04669493099208921,
+        0.046938318002503365,
+        0.04571375701925717,
+        0.046133563009789214,
+        0.046536205016309395,
+        0.07401368298451416
+      ],
+      "numpy_over_planned": {
+        "median": 34.68274101555584,
+        "q10": 31.69158348662752,
+        "q90": 38.10343694413633,
+        "samples": [
+          34.874287692110784,
+          34.35264305853028,
+          33.838533923018986,
+          35.016864536383515,
+          34.68274101555584,
+          42.733295555765544,
+          28.47115783204032
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.5972580880043097,
+      "numpy_samples_seconds": [
+        1.6317344380076975,
+        1.600220141990576,
+        1.5801842330256477,
+        1.5872014429769479,
+        1.5972580880043097,
+        1.5825775550038088,
+        2.0015864910092205
+      ],
+      "planned_seconds": 0.04671242501353845,
+      "planned_samples_seconds": [
+        0.04671242501353845,
+        0.04677870700834319,
+        0.04530134200467728,
+        0.04499287699582055,
+        0.04837887702160515,
+        0.04521062201820314,
+        0.04774909300613217
+      ],
+      "numpy_over_planned": {
+        "median": 34.931486377227884,
+        "q10": 33.73122487359045,
+        "q90": 37.93357142852446,
+        "samples": [
+          34.931486377227884,
+          34.20830211713995,
+          34.88162078868429,
+          35.276727094477316,
+          33.0156090082662,
+          35.00455168182858,
+          41.91883792959516
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.5938411940005608,
+      "numpy_samples_seconds": [
+        1.6392768170044292,
+        1.5938411940005608,
+        1.591651805996662,
+        1.5832279069873039,
+        1.598899630975211,
+        1.5889019409951288,
+        1.990395189000992
+      ],
+      "planned_seconds": 0.04687475098762661,
+      "planned_samples_seconds": [
+        0.04992009699344635,
+        0.04687475098762661,
+        0.046156780008459464,
+        0.04517720398143865,
+        0.04770175297744572,
+        0.04573922298732214,
+        0.06692654400831088
+      ],
+      "numpy_over_planned": {
+        "median": 34.0021261002812,
+        "q10": 31.59880670262678,
+        "q90": 34.86090427023105,
+        "samples": [
+          32.83801346018294,
+          34.0021261002812,
+          34.483597116283875,
+          35.04484048277497,
+          33.51867659310551,
+          34.73828012853511,
+          29.739996566292536
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 33554432
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          64
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 64
+      },
+      "numpy_seconds": 1.5852639910008293,
+      "numpy_samples_seconds": [
+        1.7334225779923145,
+        1.5810623870056588,
+        1.5796644689980894,
+        1.5852639910008293,
+        1.5881056189828087,
+        1.5827239350182936,
+        2.1096403379924595
+      ],
+      "planned_seconds": 0.04524595499970019,
+      "planned_samples_seconds": [
+        0.051067799009615555,
+        0.045236817008117214,
+        0.04524595499970019,
+        0.04753877597977407,
+        0.0450478840211872,
+        0.04502788500394672,
+        0.06391072701080702
+      ],
+      "numpy_over_planned": {
+        "median": 34.912832959511114,
+        "q10": 33.21172373710992,
+        "q90": 35.19140622617859,
+        "samples": [
+          33.94355369938556,
+          34.95078768963687,
+          34.912832959511114,
+          33.34675658614556,
+          35.25372286600367,
+          35.14986179962854,
+          33.00917446355646
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-dense",
+      "purpose": "Reuse one dense lhs through a zero batch stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.18951629701769,
+      "numpy_samples_seconds": [
+        3.896357974008424,
+        3.1869835520046763,
+        3.178551351011265,
+        3.249011520005297,
+        3.1720542930124793,
+        3.18951629701769,
+        3.191261576022953
+      ],
+      "planned_seconds": 0.09067150700138882,
+      "planned_samples_seconds": [
+        0.13495583602343686,
+        0.09067150700138882,
+        0.09363923402270302,
+        0.09034857197548263,
+        0.08893692900892347,
+        0.09099674501339905,
+        0.08985855101491325
+      ],
+      "numpy_over_planned": {
+        "median": 35.148677433538865,
+        "q10": 31.915334451989878,
+        "q90": 35.784141260701226,
+        "samples": [
+          28.871355910327363,
+          35.148677433538865,
+          33.94465347976489,
+          35.960850835439466,
+          35.6663348775424,
+          35.05088337553218,
+          35.51427816250141
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "materialized-dense",
+      "purpose": "Use one independently stored dense lhs per batch item.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          65536
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.2131205479963683,
+      "numpy_samples_seconds": [
+        3.9287042250216473,
+        3.390496534004342,
+        3.218289949989412,
+        3.2131205479963683,
+        3.180256771011045,
+        3.194747436005855,
+        3.1984551310015377
+      ],
+      "planned_seconds": 0.09180932099116035,
+      "planned_samples_seconds": [
+        0.09639605597476475,
+        0.09889701200881973,
+        0.09103447000961751,
+        0.08996551000745967,
+        0.09073215399985202,
+        0.09504643399850465,
+        0.09180932099116035
+      ],
+      "numpy_over_planned": {
+        "median": 35.051044539471995,
+        "q10": 34.01485883573317,
+        "q90": 37.73135998865333,
+        "samples": [
+          40.75586065523398,
+          34.283103858607724,
+          35.352432431906394,
+          35.7150262109329,
+          35.051044539471995,
+          33.612491301421336,
+          34.83802185302616
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-negative",
+      "purpose": "Pack one reversed physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          -1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.253180836996762,
+      "numpy_samples_seconds": [
+        3.494497345003765,
+        3.435439696011599,
+        3.199895417987136,
+        3.2006577139836736,
+        3.253180836996762,
+        3.2217360849899705,
+        3.255924110999331
+      ],
+      "planned_seconds": 0.09292749600717798,
+      "planned_samples_seconds": [
+        0.08981671399669722,
+        0.09936153900343925,
+        0.0927503679995425,
+        0.09687898098491132,
+        0.09591590400668792,
+        0.09134505700785667,
+        0.09292749600717798
+      ],
+      "numpy_over_planned": {
+        "median": 34.575145780428045,
+        "q10": 33.56528289838747,
+        "q90": 36.72476634170815,
+        "samples": [
+          38.90698278198272,
+          34.575145780428045,
+          34.50008325576584,
+          33.03768971808414,
+          33.91701168525636,
+          35.269955381525094,
+          35.037252168592104
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "prepacked-negative",
+      "purpose": "Control for the reversed lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.195409417996416,
+      "numpy_samples_seconds": [
+        3.1870717639976647,
+        3.436116166994907,
+        3.195409417996416,
+        3.2485417840071023,
+        3.328223185002571,
+        3.193033406016184,
+        3.1900000459863804
+      ],
+      "planned_seconds": 0.09256845799973235,
+      "planned_samples_seconds": [
+        0.09027084999252111,
+        0.096651555999415,
+        0.09129818002111278,
+        0.09336794298724271,
+        0.09567013301420957,
+        0.09035289598978125,
+        0.09256845799973235
+      ],
+      "numpy_over_planned": {
+        "median": 34.99970555007202,
+        "q10": 34.657510476419546,
+        "q90": 35.42438272206067,
+        "samples": [
+          35.3056580752448,
+          35.55158663990577,
+          34.99970555007202,
+          34.7929030036676,
+          34.78852887670012,
+          35.339580110163936,
+          34.46098287599869
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "broadcast-step2",
+      "purpose": "Pack one step-two physical lhs, then reuse it.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "backing_bytes": 1048576,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          512,
+          2
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": false,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": true,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.188612699013902,
+      "numpy_samples_seconds": [
+        3.1848515630117618,
+        3.4267176520079374,
+        3.182064033986535,
+        3.195845987997018,
+        3.3678930590103846,
+        3.186540911992779,
+        3.188612699013902
+      ],
+      "planned_seconds": 0.0915503739961423,
+      "planned_samples_seconds": [
+        0.08797460098867305,
+        0.10019100800855085,
+        0.08957788400584832,
+        0.0915503739961423,
+        0.10532987999613397,
+        0.09123877400998026,
+        0.09482962600304745
+      ],
+      "numpy_over_planned": {
+        "median": 34.9080604316448,
+        "q10": 32.964674824130945,
+        "q90": 35.79450291632899,
+        "samples": [
+          36.20194382492078,
+          34.201848250847846,
+          35.522875643934455,
+          34.9080604316448,
+          31.974716567929253,
+          34.9252929641976,
+          33.62464699493207
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "route": "prepacked-step2",
+      "purpose": "Control for the step-two lhs with packing outside timing.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            1,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 524288,
+          "logical_bytes": 524288
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            128,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "backing_bytes": 67108864,
+          "logical_bytes": 67108864
+        }
+      ],
+      "plan": {
+        "batch_shape": [
+          128
+        ],
+        "lhs_batch_strides": [
+          0
+        ],
+        "rhs_batch_strides": [
+          65536
+        ],
+        "lhs_matrix_strides": [
+          256,
+          1
+        ],
+        "rhs_matrix_strides": [
+          256,
+          1
+        ],
+        "lhs_blas_describable": true,
+        "rhs_blas_describable": true,
+        "expected_pack_lhs": false,
+        "expected_pack_rhs": false,
+        "expected_gemm_calls": 128
+      },
+      "numpy_seconds": 3.1817661529930774,
+      "numpy_samples_seconds": [
+        3.172791427001357,
+        3.355127589980839,
+        3.179469198017614,
+        3.2257864190032706,
+        3.3739009300188627,
+        3.1749691239965614,
+        3.1817661529930774
+      ],
+      "planned_seconds": 0.09150674199918285,
+      "planned_samples_seconds": [
+        0.08865673700347543,
+        0.09061026101699099,
+        0.09150674199918285,
+        0.09264667998650111,
+        0.09239484998397529,
+        0.09031668197712861,
+        0.09204384699114598
+      ],
+      "numpy_over_planned": {
+        "median": 35.15373964690794,
+        "q10": 34.6746181264457,
+        "q90": 36.72091663267053,
+        "samples": [
+          35.787369739053005,
+          37.028119688913534,
+          34.74573707417107,
+          34.81815451426081,
+          36.516114595175196,
+          35.15373964690794,
+          34.56793970485765
+        ]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "batch": 1,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9966465628015624,
+        "q10": 0.8806213731025225,
+        "q90": 1.0513149825870172,
+        "samples": [
+          1.0125116192241446,
+          0.7523706887338973,
+          0.9661218293482726,
+          1.0505108386951312,
+          1.052521198424846,
+          0.9966465628015624,
+          0.9895322763215766
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.1044034513414955,
+        "q10": 0.8052266223126621,
+        "q90": 1.4072684362049066,
+        "samples": [
+          0.9730871372329619,
+          0.8075487758244466,
+          1.1717106058487257,
+          1.7261842174438777,
+          1.1946579153789254,
+          1.1044034513414955,
+          0.8017433920449853
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 1.0029420563985278,
+        "q10": 0.8401499260838892,
+        "q90": 1.2163155213594818,
+        "samples": [
+          0.7204044668313817,
+          0.9199802322522274,
+          0.9605949653412895,
+          1.0163848640051176,
+          1.1653723237597167,
+          1.2927303177591296,
+          1.0029420563985278
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.3992380710462167,
+        "q10": 0.862928527363051,
+        "q90": 2.4163386183520474,
+        "samples": [
+          0.8006459735758569,
+          0.9044502298878472,
+          1.6327821941912684,
+          1.3786834285393683,
+          1.5152961993294944,
+          1.3992380710462167,
+          3.5916732545932146
+        ]
+      }
+    },
+    {
+      "batch": 1,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.0108593052164327,
+        "q10": 0.9203403397633079,
+        "q90": 1.1353108312722515,
+        "samples": [
+          1.141539700359496,
+          1.131158251880755,
+          0.9885179015576604,
+          0.8180739970717792,
+          1.0106602493547747,
+          1.0108593052164327,
+          1.0545133559307047
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.4557295041605562,
+        "q10": 1.238802669313821,
+        "q90": 1.8458802434277153,
+        "samples": [
+          1.3382986281389522,
+          1.737192410415145,
+          1.2827493634858946,
+          1.1728826280557105,
+          1.4557295041605562,
+          2.00891199294657,
+          1.6681209458705528
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9990703624524253,
+        "q10": 0.8187963104813865,
+        "q90": 1.0434803029801212,
+        "samples": [
+          0.7608324682500079,
+          0.9992777428927176,
+          1.1083074914926854,
+          1.0002621773050782,
+          0.9990703624524253,
+          0.8574388719689722,
+          0.8899765071047441
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.1124701385885685,
+        "q10": 0.8339609162125247,
+        "q90": 1.3164613193387276,
+        "samples": [
+          1.0706895272512058,
+          1.2186638967617904,
+          1.1124701385885685,
+          1.4631574532041332,
+          1.1514809851713217,
+          0.820897143823483,
+          0.8426700978052192
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 1.077241809845778,
+        "q10": 0.8059090518034264,
+        "q90": 1.2254299256581391,
+        "samples": [
+          1.122887368472589,
+          0.9265535804809748,
+          1.2141835973529567,
+          1.077241809845778,
+          0.9722543279743058,
+          1.2422994181159128,
+          0.6249422587871036
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9540494189097594,
+        "q10": 0.6583333401544927,
+        "q90": 1.8612528885882673,
+        "samples": [
+          1.0524003849741075,
+          0.7432759211630897,
+          1.3962316235065664,
+          0.7619065468989514,
+          0.9540494189097594,
+          2.5587847862108175,
+          0.5309194686415972
+        ]
+      }
+    },
+    {
+      "batch": 2,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.0794782581023152,
+        "q10": 0.992293606728563,
+        "q90": 1.2997568453386812,
+        "samples": [
+          0.9763631539994775,
+          1.1344293241649757,
+          1.0029139085479535,
+          1.2831342200269518,
+          1.0794782581023152,
+          1.0218380300638765,
+          1.324690783306275
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.1417323225410092,
+        "q10": 0.9949501022624829,
+        "q90": 1.4535964375431334,
+        "samples": [
+          1.0223016783482688,
+          1.0762437926815733,
+          0.9539227381338042,
+          1.32040915863345,
+          1.1417323225410092,
+          1.6533773559076579,
+          1.2211358595095347
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9863479638838095,
+        "q10": 0.8223664397868873,
+        "q90": 1.1768634275372791,
+        "samples": [
+          0.8658502127854633,
+          1.1936214389994786,
+          0.7571407802890234,
+          1.1656914198958128,
+          0.9863479638838095,
+          1.086460014017293,
+          0.9044954393421033
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0345988062015654,
+        "q10": 0.6513535266982295,
+        "q90": 1.596319517193753,
+        "samples": [
+          1.616163612380387,
+          1.0345988062015654,
+          0.6368500026810856,
+          1.5830901204026635,
+          0.7495033829721738,
+          1.2203371224314974,
+          0.6610225427096589
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 0.9620669041101853,
+        "q10": 0.7972734970615862,
+        "q90": 1.1079029042170347,
+        "samples": [
+          0.9620669041101853,
+          0.8394325119519462,
+          1.0474897575264535,
+          1.0383498986182784,
+          0.9270919459195271,
+          0.7340349747260463,
+          1.1985226242529066
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9668547355420145,
+        "q10": 0.8118855878340405,
+        "q90": 1.1227860559458507,
+        "samples": [
+          1.150167330059767,
+          1.1045318732032396,
+          0.7697547816139235,
+          0.9668547355420145,
+          0.8399727919807852,
+          1.0046448906574759,
+          0.9422131422854673
+        ]
+      }
+    },
+    {
+      "batch": 4,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.096433607861772,
+        "q10": 1.0235799413563353,
+        "q90": 1.1666007461085777,
+        "samples": [
+          1.1194958693535693,
+          1.1859049113634965,
+          1.0584836595653895,
+          1.1537313026052984,
+          0.9922935676702941,
+          1.044437523813696,
+          1.096433607861772
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.4823057700964077,
+        "q10": 1.1567655060298423,
+        "q90": 1.8568932709960306,
+        "samples": [
+          2.320106085248844,
+          1.2088254760896273,
+          1.5441536708870167,
+          1.1589317155517191,
+          1.153516191747027,
+          1.4823057700964077,
+          1.5480847281608212
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9215553793215683,
+        "q10": 0.851174872334008,
+        "q90": 1.055391038708786,
+        "samples": [
+          1.0766254308306031,
+          1.0181102844869565,
+          0.9215553793215683,
+          0.8195729717425826,
+          0.888818176580901,
+          1.0412347772942412,
+          0.872242806061625
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9558803969939647,
+        "q10": 0.7025085297903364,
+        "q90": 1.4717786241003183,
+        "samples": [
+          1.3994994458505448,
+          1.529897715256078,
+          0.9558803969939647,
+          0.7282288155690241,
+          1.433032563329812,
+          0.6639281011223049,
+          0.9132226578069137
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 0.9775104835281413,
+        "q10": 0.8250083049800174,
+        "q90": 1.2204327612813937,
+        "samples": [
+          1.207841370342642,
+          1.0271382183168265,
+          0.9634150009420811,
+          1.2393198476895209,
+          0.7818855501921201,
+          0.9775104835281413,
+          0.8537568081719489
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9343293003483562,
+        "q10": 0.6868704196049611,
+        "q90": 1.3101492445879914,
+        "samples": [
+          0.9343293003483562,
+          1.1071851343332941,
+          0.8463754879456821,
+          0.9562320378248006,
+          1.614595409970037,
+          0.5729876865892747,
+          0.7627922416154187
+        ]
+      }
+    },
+    {
+      "batch": 8,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 0.9311941573378455,
+        "q10": 0.8410265940346514,
+        "q90": 1.1421921565961872,
+        "samples": [
+          1.0791959203417891,
+          1.236686510977784,
+          0.879106876526648,
+          0.9311941573378455,
+          0.7839061702966564,
+          1.0653312747563914,
+          0.8866152057376452
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9770784121587348,
+        "q10": 0.689572820823011,
+        "q90": 1.183797063398958,
+        "samples": [
+          0.5030514289848943,
+          1.3541307136460623,
+          0.9770784121587348,
+          1.0210932821021401,
+          1.070241296567555,
+          0.9769346904081422,
+          0.8139204153817554
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9933556303615128,
+        "q10": 0.9878632818745356,
+        "q90": 1.0039826898427486,
+        "samples": [
+          1.0045932291762225,
+          0.9933212234858845,
+          0.9989718120942387,
+          0.9851203006349627,
+          0.9933556303615128,
+          0.9896919360342509,
+          1.0035756636204327
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.982486852878039,
+        "q10": 0.9687342949204858,
+        "q90": 1.0676451115278855,
+        "samples": [
+          0.9858123176819416,
+          0.9798668870671863,
+          0.971549907202901,
+          1.1179861244454519,
+          0.9645108764968628,
+          1.0340844362495079,
+          0.982486852878039
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 1.0060318574251088,
+        "q10": 0.997240125238126,
+        "q90": 1.017580865091788,
+        "samples": [
+          1.0099161037160573,
+          1.0060318574251088,
+          0.9984434412169336,
+          0.9954351512699146,
+          1.0080044141131623,
+          1.001184463459828,
+          1.0290780071553838
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0230225425150603,
+        "q10": 1.004075464801693,
+        "q90": 1.0587190711236873,
+        "samples": [
+          1.012097639992688,
+          1.0444902099204234,
+          1.0800623629285835,
+          1.028831474507742,
+          1.005516020636603,
+          1.0230225425150603,
+          1.001914631049328
+        ]
+      }
+    },
+    {
+      "batch": 16,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.0007282889666171,
+        "q10": 0.9962753237719829,
+        "q90": 1.0096127888553457,
+        "samples": [
+          1.0054947854144127,
+          1.0007282889666171,
+          1.0084718794694663,
+          1.0113241529341646,
+          0.9923593901257095,
+          0.9988859462028318,
+          0.9999064355927787
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0185694096877378,
+        "q10": 0.9679179233081839,
+        "q90": 1.0723573543099123,
+        "samples": [
+          1.0185694096877378,
+          0.9147080808569872,
+          1.0113764512633323,
+          1.0033911516089817,
+          1.067510836691234,
+          1.0796271307379297,
+          1.0491142348285039
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 1.0052581445149906,
+        "q10": 1.0003016854343696,
+        "q90": 1.0439211072476766,
+        "samples": [
+          1.0056698027711064,
+          0.9989550826828062,
+          1.0144331965681528,
+          1.0011994206020784,
+          1.0052581445149906,
+          1.0881529732669621,
+          1.0025060087863689
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9936973226493049,
+        "q10": 0.9856737502249441,
+        "q90": 1.0480632194786428,
+        "samples": [
+          0.98848850448013,
+          1.0243088894269807,
+          0.9936973226493049,
+          0.9814516188421653,
+          1.013213771017934,
+          1.0836947145561355,
+          0.9933841337773122
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 0.9923409878486148,
+        "q10": 0.9534208770211964,
+        "q90": 1.0038236051477722,
+        "samples": [
+          1.0016299771504544,
+          0.9932765176941147,
+          0.9886203831934021,
+          0.9923409878486148,
+          0.9852495093520597,
+          0.9056779285249014,
+          1.0071140471437492
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0061330194054323,
+        "q10": 0.9411520854048562,
+        "q90": 1.0514863244655053,
+        "samples": [
+          0.9967801217595336,
+          0.9308685300856313,
+          1.0112707983584828,
+          1.0193505609785076,
+          0.9480077889510061,
+          1.0061330194054323,
+          1.0996899696960019
+        ]
+      }
+    },
+    {
+      "batch": 32,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 0.9985353997115397,
+        "q10": 0.9903902990057623,
+        "q90": 1.009507070558209,
+        "samples": [
+          0.9926033336280222,
+          0.9897455349093159,
+          1.0064840215104096,
+          0.9992399619945763,
+          0.9908201417367264,
+          1.014041644129908,
+          0.9985353997115397
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0239313786173374,
+        "q10": 1.009462588482373,
+        "q90": 1.030629648143038,
+        "samples": [
+          1.024897843228634,
+          1.028277253700874,
+          1.0341582398062839,
+          1.0115235061609966,
+          1.017888681043025,
+          1.0063712119644372,
+          1.0239313786173374
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9853541731948376,
+        "q10": 0.9116369175951774,
+        "q90": 0.9947817311692242,
+        "samples": [
+          0.9853541731948376,
+          0.9770308444543819,
+          0.9993283668960585,
+          0.9917506406846679,
+          0.9913720161819957,
+          0.8135460273063706,
+          0.9807954289937536
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0448354921429934,
+        "q10": 0.8681752332588561,
+        "q90": 1.1073510214402624,
+        "samples": [
+          0.9691592476397622,
+          1.107907500035625,
+          1.100263499395544,
+          1.0125315682936828,
+          1.0448354921429934,
+          0.716699211687497,
+          1.1069800357100206
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 1.005151065819667,
+        "q10": 0.9978189154106358,
+        "q90": 1.1343100537723805,
+        "samples": [
+          0.9919362546461691,
+          1.0024210137853589,
+          1.005151065819667,
+          1.0085376648789555,
+          1.0017406892536136,
+          1.2565863813232598,
+          1.052792502071794
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0160220921970289,
+        "q10": 0.9775734847625638,
+        "q90": 1.241702845899278,
+        "samples": [
+          0.9935631681472176,
+          0.9982090993614031,
+          1.0361352649918643,
+          1.0160220921970289,
+          0.9535889596855831,
+          1.0293201672291201,
+          1.5500542172603984
+        ]
+      }
+    },
+    {
+      "batch": 64,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.0039034008648917,
+        "q10": 0.9448031911802973,
+        "q90": 1.0077860873720064,
+        "samples": [
+          0.9456879342734033,
+          1.008082417936147,
+          1.0075885336625794,
+          0.998715618329134,
+          1.0067967847121628,
+          1.0039034008648917,
+          0.9434760765406385
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0201305289890623,
+        "q10": 0.9666448485500378,
+        "q90": 1.0518776487240253,
+        "samples": [
+          0.9775259157741828,
+          1.03620798473101,
+          1.0201305289890623,
+          0.9503232477138204,
+          1.0589121778730015,
+          1.0157977214189178,
+          1.0471879626247078
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "comparison": "broadcast reuse / materialized batch",
+      "tested_route": "broadcast-dense",
+      "control_route": "materialized-dense",
+      "numpy_tested_over_control": {
+        "median": 0.9974208126609984,
+        "q10": 0.9685815431106608,
+        "q90": 1.0034856005424617,
+        "samples": [
+          0.9917666871414722,
+          0.939975463782791,
+          0.9876522626625741,
+          1.0111701293097484,
+          0.9974208126609984,
+          0.9983625813642705,
+          0.9977509282813255
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 0.9802140155194434,
+        "q10": 0.9411665395146046,
+        "q90": 1.1771733988871478,
+        "samples": [
+          1.4000140841733875,
+          0.916827567988633,
+          1.0286129420296546,
+          1.0042578758014176,
+          0.9802140155194434,
+          0.957392520531919,
+          0.9787519398337025
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "comparison": "negative view / prepacked negative",
+      "tested_route": "broadcast-negative",
+      "control_route": "prepacked-negative",
+      "numpy_tested_over_control": {
+        "median": 1.0014038889556547,
+        "q10": 0.9821369876584742,
+        "q90": 1.0509835906371878,
+        "samples": [
+          1.096460200387984,
+          0.9998031291870149,
+          1.0014038889556547,
+          0.985259826344495,
+          0.9774527296294431,
+          1.008989157119279,
+          1.0206658508033237
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.010980954259481,
+        "q10": 0.9995290387896829,
+        "q90": 1.0318649418864205,
+        "samples": [
+          0.9949691844503346,
+          1.0280386898690037,
+          1.0159059904380778,
+          1.0376043199125458,
+          1.0025689416825818,
+          1.010980954259481,
+          1.0038786214570699
+        ]
+      }
+    },
+    {
+      "batch": 128,
+      "comparison": "step-two view / prepacked step-two",
+      "tested_route": "broadcast-step2",
+      "control_route": "prepacked-step2",
+      "numpy_tested_over_control": {
+        "median": 1.0021518067927098,
+        "q10": 0.9952189496129127,
+        "q90": 1.0108156705119138,
+        "samples": [
+          1.0038011121398556,
+          1.021337508070001,
+          1.0008161223799679,
+          0.9907184087483684,
+          0.9982193101892756,
+          1.0036446930802436,
+          1.0021518067927098
+        ]
+      },
+      "planned_tested_over_control": {
+        "median": 1.0102095428293651,
+        "q10": 0.984468539725317,
+        "q90": 1.11944039250988,
+        "samples": [
+          0.9923058750202408,
+          1.1057357840494833,
+          0.9789211379271731,
+          0.9881668075907464,
+          1.1399973052004748,
+          1.0102095428293651,
+          1.0302657820480867
+        ]
+      }
+    }
+  ],
+  "traces": []
+}
