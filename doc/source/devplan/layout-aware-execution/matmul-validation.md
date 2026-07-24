@@ -469,9 +469,9 @@ clean post-implementation run used revision `048c8d61`; its automatic route
 uses the combined predicate.  All 270 automatic and explicit-route results
 match NumPy.  The common plan and execution routes remain unchanged.
 
-The pre-implementation Apple Silicon decision gate used revision `aee484b6`,
+The clean post-implementation Apple Silicon rerun used revision `2cb65320`,
 15 samples, five warmups, and one thread.  NumPy and `_solvcon` both link to
-Accelerate.  All 270 cases and every explicit route match NumPy.  The
+Accelerate.  All 270 automatic and explicit-route results match NumPy.  The
 [complete report](macos-matmul-vector-pack-rectangular-results.md) and
 [raw JSON](macos-matmul-vector-pack-rectangular-results.json) retain every
 sample, operand shape, predicate result, and linkage record.
@@ -480,19 +480,21 @@ sample, operand shape, predicate result, and linkage record.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Portable baseline predicate | 108 | 108 | 0 | 0 | 0 |
 | Reuse-aware extension only | 72 | 72 | 0 | 0 | 0 |
-| Candidate combined predicate | 180 | 180 | 0 | 0 | 0 |
-| All measured rows | 270 | 249 | 6 | 4 | 11 |
+| Implemented combined predicate | 180 | 180 | 0 | 0 | 0 |
+| All measured rows | 270 | 251 | 6 | 2 | 11 |
 
-The 72 extension-only rows have a median pack/generic ratio of 0.514, with
-q10 and q90 values of 0.389 and 0.811.  The worst individual q90 is 0.849,
+The 72 extension-only rows have a median pack/generic ratio of 0.521, with
+q10 and q90 values of 0.391 and 0.823.  The worst individual q90 is 0.862,
 still below the 0.95 pack-faster boundary.  Both vector directions pass in
 36 of 36 rows, and each negative, negative-step-two, and zero-stride class
 passes in 24 of 24 rows.
 
-All 11 conclusive generic wins remain outside the combined predicate.  The
-strict two-backend gate therefore passed.  Revision `b38d3f40` implements
-the extension as a private logical-OR predicate without modifying
-`MatmulPlan`, the execution routes, or the common layer.
+All 11 conclusive generic wins remain outside the implemented predicate.
+Across all 180 selected rows, explicit pack/automatic has a median of 0.992;
+every row remains within the 0.95 to 1.05 parity band.  The strict
+post-implementation gate therefore passes on both backends.  Revision
+`b38d3f40` implements the extension as a private logical-OR predicate without
+modifying `MatmulPlan`, the execution routes, or the common layer.
 
 Reproduce the Apple gate without CPU affinity:
 

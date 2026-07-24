@@ -749,14 +749,15 @@ adds 270 equal-work factorizations.  Its reuse-aware extension adds 72 rows
 to the 108-row portable baseline.  The pre-implementation OpenBLAS result
 had no conclusive generic win in the added region.
 
-The clean `aee484b6`
+The clean `2cb65320` post-implementation
 [Apple rectangular gate](macos-matmul-vector-pack-rectangular-results.md)
-completes that decision.  All 270 cases and every explicit route match
-NumPy; both libraries link to Accelerate.  The reuse-aware extension selects
-72 new rows, and all 72 are pack-faster.  Their median pack/generic ratio is
-0.514, and the worst individual q90 is 0.849.  The combined predicate selects
-180 rows, all pack-faster, while all 11 conclusive generic wins remain
-outside it.
+revalidates that decision.  All 270 automatic and explicit-route results
+match NumPy; both libraries link to Accelerate.  The reuse-aware extension
+selects 72 new rows, and all 72 are pack-faster.  Their median pack/generic
+ratio is 0.521, and the worst individual q90 is 0.862.  The implemented
+combined predicate selects 180 rows, all pack-faster, while all 11
+conclusive generic wins remain outside it.  Explicit pack execution remains
+at parity with automatic dispatch in every selected row.
 
 The strict OpenBLAS and Accelerate gate therefore passed.  Revision
 `b38d3f40` implements the extension only as a private logical-OR addition
@@ -918,5 +919,8 @@ and reproduce the same correctness matrix and timing protocol.
     rows and kept every conclusive generic win outside the combined
     predicate.  The follow-up implemented only that private predicate and
     revalidated all 270 rectangular and 31,825 Cartesian layout cases.
+11. The post-implementation Accelerate rerun matched NumPy in all 270
+    automatic and explicit-route cases and reproduced pack-once timing for
+    every selected row.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
