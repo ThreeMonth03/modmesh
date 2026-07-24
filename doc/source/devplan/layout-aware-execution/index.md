@@ -690,6 +690,15 @@ evidence that this prototype needs an Accelerate-specific batched call.  The
 step-two batch-axis control is 25 percent slower than its dense control, but
 its paired comparison with NumPy is also inconclusive.
 
+The current `0d906a8f` follow-up expands this into 47 topology rows, eight
+large vector-broadcast rows, and a 48-route batch sweep.  The
+[matmul validation page](matmul-validation.md) records the complete
+same-backend interpretation.  Both libraries link to Accelerate.  The earlier
+roughly 160-times result reproduces, but paired controls locate it in NumPy's
+negative and step-two view routes rather than zero-stride broadcasting.
+Planned execution packs the physical lhs once and reaches its prepacked
+control as the batch grows.
+
 ## Outer-contiguous reduction experiment
 
 The next Ubuntu experiment implemented the loop-interchange recommendation
@@ -736,10 +745,10 @@ reduction target.
 5. Retain the matrix-family pack-once route for unsupported matrix strides.
    Both OpenBLAS and Accelerate equal-work controls remove the repeated
    strided-matrix cost.  Treat its 4096-work threshold as backend-tunable.
-6. Do not add an Accelerate-specific batched call from the current evidence.
-   Revisit a vendor batched call or dedicated batch kernel only when a
-   workload is conclusively slower than its same-backend NumPy control.  Keep
-   that policy inside `MatmulExecutor`.
+6. Freeze the matrix prototype at the current boundary.  The same-backend
+   Apple sweep does not justify an Accelerate-specific batched call.  Split
+   the measured work into shared coordinate primitives, `MatmulPlan`, correct
+   batched execution, and automatic fast paths before adding another route.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -751,13 +760,15 @@ reduction target.
 
 The prototype currently passes:
 
-- 21 focused Python tests, including partial overlap, invalid axes and matrix
+- 67 focused Python tests, including partial overlap, invalid axes and matrix
   shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
 - 14 large-scale matmul cases covering 1024-square matrices, 16384 outputs,
   batch ranks zero through four, zero-stride broadcasting, and strided
   matrix and batch axes.
+- 47 focused matmul topology rows, eight large vector-broadcast rows, and 48
+  batch-scaling routes with matching pack and GEMM dispatch counts.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
@@ -812,5 +823,8 @@ and reproduce the same correctness matrix and timing protocol.
 6. The current Apple Silicon rerun confirmed the outer-contiguous schedule,
    reproduced pack-once matmul against Accelerate, and found no conclusive
    need for an Apple-specific small-matrix batch kernel.
+7. The focused same-backend batch sweep reproduced the large strided-input
+   ratio and located it in NumPy's view route.  Planned broadcasting retains
+   `B` contractions and amortizes one physical-operand pack.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

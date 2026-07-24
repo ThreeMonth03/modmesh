@@ -120,6 +120,23 @@ The standard suite contains:
 - No measured planned regression.
 - All 47 planned rows faster than NumPy on this Ubuntu environment.
 
+The clean Apple Silicon rerun used revision `0d906a8f`, 15 samples, five
+warmups, one thread, and no CPU affinity.  NumPy and `_solvcon` both link to
+Accelerate.  The complete data is in
+[macOS matmul topology results](macos-matmul-topology-results.md), with raw
+samples in the JSON file beside it.
+
+| Comparison | Faster | Parity | Slower | Inconclusive | Not comparable |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Legacy versus planned | 24 planned | 2 | 0 | 0 | 4 legacy incorrect and 17 new only |
+| NumPy versus planned | 15 planned | 17 | 9 NumPy | 6 | 0 |
+
+The same-backend classification is more balanced than Ubuntu.  It preserves
+the important regression result: every correct legacy route improves or
+reaches parity, and none regresses.  The nine NumPy-faster rows are small
+direct or small-batch cases, so the Ubuntu all-faster classification was a
+backend comparison rather than a portable speed result.
+
 ## Reproduce the large 1D by ND and ND by 1D suite
 
 ```console
@@ -164,6 +181,27 @@ increments are passed to GEMV and a repeated negative vector is packed once.
 The step-two matrix batches remain 2.5 to 9.9 times slower than their dense
 controls.  They still beat NumPy on this Ubuntu run, but they identify the
 remaining non-contiguous bottleneck.
+
+The Apple Silicon report is
+[macOS vector-broadcast results](macos-matmul-vector-broadcast-results.md).
+All eight planned rows pass the NumPy check.  Three are conclusively faster
+than NumPy and the other five are inconclusive.
+
+| Topology | Layout | NumPy | Control | Planned | Result |
+| --- | --- | ---: | ---: | ---: | --- |
+| `(256) @ (64,256,256)` | dense | 1.9126 ms | n/a | 1.9203 ms | inconclusive |
+| `(256) @ (64,256,256)` | negative vector | 8.1480 ms | 1.7875 ms | 1.7790 ms | planned-faster |
+| `(256) @ (64,256,256)` | step-two vector | 1.8876 ms | 1.9058 ms | 1.9016 ms | inconclusive |
+| `(256) @ (64,256,256)` | step-two matrix | 10.0241 ms | 2.1242 ms | 9.1829 ms | inconclusive |
+| `(64,256,256) @ (256)` | dense | 0.8406 ms | n/a | 0.8305 ms | inconclusive |
+| `(64,256,256) @ (256)` | negative vector | 7.3350 ms | 0.8458 ms | 1.1041 ms | planned-faster |
+| `(64,256,256) @ (256)` | step-two vector | 0.8564 ms | 0.8434 ms | 0.9382 ms | inconclusive |
+| `(64,256,256) @ (256)` | step-two matrix | 7.3936 ms | 1.1719 ms | 6.1599 ms | planned-faster |
+
+Positive and reusable negative vector layouts remain close to their dense
+controls.  Step-two matrix batches remain 4.3 and 5.3 times slower than their
+prepacked controls.  The same topology is therefore the remaining
+non-contiguous bottleneck on both OpenBLAS and Accelerate.
 
 ## Reproduce matrix broadcast scaling
 
@@ -232,7 +270,39 @@ The one-time copy is visible at `B=1` and amortized by larger batches.  The
 experiment does not show that broadcasting reduces arithmetic.  Broadcast
 and materialized routes both perform `B` contractions.
 
-## Reading the Ubuntu comparison
+## Apple Silicon same-backend broadcast scaling
+
+The clean Apple Silicon sweep used revision `0d906a8f`, 20 samples, five
+warmups, and one thread.  Both linkage records identify Accelerate.  The
+[complete macOS scaling report](macos-matmul-broadcast-scaling-results.md)
+retains all 48 timing rows and dispatch counts.  The timing JSON and the
+separate profile-build trace JSON are stored beside it.
+
+| B | Planned broadcast/materialized | Planned negative/prepacked | Planned step-two/prepacked | NumPy negative/prepacked | NumPy step-two/prepacked |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 1.000x | 1.260x | 1.283x | 164.650x | 165.379x |
+| 8 | 0.888x | 1.220x | 1.221x | 202.920x | 200.458x |
+| 64 | 0.879x | 1.017x | 1.061x | 167.699x | 167.195x |
+| 128 | 0.888x | 1.026x | 1.032x | 161.427x | 161.309x |
+
+The previous roughly 160-times result reproduces across the full sweep.
+The paired controls locate it in NumPy's negative and step-two view routes,
+not in broadcast planning.  NumPy's view-to-prepacked ratio remains 161
+through 203 at the selected batch sizes.  Planned execution pays a 26 to
+28 percent one-time packing cost at `B=1`; the ratio reaches an interval
+containing parity at the larger batch sizes.
+
+Broadcast reuse is at parity with or faster than the materialized planned
+control.  It still performs the same `B` contractions.  Its advantage is
+storing and reading one lhs matrix instead of `B` matrices, not reducing
+arithmetic.
+
+The separate profile build validates all 48 routes.  Negative and step-two
+routes pack lhs exactly once, dense and prepacked routes pack zero times,
+every route performs exactly `B` GEMM calls, and no route enters the generic
+kernel.  The timing build contains no probes.
+
+## Reading the backend comparisons
 
 The topology and vector-broadcast reports used revision `ea09ea2a`.  The
 broadcast-scaling report used clean revision `c17db004`, Linux 6.6 on WSL2
@@ -246,10 +316,12 @@ useful for correctness, topology coverage, dispatch validation, and
 regression testing against legacy `SimpleArray` and `matmul_blas()`.  It is
 not the final same-backend performance claim.
 
-The final performance statement requires rerunning both commands on Apple
-Silicon, where NumPy and `_solvcon` can both use Accelerate.  A ratio greater
-than one means planned is faster.  Every report includes q10 and q90 paired
-ratio quantiles, so isolated medians are not treated as conclusive.
+The Apple Silicon data supplies the same-backend comparison.  It confirms
+the execution topology and the one-pack policy, while rejecting the broad
+Ubuntu claim that every planned row is faster than NumPy.  It also explains
+the large strided-input ratio: NumPy's view route is the outlier relative to
+its own contiguous control.  It is not evidence that zero-stride
+broadcasting avoids matrix arithmetic.
 
 ## Acceptance boundary
 
@@ -264,7 +336,12 @@ ratio quantiles, so isolated medians are not treated as conclusive.
 - Repeated strided matrix operands are packed once rather than once per output
   matrix.
 - Planning, packing, allocation, and dispatch remain inside the timed call.
-- Same-backend Apple Silicon data is required before publishing an upstream
-  speed claim.
+- Same-backend Apple Silicon data must accompany any upstream speed claim and
+  identify the NumPy strided-view route as the source of the large ratio.
+
+The Apple decision gate is complete.  The prototype should now freeze rather
+than widen the common layer.  The measured implementation can be split into
+upstream-sized work for shared coordinate primitives, `MatmulPlan`, correct
+batched execution, and automatic fast paths.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

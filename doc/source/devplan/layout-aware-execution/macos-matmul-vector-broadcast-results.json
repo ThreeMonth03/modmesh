@@ -1,0 +1,1386 @@
+{
+  "metadata": {
+    "git_revision": "0d906a8fb8f1b6e9ea57b5bae650c14e28a8b519",
+    "git_dirty": false,
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "python": "3.11.6",
+    "numpy": "2.2.4",
+    "numpy_build_configuration": {
+      "Compilers": {
+        "c": {
+          "name": "clang",
+          "linker": "ld64",
+          "version": "17.0.0",
+          "commands": "cc"
+        },
+        "cython": {
+          "name": "cython",
+          "linker": "cython",
+          "version": "3.1.2",
+          "commands": "cython"
+        },
+        "c++": {
+          "name": "clang",
+          "linker": "ld64",
+          "version": "17.0.0",
+          "commands": "c++"
+        }
+      },
+      "Machine Information": {
+        "host": {
+          "cpu": "aarch64",
+          "family": "aarch64",
+          "endian": "little",
+          "system": "darwin"
+        },
+        "build": {
+          "cpu": "aarch64",
+          "family": "aarch64",
+          "endian": "little",
+          "system": "darwin"
+        }
+      },
+      "Build Dependencies": {
+        "blas": {
+          "name": "accelerate",
+          "found": true,
+          "version": "unknown",
+          "detection method": "system",
+          "include directory": "unknown",
+          "lib directory": "unknown",
+          "openblas configuration": "unknown",
+          "pc file directory": "unknown"
+        },
+        "lapack": {
+          "name": "accelerate",
+          "found": true,
+          "version": "unknown",
+          "detection method": "system",
+          "include directory": "unknown",
+          "lib directory": "unknown",
+          "openblas configuration": "unknown",
+          "pc file directory": "unknown"
+        }
+      },
+      "Python Information": {
+        "path": "/Users/abao/vscode/devenv/flavors/prime/usr/bin/python3",
+        "version": "3.11"
+      },
+      "SIMD Extensions": {
+        "baseline": [
+          "NEON",
+          "NEON_FP16",
+          "NEON_VFPV4",
+          "ASIMD"
+        ],
+        "found": [
+          "ASIMDHP"
+        ],
+        "not found": [
+          "ASIMDFHM",
+          "SVE"
+        ]
+      }
+    },
+    "numpy_extension_linkage": {
+      "extension": "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so",
+      "command": [
+        "otool",
+        "-L",
+        "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so"
+      ],
+      "returncode": 0,
+      "output": "/Users/abao/vscode/devenv/flavors/prime/usr/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-darwin.so:\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)",
+      "error": ""
+    },
+    "solvcon_extension_linkage": {
+      "extension": "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so",
+      "command": [
+        "otool",
+        "-L",
+        "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so"
+      ],
+      "returncode": 0,
+      "output": "/Users/abao/vscode/solvcon-pr26-rerun/_solvcon.cpython-311-darwin.so:\n\t/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5026.5.4)\n\t/System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)\n\t/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore (compatibility version 1.2.0, current version 1195.14.4)\n\t/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 373.2.0)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 2100.43.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)",
+      "error": ""
+    },
+    "seed": 20260722,
+    "repeat": 15,
+    "warmup": 5,
+    "quick": false,
+    "hpc_matmul": true,
+    "hpc_matmul_slow": false,
+    "matmul_only": false,
+    "case_count": 8,
+    "case_filters": [
+      "vector-batch",
+      "batch-matrix-vector-256",
+      "batch-matrix-negative-vector",
+      "batch-matrix-step2-vector",
+      "batch-step2-matrix-vector"
+    ],
+    "requested_cpu": null,
+    "cpu_affinity": null,
+    "thread_count": "1",
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "BLIS_NUM_THREADS": "1"
+    }
+  },
+  "results": [
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "vector-batch-matrix-256-b64",
+      "number": 1,
+      "note": "One vector is reused by 64 matrix-vector contractions.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": true,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 1,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33556480,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.00191258400445804,
+      "numpy_samples_seconds": [
+        0.0018907089834101498,
+        0.0018926660413853824,
+        0.001883958000689745,
+        0.00191258400445804,
+        0.0018730410374701023,
+        0.0018944579642266035,
+        0.0019057919853366911,
+        0.002213291998486966,
+        0.0022401249734684825,
+        0.0023506670258939266,
+        0.0022329590283334255,
+        0.002104500017594546,
+        0.0021010410273447633,
+        0.0019095420138910413,
+        0.0019463750068098307
+      ],
+      "planned_seconds": 0.0019202909898012877,
+      "planned_samples_seconds": [
+        0.0018511670059524477,
+        0.0018791250186040998,
+        0.0019476250163279474,
+        0.0018635830492712557,
+        0.0018474170356057584,
+        0.001843124977312982,
+        0.0019202909898012877,
+        0.002022791013587266,
+        0.001972416997887194,
+        0.0018881250289268792,
+        0.0021544579649344087,
+        0.0021097499993629754,
+        0.002046958019491285,
+        0.0018911249935626984,
+        0.0020621250150725245
+      ],
+      "numpy_over_planned": 1.021360567323507,
+      "numpy_over_planned_q10": 0.9773660924680361,
+      "numpy_over_planned_q90": 1.1191064283853736,
+      "numpy_over_planned_samples": [
+        1.021360567323507,
+        1.0072060254891084,
+        0.9673104344499331,
+        1.0262939476756594,
+        1.0138701773181071,
+        1.0278510614014127,
+        0.9924495794951905,
+        1.094177294451126,
+        1.1357258510082051,
+        1.2449742415786598,
+        1.0364365722964601,
+        0.9975115621424271,
+        1.0264211612248497,
+        1.0097386584128674,
+        0.9438685785698483
+      ],
+      "planned_vs_numpy": "inconclusive",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "",
+      "control_seconds": null,
+      "control_samples_seconds": null,
+      "control_over_planned": null,
+      "planned_vs_control": "not-measured",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "negative-vector-batch-matrix-256-b64",
+      "number": 1,
+      "note": "A repeated negative vector may be packed at most once.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": true,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 1,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33556480,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.008147999993525445,
+      "numpy_samples_seconds": [
+        0.008239290968049318,
+        0.008170874963980168,
+        0.008169207954779267,
+        0.00824799999827519,
+        0.008250374987255782,
+        0.008120540995150805,
+        0.008147999993525445,
+        0.008134667004924268,
+        0.008226583013311028,
+        0.008137333032209426,
+        0.008261291950475425,
+        0.008121665974613279,
+        0.008095416007563472,
+        0.008090583025477827,
+        0.008117749996017665
+      ],
+      "planned_seconds": 0.001778957957867533,
+      "planned_samples_seconds": [
+        0.0021105409832671285,
+        0.001824999984819442,
+        0.0019061659695580602,
+        0.001890083949547261,
+        0.0017969170003198087,
+        0.0017257079598493874,
+        0.0017322920029982924,
+        0.0017890839953906834,
+        0.001974874990992248,
+        0.001778957957867533,
+        0.0017391659785062075,
+        0.0017123750294558704,
+        0.001743457978591323,
+        0.0017300000181421638,
+        0.001727666996885091
+      ],
+      "numpy_over_planned": 4.591405716450682,
+      "numpy_over_planned_q10": 4.213643315986995,
+      "numpy_over_planned_q90": 4.728006374370185,
+      "numpy_over_planned_samples": [
+        3.903876320513261,
+        4.477191798326815,
+        4.285675059382829,
+        4.363827331717655,
+        4.591405716450682,
+        4.705628753001482,
+        4.703594994044129,
+        4.546833477847917,
+        4.165622153723106,
+        4.574213233214227,
+        4.750145789748691,
+        4.742924788615987,
+        4.643310080868365,
+        4.676637537938441,
+        4.6986774712103765
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.0017875420162454247,
+      "control_samples_seconds": [
+        0.0019489169935695827,
+        0.0017818750347942114,
+        0.0020944999996572733,
+        0.001835875038523227,
+        0.0019379169680178165,
+        0.0018468750058673322,
+        0.0017472910112701356,
+        0.0017875420162454247,
+        0.001888624974526465,
+        0.0017404159880243242,
+        0.0017819160129874945,
+        0.0017357909819111228,
+        0.0017542499699629843,
+        0.0017061660182662308,
+        0.0018595000146888196
+      ],
+      "control_over_planned": 1.0061899922476945,
+      "planned_vs_control": "inconclusive",
+      "status": "new-only",
+      "control_over_planned_q10": 0.9623235289100481,
+      "control_over_planned_q90": 1.077603412196794,
+      "control_over_planned_samples": [
+        0.9234205869590123,
+        0.976369890200576,
+        1.0988025350924076,
+        0.9713193104269158,
+        1.0784677131291613,
+        1.0702129496050536,
+        1.0086584757338155,
+        0.9991381180820849,
+        0.9563263412321364,
+        0.9783345246172036,
+        1.0245807674538376,
+        1.0136745467858714,
+        1.0061899922476945,
+        0.9862231216034737,
+        1.076306960798243
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "step2-vector-batch-matrix-256-b64",
+      "number": 1,
+      "note": "A repeated step-two vector retains one physical copy.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 1,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33558528,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.001887582999188453,
+      "numpy_samples_seconds": [
+        0.001746875001117587,
+        0.0019823749898932874,
+        0.002094374969601631,
+        0.0021739170188084245,
+        0.00195891602197662,
+        0.0019910410046577454,
+        0.002116040966939181,
+        0.0018723339890129864,
+        0.0018519170116633177,
+        0.0018769170274026692,
+        0.001887582999188453,
+        0.001909332990180701,
+        0.001873500004876405,
+        0.001854332978837192,
+        0.0018624169752001762
+      ],
+      "planned_seconds": 0.001901624957099557,
+      "planned_samples_seconds": [
+        0.0017126250313594937,
+        0.0017969580367207527,
+        0.0024408329627476633,
+        0.002000542008318007,
+        0.002139416988939047,
+        0.0021244999952614307,
+        0.002586500020697713,
+        0.001860082964412868,
+        0.0019029999966733158,
+        0.0018798750243149698,
+        0.001901624957099557,
+        0.0018968330114148557,
+        0.001959624991286546,
+        0.001854000031016767,
+        0.0018898749840445817
+      ],
+      "numpy_over_planned": 0.9926158110942541,
+      "numpy_over_planned_q10": 0.8810867926167077,
+      "numpy_over_planned_q90": 1.0599978202526363,
+      "numpy_over_planned_samples": [
+        1.0199985222281291,
+        1.1031837969410236,
+        0.8580574752825274,
+        1.0866640189356411,
+        0.9156307686179782,
+        0.9371809880436067,
+        0.8181097815604793,
+        1.0065862785878399,
+        0.9731566026803481,
+        0.9984264927859348,
+        0.9926158110942541,
+        1.0065899205099353,
+        0.9560502714585214,
+        1.000179583503158,
+        0.9854709919564936
+      ],
+      "planned_vs_numpy": "inconclusive",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.0019058340112678707,
+      "control_samples_seconds": [
+        0.0017257079598493874,
+        0.001879249990452081,
+        0.0019762080046348274,
+        0.0021136249997653067,
+        0.0020149159827269614,
+        0.001994082995224744,
+        0.00222100003156811,
+        0.0019058340112678707,
+        0.0018658749759197235,
+        0.001974332961253822,
+        0.0019437079899944365,
+        0.001846333034336567,
+        0.0019007090013474226,
+        0.001860833028331399,
+        0.0018896249821409583
+      ],
+      "control_over_planned": 0.9998677151103994,
+      "planned_vs_control": "inconclusive",
+      "status": "new-only",
+      "control_over_planned_q10": 0.8906587522956974,
+      "control_over_planned_q90": 1.048466212201941,
+      "control_over_planned_samples": [
+        1.0076391085324197,
+        1.045795144933658,
+        0.8096449182701121,
+        1.0565261768946188,
+        0.9418061056559963,
+        0.9386128499281836,
+        0.8586893538740399,
+        1.0245962399152684,
+        0.9804913185399414,
+        1.0502469237141296,
+        1.02213003817486,
+        0.9733766879981592,
+        0.9699350691070522,
+        1.0036855432579925,
+        0.9998677151103994
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "vector-batch-step2-matrix-256-b64",
+      "number": 1,
+      "note": "Every rhs matrix has a step-two column stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": true,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 1,
+        "inner_size": 256,
+        "columns": 256,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 67110912,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.010024083021562546,
+      "numpy_samples_seconds": [
+        0.00959295901702717,
+        0.009794541983865201,
+        0.009933041001204401,
+        0.010090791038237512,
+        0.009790957963559777,
+        0.01004391600145027,
+        0.010024083021562546,
+        0.01003050000872463,
+        0.010101624997332692,
+        0.009881375008262694,
+        0.010115374985616654,
+        0.010111792013049126,
+        0.009999125031754375,
+        0.010081542015541345,
+        0.010009250021539629
+      ],
+      "planned_seconds": 0.009182874986436218,
+      "planned_samples_seconds": [
+        0.009337458992376924,
+        0.00910391699289903,
+        0.009194082987960428,
+        0.009182874986436218,
+        0.00910229200962931,
+        0.009031624998897314,
+        0.009064415993634611,
+        0.009097665955778211,
+        0.009116250032093376,
+        0.009891875030007213,
+        0.009816167003009468,
+        0.009394083986990154,
+        0.009435457992367446,
+        0.009158000000752509,
+        0.009307125001214445
+      ],
+      "numpy_over_planned": 1.0764000010062635,
+      "numpy_over_planned_q10": 1.028610201262136,
+      "numpy_over_planned_q90": 1.1072027307633723,
+      "numpy_over_planned_samples": [
+        1.0273629072811816,
+        1.0758602029769002,
+        1.0803732154921413,
+        1.0988705664775305,
+        1.0756585213045162,
+        1.1120829311089144,
+        1.1058719092991596,
+        1.1025355357605702,
+        1.1080899450728474,
+        0.9989385205825319,
+        1.0304811422335678,
+        1.0764000010062635,
+        1.0597392346871652,
+        1.1008453826941416,
+        1.0754395175989973
+      ],
+      "planned_vs_numpy": "inconclusive",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.0021242499933578074,
+      "control_samples_seconds": [
+        0.0021218330366536975,
+        0.002066624991130084,
+        0.0021489999489858747,
+        0.002146208949852735,
+        0.002086416003294289,
+        0.002102874976117164,
+        0.0021116670104674995,
+        0.0020606250036507845,
+        0.002233541978057474,
+        0.0023452500463463366,
+        0.0021292499732226133,
+        0.00219558400567621,
+        0.0021855420200154185,
+        0.002071750001050532,
+        0.0021242499933578074
+      ],
+      "control_over_planned": 0.2316307297200997,
+      "planned_vs_control": "control-faster",
+      "status": "new-only",
+      "control_over_planned_q10": 0.22633394585240715,
+      "control_over_planned_q90": 0.23574802611959725,
+      "control_over_planned_samples": [
+        0.22723880644466082,
+        0.22700393607960528,
+        0.23373727992231216,
+        0.2337186287543763,
+        0.22921875073740447,
+        0.23283462016789971,
+        0.23296227930739222,
+        0.2265004028139786,
+        0.24500666065480686,
+        0.23708852358445398,
+        0.21691256603212047,
+        0.2337198612144483,
+        0.2316307297200997,
+        0.22622297454469284,
+        0.22823911713666933
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "batch-matrix-vector-256-b64",
+      "number": 1,
+      "note": "One vector is reused by 64 matrix-vector contractions.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": true,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 1,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33556480,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.0008406250271946192,
+      "numpy_samples_seconds": [
+        0.0011711249826475978,
+        0.0014654999831691384,
+        0.001051541999913752,
+        0.0014557919930666685,
+        0.0009177910396829247,
+        0.0008900000248104334,
+        0.0008255420252680779,
+        0.0006863339804112911,
+        0.0008428749861195683,
+        0.0008406250271946192,
+        0.0008212499669753015,
+        0.0008207499631680548,
+        0.0008076250087469816,
+        0.0007944999961182475,
+        0.0007995410123839974
+      ],
+      "planned_seconds": 0.0008305000374093652,
+      "planned_samples_seconds": [
+        0.0012546659563668072,
+        0.0014744169893674552,
+        0.0007132909959182143,
+        0.0013572080060839653,
+        0.0008890840108506382,
+        0.0008098329999484122,
+        0.0008518749964423478,
+        0.0007270830101333559,
+        0.0010000409674830735,
+        0.0008562500006519258,
+        0.0008027080330066383,
+        0.0008305000374093652,
+        0.0008051660261116922,
+        0.0007898330222815275,
+        0.0007834169664420187
+      ],
+      "numpy_over_planned": 1.0030540069445855,
+      "numpy_over_planned_q10": 0.9376316443190964,
+      "numpy_over_planned_q90": 1.0884501653038168,
+      "numpy_over_planned_samples": [
+        0.9334157643352954,
+        0.9939521815994928,
+        1.4742117956502587,
+        1.0726373455953546,
+        1.0322883197559936,
+        1.0989920451094584,
+        0.9690882215298685,
+        0.9439554642947978,
+        0.8428404570674098,
+        0.9817518558301779,
+        1.02309922562904,
+        0.9882599954218854,
+        1.0030540069445855,
+        1.0059088107296892,
+        1.0205816910185237
+      ],
+      "planned_vs_numpy": "inconclusive",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "",
+      "control_seconds": null,
+      "control_samples_seconds": null,
+      "control_over_planned": null,
+      "planned_vs_control": "not-measured",
+      "status": "new-only"
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "batch-matrix-negative-vector-256-b64",
+      "number": 1,
+      "note": "A repeated negative vector may be packed at most once.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            -1
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": true,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 1,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33556480,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.007335041998885572,
+      "numpy_samples_seconds": [
+        0.007322209014091641,
+        0.007316709030419588,
+        0.007335041998885572,
+        0.00733866699738428,
+        0.007334124995395541,
+        0.007374958950094879,
+        0.007302125042770058,
+        0.0073430409538559616,
+        0.007312791014555842,
+        0.0073822500417009,
+        0.007328374951612204,
+        0.0073637080495245755,
+        0.007374624954536557,
+        0.007310291985049844,
+        0.007373583037406206
+      ],
+      "planned_seconds": 0.0011041249963454902,
+      "planned_samples_seconds": [
+        0.0008322909707203507,
+        0.0008071250049397349,
+        0.000873417011462152,
+        0.0008194999536499381,
+        0.0008032500045374036,
+        0.0008355000172741711,
+        0.0011729170219041407,
+        0.001158915983978659,
+        0.0011277919984422624,
+        0.0012184999650344253,
+        0.0008610410150140524,
+        0.0011167920310981572,
+        0.0011080409749411047,
+        0.0011041249963454902,
+        0.001126791990827769
+      ],
+      "numpy_over_planned": 6.655552566482064,
+      "numpy_over_planned_q10": 6.2698180875325,
+      "numpy_over_planned_q90": 9.021111767175439,
+      "numpy_over_planned_samples": [
+        8.79765523318635,
+        9.065149742159084,
+        8.398098391289947,
+        8.95505480469997,
+        9.13056327913662,
+        8.827000356212764,
+        6.225610939566397,
+        6.3361288094816555,
+        6.48416642843403,
+        6.05847374110703,
+        8.511063728471289,
+        6.593625173241735,
+        6.655552566482064,
+        6.620891664662929,
+        6.543872424926797
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.0008457909571006894,
+      "control_samples_seconds": [
+        0.0008147500338964164,
+        0.0008457909571006894,
+        0.0008257500012405217,
+        0.0007814170094206929,
+        0.0007766670314595103,
+        0.0008017499931156635,
+        0.0012676659971475601,
+        0.0011182079906575382,
+        0.0006304590497165918,
+        0.0011980829876847565,
+        0.000688833009917289,
+        0.0011436250060796738,
+        0.0011235830024816096,
+        0.001085874973796308,
+        0.0011012500035576522
+      ],
+      "control_over_planned": 0.9773321185471393,
+      "planned_vs_control": "inconclusive",
+      "status": "new-only",
+      "control_over_planned_q10": 0.8581700111309168,
+      "control_over_planned_q90": 1.0383542004052138,
+      "control_over_planned_samples": [
+        0.9789245138527064,
+        1.047905779060632,
+        0.9454246830596613,
+        0.953529046512292,
+        0.9669057293149939,
+        0.9596049988501287,
+        1.0807806293829736,
+        0.9648740772550511,
+        0.5590206798659676,
+        0.9832441707545786,
+        0.8000002298450871,
+        1.024026832422086,
+        1.0140265819513858,
+        0.9834710539027851,
+        0.9773321185471393
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "batch-matrix-step2-vector-256-b64",
+      "number": 1,
+      "note": "A repeated step-two vector retains one physical copy.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            65536,
+            256,
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 1,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 33558528,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.0008564170566387475,
+      "numpy_samples_seconds": [
+        0.0011582080041989684,
+        0.0011527090100571513,
+        0.00109195796540007,
+        0.0011009169975295663,
+        0.0011630419758148491,
+        0.0012090419768355787,
+        0.0012880419963039458,
+        0.000825958966743201,
+        0.0008536670356988907,
+        0.0008183749741874635,
+        0.000826333009172231,
+        0.0008368329727090895,
+        0.0008034579805098474,
+        0.0008564169984310865,
+        0.0008564170566387475
+      ],
+      "planned_seconds": 0.0009382499847561121,
+      "planned_samples_seconds": [
+        0.0012561660259962082,
+        0.0011752910213544965,
+        0.0011342079960741103,
+        0.001156834012363106,
+        0.0011272089905105531,
+        0.0012273750035092235,
+        0.0011184169561602175,
+        0.0009382499847561121,
+        0.0008188750362023711,
+        0.0008180830045603216,
+        0.0008929999894462526,
+        0.0008079999824985862,
+        0.0008250420214608312,
+        0.0008319169864989817,
+        0.0008438329678028822
+      ],
+      "numpy_over_planned": 0.9850632230400421,
+      "numpy_over_planned_q10": 0.9233489219376922,
+      "numpy_over_planned_q90": 1.0397662918339603,
+      "numpy_over_planned_samples": [
+        0.9220182525478241,
+        0.980786025854839,
+        0.9627493098088865,
+        0.951663752763185,
+        1.0317891230516765,
+        0.9850632230400421,
+        1.151665297284199,
+        0.8803186572477271,
+        1.0424875566580605,
+        1.0003568948694868,
+        0.9253449260224945,
+        1.0356843945978103,
+        0.9738388586404766,
+        1.0294500681314491,
+        1.0149130092281544
+      ],
+      "planned_vs_numpy": "inconclusive",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.000843374989926815,
+      "control_samples_seconds": [
+        0.001172084012068808,
+        0.0011302079656161368,
+        0.0011002920218743384,
+        0.0011485000140964985,
+        0.0011063750134781003,
+        0.0011706670047715306,
+        0.0011206669732928276,
+        0.0007819590391591191,
+        0.0008173750247806311,
+        0.0008070420008152723,
+        0.000843374989926815,
+        0.0008262500050477684,
+        0.0008007500437088311,
+        0.0007881249766796827,
+        0.0008204589830711484
+      ],
+      "control_over_planned": 0.9705566781810842,
+      "planned_vs_control": "inconclusive",
+      "status": "new-only",
+      "control_over_planned_q10": 0.9376102981089955,
+      "control_over_planned_q90": 1.000474354326039,
+      "control_over_planned_samples": [
+        0.9330645693424813,
+        0.9616409426097695,
+        0.9700972182199676,
+        0.992795856468999,
+        0.9815172011509451,
+        0.9537973328643997,
+        1.00201178739308,
+        0.8334229169877161,
+        0.9981682047254774,
+        0.9865038099025377,
+        0.9444288912587671,
+        1.0225866620600008,
+        0.9705566781810842,
+        0.9473601206250252,
+        0.972300223357481
+      ]
+    },
+    {
+      "family": "matmul-hpc",
+      "operation": "matmul",
+      "layout": "batch-step2-matrix-vector-256-b64",
+      "number": 1,
+      "note": "Every lhs matrix has a step-two inner stride.",
+      "operands": [
+        {
+          "name": "lhs",
+          "shape": [
+            64,
+            256,
+            256
+          ],
+          "strides": [
+            131072,
+            512,
+            2
+          ],
+          "c_contiguous": false,
+          "f_contiguous": false,
+          "negative_stride": false,
+          "zero_stride": false
+        },
+        {
+          "name": "rhs",
+          "shape": [
+            256
+          ],
+          "strides": [
+            1
+          ],
+          "c_contiguous": true,
+          "f_contiguous": true,
+          "negative_stride": false,
+          "zero_stride": false
+        }
+      ],
+      "workload": {
+        "batch_shape": [
+          64
+        ],
+        "batch_rank": 1,
+        "batch_matrices": 64,
+        "rows": 256,
+        "inner_size": 256,
+        "columns": 1,
+        "multiply_accumulates": 4194304,
+        "logical_input_bytes": 33556480,
+        "backing_input_bytes": 67110912,
+        "expanded_input_bytes": 33685504,
+        "output_bytes": 131072
+      },
+      "numpy_seconds": 0.007393624982796609,
+      "numpy_samples_seconds": [
+        0.00738987501244992,
+        0.007366332982201129,
+        0.007394667016342282,
+        0.0073586670332588255,
+        0.007409749960061163,
+        0.007339625037275255,
+        0.007360000046901405,
+        0.007466666982509196,
+        0.007402500021271408,
+        0.007486666028853506,
+        0.007513000047765672,
+        0.00741470797220245,
+        0.007393624982796609,
+        0.0073499169666320086,
+        0.007354124973062426
+      ],
+      "planned_seconds": 0.006159875018056482,
+      "planned_samples_seconds": [
+        0.0061420410056598485,
+        0.006206875026691705,
+        0.006125958985649049,
+        0.006213249987922609,
+        0.006159875018056482,
+        0.006097832985688001,
+        0.00613933295244351,
+        0.006352500000502914,
+        0.006374040967784822,
+        0.006292500009294599,
+        0.006269000004976988,
+        0.006108833011239767,
+        0.006253332947380841,
+        0.006133583025075495,
+        0.006140791985671967
+      ],
+      "numpy_over_planned": 1.1983072433492563,
+      "numpy_over_planned_q10": 1.1781739831030174,
+      "numpy_over_planned_q90": 1.2057200721702759,
+      "numpy_over_planned_samples": [
+        1.2031627606589081,
+        1.1868022073142048,
+        1.207103578993161,
+        1.1843507097835582,
+        1.2029058931132393,
+        1.2036448119359482,
+        1.198827316243218,
+        1.1753903159257104,
+        1.161351183446191,
+        1.1897760854660333,
+        1.19843675894099,
+        1.213768318524991,
+        1.1823494838689776,
+        1.1983072433492563,
+        1.1975857495615343
+      ],
+      "planned_vs_numpy": "planned-faster",
+      "legacy_seconds": null,
+      "legacy_samples_seconds": null,
+      "legacy_over_planned": null,
+      "legacy_correct": null,
+      "legacy_error_type": "",
+      "legacy_error": "",
+      "blas_seconds": null,
+      "blas_samples_seconds": null,
+      "blas_over_planned": null,
+      "blas_correct": null,
+      "blas_error_type": "",
+      "blas_error": "",
+      "planned_vs_blas": "not-measured",
+      "control_label": "dense planned",
+      "control_seconds": 0.0011718749883584678,
+      "control_samples_seconds": [
+        0.0010809159721247852,
+        0.0011160420253872871,
+        0.0010832909611053765,
+        0.0011718749883584678,
+        0.0012486249906942248,
+        0.001145209011156112,
+        0.001146750000771135,
+        0.001322916999924928,
+        0.0014665410271845758,
+        0.0013095420436002314,
+        0.001477458979934454,
+        0.0009644590318202972,
+        0.001215500000398606,
+        0.0011281670304015279,
+        0.0012289580190554261
+      ],
+      "control_over_planned": 0.1886090195366954,
+      "planned_vs_control": "control-faster",
+      "status": "new-only",
+      "control_over_planned_q10": 0.17632632534969847,
+      "control_over_planned_q90": 0.22134871708915782,
+      "control_over_planned_samples": [
+        0.1759864467086313,
+        0.1798073943148398,
+        0.1768361433112992,
+        0.1886090195366954,
+        0.20270297482239855,
+        0.18780589987360916,
+        0.1867873936230675,
+        0.20825139705945617,
+        0.2300802637756256,
+        0.20811156800411884,
+        0.2356769785869345,
+        0.15787942313135248,
+        0.19437634468315151,
+        0.18393278867985027,
+        0.20013021478709886
+      ]
+    }
+  ]
+}
