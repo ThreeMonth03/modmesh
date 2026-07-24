@@ -20,7 +20,7 @@ isolates vector packing from matrix packing.
 
 ## Predicates under test
 
-The current portable predicate is:
+The portable baseline before the reuse-aware extension is:
 
 ```text
 core_work >= 1024
@@ -39,16 +39,20 @@ Because `core_work = K * output_extent`, the second condition is
 equivalent to comparing total contracted work with the `K` values
 copied by vector packing.
 
-The extension adds work to the current predicate.  It does not
+The extension adds work to the baseline predicate.  It does not
 disable an existing pack-once selection.
+
+The combined predicate was the **candidate** policy for this
+run.  The measured automatic route used the `baseline`
+policy.
 
 ## Pack-once versus generic contraction
 
 | Selection | Rows | Pack faster | Parity | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Current portable predicate | 108 | 108 | 0 | 0 | 0 |
+| Portable baseline predicate | 108 | 108 | 0 | 0 | 0 |
 | Reuse-aware extension only | 72 | 72 | 0 | 0 | 0 |
-| Combined predicate | 180 | 180 | 0 | 0 | 0 |
+| Candidate combined predicate | 180 | 180 | 0 | 0 | 0 |
 | All measured rows | 270 | 249 | 6 | 4 | 11 |
 
 An extension is acceptable only when every added rectangular
@@ -57,7 +61,7 @@ OpenBLAS and Accelerate.
 
 ## Detailed rectangular crossover
 
-| Topology | Vector layout | K | O | Core work | B | Reuse intensity | Current | Extension | Combined | Supplied operands | Number | Current us | Generic us | Pack us | Prepacked us | NumPy us | Pack/generic | Generic/current | Pack/current | NumPy/current | Result |
+| Topology | Vector layout | K | O | Core work | B | Reuse intensity | Baseline | Extension | Combined | Supplied operands | Number | Automatic us | Generic us | Pack us | Prepacked us | NumPy us | Pack/generic | Generic/automatic | Pack/automatic | NumPy/automatic | Result |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | `1d-nd` | `negative-vector` | 8 | 72 | 576 | 1 | 72 | generic | generic | generic | lhs: shape=(8,), strides=(-1,)<br>rhs: shape=(1, 8, 72), strides=(576, 72, 1) | 347 | 1.354 | 1.349 | 1.344 | 1.170 | 1.298 | 0.995x (0.989..1.001) | 0.998x (0.994..1.001) | 0.990x (0.988..0.998) | 0.960x (0.954..0.964) | parity |
 | `1d-nd` | `negative-vector` | 8 | 72 | 576 | 2 | 144 | generic | pack | pack | lhs: shape=(8,), strides=(-1,)<br>rhs: shape=(2, 8, 72), strides=(576, 72, 1) | 173 | 1.785 | 1.781 | 1.445 | 1.268 | 1.744 | 0.811x (0.809..0.817) | 0.997x (0.995..0.999) | 0.809x (0.807..0.813) | 0.977x (0.973..0.980) | pack-faster |

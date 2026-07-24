@@ -743,18 +743,11 @@ backend tuning option, not evidence for widening matrix packing or changing
 the common plan.
 
 The square boundary does not distinguish contraction work from vector copy
-volume.  The clean `f73266ab`
+volume.  The
 [Ubuntu rectangular gate](ubuntu-matmul-vector-pack-rectangular-results.md)
-adds 270 equal-work factorizations.  The existing predicate selects 108 rows,
-with 97 pack-faster and 11 inconclusive results.  A reuse-aware extension
-adds 72 rows, with 41 pack-faster, 31 inconclusive, and no generic-faster
-results.  All seven generic-faster rows in the notebook stay outside the
-combined predicate.
-
-This froze the matrix common layer while leaving one private dispatch
-decision for Accelerate.  The current predicate remains the base rule; the
-extension must not replace it, add matrix packing, or introduce an
-Apple-specific route.
+adds 270 equal-work factorizations.  Its reuse-aware extension adds 72 rows
+to the 108-row portable baseline.  The pre-implementation OpenBLAS result
+had no conclusive generic win in the added region.
 
 The clean `aee484b6`
 [Apple rectangular gate](macos-matmul-vector-pack-rectangular-results.md)
@@ -765,10 +758,16 @@ NumPy; both libraries link to Accelerate.  The reuse-aware extension selects
 180 rows, all pack-faster, while all 11 conclusive generic wins remain
 outside it.
 
-The strict OpenBLAS and Accelerate gate therefore passes.  Implement the
-extension only as a private logical-OR addition to the existing predicate.
-Keep `MatmulPlan`, matrix packing policy, execution routes, and the common
-layer frozen.
+The strict OpenBLAS and Accelerate gate therefore passed.  Revision
+`b38d3f40` implements the extension only as a private logical-OR addition
+to the baseline.  It does not change `MatmulPlan`, matrix packing policy,
+execution routes, or the common layer.
+
+The clean `048c8d61` post-implementation Ubuntu rerun measures the automatic
+combined route.  The 72 added rows contain 50 conclusive pack wins, 22
+inconclusive results, and no generic win.  Across all 180 selected rows,
+147 are pack-faster and 33 are inconclusive.  All five conclusive generic
+wins in the 270-row notebook stay outside automatic packing.
 
 ## Outer-contiguous reduction experiment
 
@@ -821,9 +820,9 @@ reduction target.
    pack-once policy for a directly describable matrix.  The explicit Ubuntu
    control rejects wider vector-batch matrix packing, and the focused
    Accelerate run confirms the portable vector boundary.  Both rectangular
-   gates accept the private reuse-aware extension.  Add only that predicate
-   change; do not add a platform-specific batched call or another common
-   abstraction.
+   gates accept the private reuse-aware extension.  The prototype adds only
+   that predicate change; it does not add a platform-specific batched call
+   or another common abstraction.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -917,6 +916,7 @@ and reproduce the same correctness matrix and timing protocol.
    justifying wider matrix packing.
 10. The rectangular Accelerate gate accepted all 72 reuse-aware extension
     rows and kept every conclusive generic win outside the combined
-    predicate.
+    predicate.  The follow-up implemented only that private predicate and
+    revalidated all 270 rectangular and 31,825 Cartesian layout cases.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

@@ -437,14 +437,14 @@ cover both vector directions, three unsupported vector strides, three equal
 work levels, three factorizations per work level, and batches 1 through 16.
 The matrix core remains C layout so no matrix packing enters the comparison.
 
-The current portable predicate remains unchanged:
+The portable baseline before the reuse-aware change was:
 
 ```text
 core work >= 1024
 batch >= 4
 ```
 
-The report evaluates this additional reuse-aware condition:
+The implementation adds this reuse-aware condition:
 
 ```text
 core work >= 576
@@ -452,35 +452,35 @@ reuse intensity = batch * output extent
 reuse intensity >= 128
 ```
 
-The extension is combined with the current predicate using logical OR.  It
-never disables a current pack-once selection.  Because core work is
+The extension is combined with the baseline predicate using logical OR.  It
+never disables a baseline pack-once selection.  Because core work is
 `K * output extent`, reuse intensity compares the total contracted work with
 the `K` values copied once from the vector.
 
 | Ubuntu selection | Rows | Pack faster | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: |
-| Current portable predicate | 108 | 97 | 11 | 0 |
-| Reuse-aware extension only | 72 | 41 | 31 | 0 |
-| Combined predicate | 180 | 138 | 42 | 0 |
-| All measured rows | 270 | 157 | 106 | 7 |
+| Portable baseline predicate | 108 | 97 | 11 | 0 |
+| Reuse-aware extension only | 72 | 50 | 22 | 0 |
+| Implemented combined predicate | 180 | 147 | 33 | 0 |
+| All measured rows | 270 | 166 | 99 | 5 |
 
-All seven conclusive generic wins remain outside the combined predicate.
-This supports testing the extension on Accelerate, but it does not change
-automatic dispatch yet.  The common plan and execution routes remain frozen;
-only the private vector packing predicate is under review.
+All five conclusive generic wins remain outside the combined predicate.  The
+clean post-implementation run used revision `048c8d61`; its automatic route
+uses the combined predicate.  All 270 automatic and explicit-route results
+match NumPy.  The common plan and execution routes remain unchanged.
 
-The clean Apple Silicon rerun used revision `aee484b6`, 15 samples, five
-warmups, and one thread.  NumPy and `_solvcon` both link to Accelerate.  All
-270 cases and every explicit route match NumPy.  The
+The pre-implementation Apple Silicon decision gate used revision `aee484b6`,
+15 samples, five warmups, and one thread.  NumPy and `_solvcon` both link to
+Accelerate.  All 270 cases and every explicit route match NumPy.  The
 [complete report](macos-matmul-vector-pack-rectangular-results.md) and
 [raw JSON](macos-matmul-vector-pack-rectangular-results.json) retain every
 sample, operand shape, predicate result, and linkage record.
 
 | Apple selection | Rows | Pack faster | Parity | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Current portable predicate | 108 | 108 | 0 | 0 | 0 |
+| Portable baseline predicate | 108 | 108 | 0 | 0 | 0 |
 | Reuse-aware extension only | 72 | 72 | 0 | 0 | 0 |
-| Combined predicate | 180 | 180 | 0 | 0 | 0 |
+| Candidate combined predicate | 180 | 180 | 0 | 0 | 0 |
 | All measured rows | 270 | 249 | 6 | 4 | 11 |
 
 The 72 extension-only rows have a median pack/generic ratio of 0.514, with
@@ -490,8 +490,8 @@ still below the 0.95 pack-faster boundary.  Both vector directions pass in
 passes in 24 of 24 rows.
 
 All 11 conclusive generic wins remain outside the combined predicate.  The
-strict two-backend gate therefore passes.  The reuse-aware extension can be
-implemented as a private logical-OR predicate without modifying
+strict two-backend gate therefore passed.  Revision `b38d3f40` implements
+the extension as a private logical-OR predicate without modifying
 `MatmulPlan`, the execution routes, or the common layer.
 
 Reproduce the Apple gate without CPU affinity:
