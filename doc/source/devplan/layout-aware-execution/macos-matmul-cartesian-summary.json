@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "git_revision": "6120aec8c261087b3b4a7061ca6f7d8081e151b7",
+    "git_dirty": false,
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "Apple M1",
+    "memory_bytes": 8589934592,
+    "python": "3.11.6",
+    "numpy": "2.2.4",
+    "numpy_blas": "Accelerate",
+    "solvcon_blas": "Accelerate",
+    "thread_count": 1,
+    "repeat": 7,
+    "warmup": 2,
+    "side": 32,
+    "batch": 4,
+    "number": 1
+  },
+  "coverage": {
+    "case_count": 31825,
+    "correct": 31825,
+    "planned_vs_numpy": {
+      "planned-faster": 29939,
+      "parity": 378,
+      "inconclusive": 1508,
+      "numpy-faster": 0
+    },
+    "numpy_over_planned": {
+      "median": 21.409524,
+      "q10": 1.224029,
+      "q90": 25.073487,
+      "minimum": 1.003392,
+      "maximum": 42.684636
+    }
+  },
+  "topologies": [
+    {
+      "name": "1d-1d",
+      "cases": 25,
+      "planned-faster": 15,
+      "parity": 0,
+      "inconclusive": 10,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 1.232111
+    },
+    {
+      "name": "1d-2d",
+      "cases": 50,
+      "planned-faster": 46,
+      "parity": 0,
+      "inconclusive": 4,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 1.308886
+    },
+    {
+      "name": "2d-1d",
+      "cases": 50,
+      "planned-faster": 47,
+      "parity": 0,
+      "inconclusive": 3,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 1.302051
+    },
+    {
+      "name": "2d-2d",
+      "cases": 100,
+      "planned-faster": 100,
+      "parity": 0,
+      "inconclusive": 0,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 6.343012
+    },
+    {
+      "name": "1d-nd",
+      "cases": 200,
+      "planned-faster": 199,
+      "parity": 0,
+      "inconclusive": 1,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 1.207385
+    },
+    {
+      "name": "nd-1d",
+      "cases": 200,
+      "planned-faster": 200,
+      "parity": 0,
+      "inconclusive": 0,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 1.150588
+    },
+    {
+      "name": "2d-nd",
+      "cases": 400,
+      "planned-faster": 389,
+      "parity": 0,
+      "inconclusive": 11,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 12.675966
+    },
+    {
+      "name": "nd-2d",
+      "cases": 400,
+      "planned-faster": 389,
+      "parity": 0,
+      "inconclusive": 11,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 12.562410
+    },
+    {
+      "name": "nd-nd-same-batch",
+      "cases": 1600,
+      "planned-faster": 1529,
+      "parity": 0,
+      "inconclusive": 71,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 10.312481
+    },
+    {
+      "name": "nd-nd-lhs-broadcast",
+      "cases": 1600,
+      "planned-faster": 1493,
+      "parity": 0,
+      "inconclusive": 107,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 12.496490
+    },
+    {
+      "name": "nd-nd-rhs-broadcast",
+      "cases": 1600,
+      "planned-faster": 1531,
+      "parity": 0,
+      "inconclusive": 69,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 12.429571
+    },
+    {
+      "name": "nd-nd-cross-broadcast",
+      "cases": 25600,
+      "planned-faster": 24001,
+      "parity": 378,
+      "inconclusive": 1221,
+      "numpy-faster": 0,
+      "numpy_over_planned_median": 21.556536
+    }
+  ],
+  "vector_decision_gate": [
+    {
+      "layout_class": "positive-vector-direct-gemv-matrix",
+      "cases": 48,
+      "generic_over_current": {
+        "median": 2.092880,
+        "q10": 1.469951,
+        "q90": 2.351501
+      },
+      "blas_over_current": {
+        "median": 0.995677,
+        "q10": 0.992417,
+        "q90": 0.998513
+      },
+      "generic_status": {
+        "planned-faster": 48
+      },
+      "blas_status": {
+        "parity": 45,
+        "inconclusive": 3
+      }
+    },
+    {
+      "layout_class": "negative-or-zero-vector-direct-gemv-matrix",
+      "cases": 72,
+      "generic_over_current": {
+        "median": 0.997178,
+        "q10": 0.995183,
+        "q90": 0.998966
+      },
+      "blas_over_current": {
+        "median": 0.535400,
+        "q10": 0.489856,
+        "q90": 0.581520
+      },
+      "generic_status": {
+        "parity": 71,
+        "inconclusive": 1
+      },
+      "blas_status": {
+        "blas-faster": 72
+      }
+    },
+    {
+      "layout_class": "matrix-not-directly-describable-by-gemv",
+      "cases": 280,
+      "generic_over_current": {
+        "median": 0.997179,
+        "q10": 0.995208,
+        "q90": 0.999463
+      },
+      "blas_over_current": {
+        "median": 0.998770,
+        "q10": 0.996758,
+        "q90": 1.001262
+      },
+      "generic_status": {
+        "parity": 253,
+        "inconclusive": 27
+      },
+      "blas_status": {
+        "parity": 258,
+        "inconclusive": 22
+      }
+    }
+  ]
+}

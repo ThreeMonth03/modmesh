@@ -699,6 +699,23 @@ negative and step-two view routes rather than zero-stride broadcasting.
 Planned execution packs the physical lhs once and reaches its prepacked
 control as the batch grows.
 
+The clean `6120aec8` follow-up validates every declared lhs by rhs layout
+pair.  All 31,825 Cartesian cases match NumPy.  The
+[Apple Cartesian summary](macos-matmul-cartesian-summary.md) records 29,939
+planned-faster, 378 parity, 1,508 inconclusive, and no NumPy-faster rows.  Its
+[machine-readable summary](macos-matmul-cartesian-summary.json) retains the
+per-topology counts.
+
+The same run measures all 400 stable vector layout pairs with 100 calls per
+sample.  The
+[complete vector notebook](macos-matmul-vector-cartesian-results.md) and
+[raw JSON](macos-matmul-vector-cartesian-results.json) show that all 48
+positive-stride direct-GEMV rows retain the intended fast path.  Forced
+pack-once BLAS is faster in all 72 negative or zero vector rows, with a
+median time of 0.535 of current generic dispatch.  The 280
+non-directly-describable matrix rows remain at parity, which bounds the
+recommended policy to the reusable vector.
+
 ## Outer-contiguous reduction experiment
 
 The next Ubuntu experiment implemented the loop-interchange recommendation
@@ -745,10 +762,13 @@ reduction target.
 5. Retain the matrix-family pack-once route for unsupported matrix strides.
    Both OpenBLAS and Accelerate equal-work controls remove the repeated
    strided-matrix cost.  Treat its 4096-work threshold as backend-tunable.
-6. Freeze the matrix prototype at the current boundary.  The same-backend
-   Apple sweep does not justify an Accelerate-specific batched call.  Split
-   the measured work into shared coordinate primitives, `MatmulPlan`, correct
-   batched execution, and automatic fast paths before adding another route.
+6. Freeze the matrix common layer at the current boundary.  Retain the
+   positive-stride direct-GEMV route and add only the measured negative or
+   zero vector pack-once policy for a directly describable matrix.  The Apple
+   sweep does not justify an Accelerate-specific batched call or a wider
+   small-matrix packing rule.  Split the measured work into shared coordinate
+   primitives, `MatmulPlan`, correct batched execution, and automatic fast
+   paths before adding another route.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -760,7 +780,7 @@ reduction target.
 
 The prototype currently passes:
 
-- 67 focused Python tests, including partial overlap, invalid axes and matrix
+- 71 focused Python tests, including partial overlap, invalid axes and matrix
   shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
@@ -769,6 +789,8 @@ The prototype currently passes:
   matrix and batch axes.
 - 47 focused matmul topology rows, eight large vector-broadcast rows, and 48
   batch-scaling routes with matching pack and GEMM dispatch counts.
+- 31,825 Cartesian lhs by rhs matmul layout pairs and a 400-row stable vector
+  control covering forced generic and forced BLAS dispatch.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
@@ -826,5 +848,8 @@ and reproduce the same correctness matrix and timing protocol.
 7. The focused same-backend batch sweep reproduced the large strided-input
    ratio and located it in NumPy's view route.  Planned broadcasting retains
    `B` contractions and amortizes one physical-operand pack.
+8. The exhaustive Apple Cartesian rerun matched NumPy in all 31,825 cases.
+   Its stable vector control retained the positive-stride fast path and
+   justified a bounded negative or zero vector pack-once follow-up.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

@@ -266,6 +266,40 @@ forced BLAS should remain at parity.  The 72-row negative or zero vector
 class decides whether the automatic pack-once policy can be widened on
 Accelerate.
 
+The clean Apple Silicon run used revision `6120aec8`, the timing parameters
+above, and one thread.  Both linkage records identify Accelerate.  All 31,825
+Cartesian layout pairs match NumPy.  The
+[complete aggregate report](macos-matmul-cartesian-summary.md) retains the
+per-topology result, and its
+[machine-readable summary](macos-matmul-cartesian-summary.json) records the
+exact counts.  The 96 MiB raw timing JSON is reproducible from the command
+above rather than committed to the branch.
+
+| Comparison with NumPy | Planned faster | Parity | Inconclusive | NumPy faster |
+| --- | ---: | ---: | ---: | ---: |
+| Complete Cartesian matrix | 29,939 | 378 | 1,508 | 0 |
+
+The focused 400-row vector control is stored as a
+[complete notebook](macos-matmul-vector-cartesian-results.md) and
+[raw JSON](macos-matmul-vector-cartesian-results.json).
+
+| Layout class | Pairs | Generic/current | BLAS/current | Current route |
+| --- | ---: | ---: | ---: | --- |
+| Positive vector stride and direct GEMV matrix | 48 | 2.093x (1.470..2.352) | 0.996x (0.992..0.999) | BLAS |
+| Negative or zero vector and direct GEMV matrix | 72 | 0.997x (0.995..0.999) | 0.535x (0.490..0.582) | Generic |
+| Matrix not directly describable by GEMV | 280 | 0.997x (0.995..0.999) | 0.999x (0.997..1.001) | Generic |
+
+All 48 positive-stride rows make forced generic execution conclusively
+slower.  Forced BLAS reaches parity in 45 rows and is inconclusive in three,
+so the current small direct-GEMV route passes the gate.
+
+All 72 negative or zero vector rows make pack-once forced BLAS conclusively
+faster.  Its median time is 0.535 of current, or about 1.87 times faster.
+This supports widening the automatic vector pack-once path on Accelerate at
+the measured work and batch size.  The 280 non-describable matrix rows keep
+forced BLAS and generic execution at parity with current dispatch, so they
+do not support a wider matrix policy.
+
 ## Reproduce the large 1D by ND and ND by 1D suite
 
 ```console
@@ -468,9 +502,12 @@ broadcasting avoids matrix arithmetic.
 - Same-backend Apple Silicon data must accompany any upstream speed claim and
   identify the NumPy strided-view route as the source of the large ratio.
 
-The Apple decision gate is complete.  The prototype should now freeze rather
-than widen the common layer.  The measured implementation can be split into
-upstream-sized work for shared coordinate primitives, `MatmulPlan`, correct
-batched execution, and automatic fast paths.
+The Cartesian Apple decision gate is complete.  Keep the positive-stride
+direct-GEMV route and add only the bounded negative or zero vector pack-once
+policy supported by the 72-row control.  Leave non-describable matrix layouts
+generic at this small-work threshold.  The common layer should now freeze.
+The measured implementation can be split into upstream-sized work for shared
+coordinate primitives, `MatmulPlan`, correct batched execution, and the
+measured automatic fast paths.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
