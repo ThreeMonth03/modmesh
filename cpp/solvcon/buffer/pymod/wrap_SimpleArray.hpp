@@ -719,6 +719,14 @@ class SOLVCON_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
                 &execution_type::planned_matmul_force_blas,
                 pybind11::arg("other"))
             .def(
+                "_planned_matmul_force_direct_blas",
+                &execution_type::planned_matmul_force_direct_blas,
+                pybind11::arg("other"))
+            .def(
+                "_planned_matmul_force_pack_once_blas",
+                &execution_type::planned_matmul_force_pack_once_blas,
+                pybind11::arg("other"))
+            .def(
                 "_planned_matmul_force_blas_into",
                 &execution_type::planned_matmul_force_blas_into,
                 pybind11::arg("other"),

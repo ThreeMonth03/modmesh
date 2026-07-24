@@ -380,6 +380,49 @@ class PlannedMatmulTC(unittest.TestCase):
                 np.testing.assert_allclose(
                     output.ndarray, np.matmul(lhs, rhs))
 
+    def test_explicit_blas_control_contracts(self):
+        rng = np.random.default_rng(20260724)
+        vector = rng.random((32,), dtype='float64')
+        matrices = rng.random((4, 32, 32), dtype='float64')
+        dense_cases = (
+            (vector, matrices),
+            (matrices, vector),
+            (matrices, matrices),
+        )
+        for lhs, rhs in dense_cases:
+            with self.subTest(
+                    route='direct',
+                    lhs_shape=lhs.shape,
+                    rhs_shape=rhs.shape):
+                lhs_array = make_array(lhs)
+                rhs_array = make_array(rhs)
+                result = lhs_array._planned_matmul_force_direct_blas(
+                    rhs_array)
+                np.testing.assert_allclose(
+                    result.ndarray, np.matmul(lhs, rhs))
+
+        packed_cases = (
+            (vector[::-1], matrices),
+            (vector, make_stepped(matrices)),
+            (make_stepped(matrices), vector),
+            (make_stepped(matrices), matrices),
+        )
+        for lhs, rhs in packed_cases:
+            with self.subTest(
+                    route='pack-once',
+                    lhs_strides=lhs.strides,
+                    rhs_strides=rhs.strides):
+                lhs_array = make_array(lhs)
+                rhs_array = make_array(rhs)
+                with self.assertRaises(ValueError):
+                    lhs_array._planned_matmul_force_direct_blas(
+                        rhs_array)
+                result = (
+                    lhs_array._planned_matmul_force_pack_once_blas(
+                        rhs_array))
+                np.testing.assert_allclose(
+                    result.ndarray, np.matmul(lhs, rhs))
+
     def test_batched_packed_blas(self):
         rng = np.random.default_rng(20260723)
         lhs = rng.random((2, 1, 17, 17), dtype='float64')

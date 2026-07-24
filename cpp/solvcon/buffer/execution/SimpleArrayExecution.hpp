@@ -68,6 +68,10 @@ public:
     static A planned_matmul_force_generic(
         A const & self, A const & other);
     static A planned_matmul_force_blas(A const & self, A const & other);
+    static A planned_matmul_force_direct_blas(
+        A const & self, A const & other);
+    static A planned_matmul_force_pack_once_blas(
+        A const & self, A const & other);
     static void planned_matmul_force_blas_into(
         A const & self, A const & other, A & output);
     static void planned_matmul_affine_blas_into(
@@ -379,6 +383,22 @@ A SimpleArrayExecution<A, T>::planned_matmul_force_blas(
     A const & self, A const & other)
 {
     return matmul_executor_type::multiply_force_blas(self, other);
+}
+
+template <typename A, typename T>
+A SimpleArrayExecution<A, T>::planned_matmul_force_direct_blas(
+    A const & self, A const & other)
+{
+    return matmul_executor_type::multiply_force_direct_blas(
+        self, other);
+}
+
+template <typename A, typename T>
+A SimpleArrayExecution<A, T>::planned_matmul_force_pack_once_blas(
+    A const & self, A const & other)
+{
+    return matmul_executor_type::multiply_force_pack_once_blas(
+        self, other);
 }
 
 template <typename A, typename T>

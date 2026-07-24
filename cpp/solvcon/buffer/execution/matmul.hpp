@@ -30,6 +30,10 @@ public:
     static Array multiply_force_generic(
         Array const & lhs, Array const & rhs);
     static Array multiply_force_blas(Array const & lhs, Array const & rhs);
+    static Array multiply_force_direct_blas(
+        Array const & lhs, Array const & rhs);
+    static Array multiply_force_pack_once_blas(
+        Array const & lhs, Array const & rhs);
     static void multiply_force_blas_into(Array const & lhs,
                                          Array const & rhs,
                                          Array & output);
@@ -40,6 +44,8 @@ public:
 private:
     static constexpr size_t BLAS_MINIMUM_WORK = 4096;
     static constexpr size_t DIRECT_VECTOR_BLAS_MINIMUM_WORK = 512;
+    static constexpr size_t PACKED_VECTOR_BLAS_MINIMUM_WORK = 1024;
+    static constexpr size_t PACKED_VECTOR_BLAS_MINIMUM_BATCHES = 4;
 
     class BlasMatrixLayout
     {
@@ -92,6 +98,14 @@ private:
                                      Array const & rhs);
     static Array execute_vector_blas_dispatch(
         MatmulPlan const & plan, Array const & lhs, Array const & rhs);
+    static Array execute_direct_blas(MatmulPlan const & plan,
+                                     Array const & lhs,
+                                     Array const & rhs);
+    static Array execute_packed_vector_blas(
+        Array const & lhs,
+        Array const & rhs,
+        bool pack_lhs,
+        bool pack_rhs);
     static Array execute_packed_batch_blas(Array const & lhs,
                                            Array const & rhs,
                                            bool pack_lhs,
@@ -447,6 +461,85 @@ Array MatmulExecutor<Array, T>::execute_vector_blas_dispatch(
 }
 
 template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_direct_blas(
+    MatmulPlan const & plan,
+    Array const & lhs,
+    Array const & rhs)
+{
+    if (plan.lhs_vector() || plan.rhs_vector())
+    {
+        if ((plan.lhs_vector() && plan.lhs_inner_stride() <= 0) ||
+            (plan.rhs_vector() && plan.rhs_inner_stride() <= 0))
+        {
+            throw std::invalid_argument(
+                "direct BLAS requires positive vector strides");
+        }
+        if (plan.lhs_vector() != plan.rhs_vector())
+        {
+            std::optional<BlasMatrixLayout> const matrix_layout =
+                plan.lhs_vector() ? rhs_blas_layout(plan)
+                                  : lhs_blas_layout(plan);
+            if (!matrix_layout)
+            {
+                throw std::invalid_argument(
+                    "direct BLAS requires a matrix descriptor");
+            }
+        }
+        if (plan.batch().rank() != 0)
+        {
+            return execute_vector_batch_blas(plan, lhs, rhs);
+        }
+        return execute_vector_blas(plan, lhs, rhs);
+    }
+
+    std::optional<BlasMatrixLayout> const lhs_layout =
+        lhs_blas_layout(plan);
+    std::optional<BlasMatrixLayout> const rhs_layout =
+        rhs_blas_layout(plan);
+    if (!lhs_layout || !rhs_layout)
+    {
+        throw std::invalid_argument(
+            "direct BLAS requires matrix descriptors");
+    }
+    return execute_matrix_blas(
+        plan,
+        lhs,
+        rhs,
+        lhs_layout.value(),
+        rhs_layout.value());
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::execute_packed_vector_blas(
+    Array const & lhs,
+    Array const & rhs,
+    bool pack_lhs,
+    bool pack_rhs)
+{
+    std::optional<Array> packed_lhs;
+    std::optional<Array> packed_rhs;
+    Array const * ready_lhs = &lhs;
+    Array const * ready_rhs = &rhs;
+    if (pack_lhs)
+    {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_lhs");
+        packed_lhs.emplace(lhs.to_row_major());
+        ready_lhs = &packed_lhs.value();
+    }
+    if (pack_rhs)
+    {
+        SOLVCON_PROFILE_SCOPE("execution.matmul.pack_rhs");
+        packed_rhs.emplace(rhs.to_row_major());
+        ready_rhs = &packed_rhs.value();
+    }
+
+    MatmulPlan const ready_plan =
+        MatmulPlan::make(*ready_lhs, *ready_rhs);
+    return execute_direct_blas(
+        ready_plan, *ready_lhs, *ready_rhs);
+}
+
+template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::execute_packed_batch_blas(
     Array const & lhs,
     Array const & rhs,
@@ -485,7 +578,8 @@ Array MatmulExecutor<Array, T>::execute_packed_batch_blas(
             lhs_layout.value(),
             rhs_layout.value());
     }
-    return execute_generic(ready_plan, *ready_lhs, *ready_rhs);
+    throw std::invalid_argument(
+        "packed matrix is not BLAS-describable");
 }
 
 template <typename Array, typename T>
@@ -509,8 +603,7 @@ template <typename Array, typename T>
 bool MatmulExecutor<Array, T>::use_small_batched_vector_blas(
     MatmulPlan const & plan, size_t matrix_work)
 {
-    if (plan.batch().rank() == 0 ||
-        matrix_work < DIRECT_VECTOR_BLAS_MINIMUM_WORK)
+    if (plan.batch().rank() == 0)
     {
         return false;
     }
@@ -524,7 +617,12 @@ bool MatmulExecutor<Array, T>::use_small_batched_vector_blas(
     ssize_t const vector_stride =
         plan.lhs_vector() ? plan.lhs_inner_stride()
                           : plan.rhs_inner_stride();
-    return vector_stride > 0;
+    if (vector_stride > 0)
+    {
+        return matrix_work >= DIRECT_VECTOR_BLAS_MINIMUM_WORK;
+    }
+    return matrix_work >= PACKED_VECTOR_BLAS_MINIMUM_WORK &&
+           plan.batch().size() >= PACKED_VECTOR_BLAS_MINIMUM_BATCHES;
 }
 
 template <typename Array, typename T>
@@ -656,6 +754,46 @@ Array MatmulExecutor<Array, T>::multiply_force_blas(
         }
     }
     return execute_planned(plan, lhs, rhs);
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::multiply_force_direct_blas(
+    Array const & lhs, Array const & rhs)
+{
+    if constexpr (can_matmul_blas_v<value_type>)
+    {
+        MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+        return execute_direct_blas(plan, lhs, rhs);
+    }
+    throw std::invalid_argument(
+        "direct BLAS control requires a BLAS value type");
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::multiply_force_pack_once_blas(
+    Array const & lhs, Array const & rhs)
+{
+    if constexpr (can_matmul_blas_v<value_type>)
+    {
+        MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+        bool const pack_lhs =
+            plan.lhs_vector()
+                ? plan.lhs_inner_stride() <= 0
+                : !lhs_blas_layout(plan);
+        bool const pack_rhs =
+            plan.rhs_vector()
+                ? plan.rhs_inner_stride() <= 0
+                : !rhs_blas_layout(plan);
+        if (plan.lhs_vector() || plan.rhs_vector())
+        {
+            return execute_packed_vector_blas(
+                lhs, rhs, pack_lhs, pack_rhs);
+        }
+        return execute_packed_batch_blas(
+            lhs, rhs, pack_lhs, pack_rhs);
+    }
+    throw std::invalid_argument(
+        "pack-once BLAS control requires a BLAS value type");
 }
 
 template <typename Array, typename T>
