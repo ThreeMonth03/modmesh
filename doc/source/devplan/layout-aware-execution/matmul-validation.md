@@ -137,6 +137,135 @@ reaches parity, and none regresses.  The nine NumPy-faster rows are small
 direct or small-batch cases, so the Ubuntu all-faster classification was a
 backend comparison rather than a portable speed result.
 
+## Exhaustive layout-pair validation
+
+One-sided layout samples are not enough to validate matmul dispatch.  The
+lhs and rhs descriptors jointly determine whether NumPy or planned execution
+uses a direct kernel, BLAS descriptor, packing, or generic traversal.  In
+particular, a `2D @ ND` call may follow a different NumPy path when either
+operand stops being C-contiguous.
+
+The Cartesian profiler therefore declares operand layout catalogs and pairs
+every legal lhs entry with every legal rhs entry for each topology:
+
+- Vectors use strides `1`, `-1`, `2`, `-2`, and `0`.
+- Matrix cores use C, per-matrix F, step-two and negative choices on either
+  matrix axis, matching changes on both matrix axes, and zero strides on
+  either matrix axis.
+- Every leading batch axis independently uses C, negative, step-two, or zero
+  stride traversal.
+
+A rank-two matrix has 10 core layouts.  A rank-three matrix has 40 layouts,
+and a rank-four matrix has 160 layouts.  The final lhs by rhs inventory is:
+
+| Topology | Lhs role | Rhs role | Layout pairs |
+| --- | --- | --- | ---: |
+| `1d-1d` | vector | vector | 25 |
+| `1d-2d` | vector | matrix | 50 |
+| `2d-1d` | matrix | vector | 50 |
+| `2d-2d` | matrix | matrix | 100 |
+| `1d-nd` | vector | one-axis matrix batch | 200 |
+| `nd-1d` | one-axis matrix batch | vector | 200 |
+| `2d-nd` | matrix | one-axis matrix batch | 400 |
+| `nd-2d` | one-axis matrix batch | matrix | 400 |
+| `nd-nd-same-batch` | one-axis matrix batch | same batch | 1,600 |
+| `nd-nd-lhs-broadcast` | extent-one lhs batch | rhs batch | 1,600 |
+| `nd-nd-rhs-broadcast` | lhs batch | extent-one rhs batch | 1,600 |
+| `nd-nd-cross-broadcast` | rank-four lhs | rank-four rhs | 25,600 |
+| **Total** | | | **31,825** |
+
+Run the small complete differential check before timing:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 4 --batch 3 --check-only --cpu 0
+```
+
+Run the complete performance matrix and render the exact shape, element
+strides, flags, medians, raw ratio intervals, and status for every pair:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 32 --batch 4 --number 1 \
+    --repeat 7 --warmup 2 --cpu 0 \
+    --output /tmp/matmul-cartesian.json
+$ PYTHONPATH=.:profiling python3 \
+    profiling/render_execution_profile.py \
+    /tmp/matmul-cartesian.json \
+    /tmp/matmul-cartesian.md
+```
+
+The clean Ubuntu run used revision `2f95e8bf`.  All 31,825 results matched
+NumPy.  Planned execution was conclusively faster than NumPy in 31,814 rows
+and inconclusive in 11.  NumPy and solvcon use different backends on this
+machine, so this classification validates coverage and exposes dispatch
+changes.  It is not a portable speed claim.
+
+Microsecond dispatch thresholds need more calls per sample than the complete
+matrix can afford.  The focused command retains all 400 vector-batch layout
+pairs and executes each route 100 times in each of 15 paired samples:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 32 --batch 4 --number 100 \
+    --repeat 15 --warmup 5 --cpu 0 \
+    --filter 1d-nd/ --filter nd-1d/ \
+    --output /tmp/matmul-vector-cartesian.json
+```
+
+`Generic/current` above one means current dispatch is faster than forced
+generic execution.  `BLAS/current` near one confirms that current selected
+the intended BLAS route.
+
+| Layout class | Pairs | Generic/current | BLAS/current | Current route |
+| --- | ---: | ---: | ---: | --- |
+| Positive vector stride and direct GEMV matrix | 48 | 1.518x (1.270..1.733) | 0.980x (0.949..0.999) | BLAS |
+| Negative or zero vector and direct GEMV matrix | 72 | 0.970x (0.950..1.013) | 0.660x (0.623..0.715) | Generic |
+| Matrix not directly describable by GEMV | 280 | 0.957x (0.931..0.977) | 0.998x (0.973..1.022) | Generic |
+
+The small automatic fast path is deliberately limited to positive vector
+strides and matrices that GEMV can describe without packing.  The first row
+shows a 1.234 through 1.758 improvement across every individual layout pair.
+Negative and zero vectors can benefit from pack-once execution on Ubuntu, but
+their crossover depends on matrix size, batch size, and BLAS backend.  The
+forced controls remain available for the Apple Silicon run before that
+policy is widened.
+
+### Apple Silicon Cartesian decision gate
+
+Use the same revision and omit `--cpu` on macOS:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 4 --batch 3 --check-only
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 32 --batch 4 --number 1 \
+    --repeat 7 --warmup 2 \
+    --output /tmp/macos-matmul-cartesian.json
+$ PYTHONPATH=.:profiling python3 \
+    profiling/render_execution_profile.py \
+    /tmp/macos-matmul-cartesian.json \
+    /tmp/macos-matmul-cartesian.md
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_cartesian.py \
+    --side 32 --batch 4 --number 100 \
+    --repeat 15 --warmup 5 \
+    --filter 1d-nd/ --filter nd-1d/ \
+    --output /tmp/macos-matmul-vector-cartesian.json
+```
+
+Confirm that NumPy and `_solvcon` both link to Accelerate in each timing
+JSON.  The immediate gate is the 48-row positive-stride direct-GEMV class.
+Forced generic execution should remain slower than current dispatch, while
+forced BLAS should remain at parity.  The 72-row negative or zero vector
+class decides whether the automatic pack-once policy can be widened on
+Accelerate.
+
 ## Reproduce the large 1D by ND and ND by 1D suite
 
 ```console
