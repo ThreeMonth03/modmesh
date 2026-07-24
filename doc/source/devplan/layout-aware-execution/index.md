@@ -728,6 +728,20 @@ generic/current ratio of 1.465, and all six show a conclusive improvement.
 This adds the reusable-vector policy without
 widening vector-batch matrix packing.
 
+The clean `d1ebc1cc` Apple rerun completes that boundary check.  The
+[complete Accelerate report](macos-matmul-vector-pack-boundary-results.md)
+and [raw JSON](macos-matmul-vector-pack-boundary-results.json) retain all
+72 rows.  At side 32 and batch 4, all six direction and layout pairs improve,
+with a median generic/current ratio of 1.768.  Across all 36 rows selected
+by automatic pack-once dispatch, generic/current has a median of 2.456 and
+the explicit pack/current control remains at parity.
+
+Accelerate also makes pack-once faster in all 36 rows below or outside the
+portable threshold.  The implemented cross-platform boundary is therefore
+safe but conservative on Apple.  A lower Apple-specific threshold is a
+backend tuning option, not evidence for widening matrix packing or changing
+the common plan.
+
 ## Outer-contiguous reduction experiment
 
 The next Ubuntu experiment implemented the loop-interchange recommendation
@@ -777,9 +791,10 @@ reduction target.
 6. Freeze the matrix common layer at the current boundary.  Retain the
    positive-stride direct-GEMV route and the measured negative or zero vector
    pack-once policy for a directly describable matrix.  The explicit Ubuntu
-   control rejects wider vector-batch matrix packing.  Rerun the narrow vector
-   boundary on Accelerate, but do not add a platform-specific batched call or
-   another common abstraction.
+   control rejects wider vector-batch matrix packing, and the focused
+   Accelerate run confirms the portable vector boundary.  Do not add a
+   platform-specific batched call or another common abstraction.  Treat a
+   lower Apple vector threshold only as later backend tuning.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -802,6 +817,8 @@ The prototype currently passes:
   batch-scaling routes with matching pack and GEMM dispatch counts.
 - 31,825 Cartesian lhs by rhs matmul layout pairs and a 400-row stable vector
   control covering forced generic and forced BLAS dispatch.
+- 72 Apple vector pack-boundary rows covering both directions, three
+  unsupported vector strides, three matrix sides, and four batch sizes.
 - 5000 deterministic randomized iterations covering ranks one through four,
   broadcasting, axis permutations, negative strides, reductions, and batch
   broadcasting.
@@ -862,5 +879,8 @@ and reproduce the same correctness matrix and timing protocol.
 8. The exhaustive Apple Cartesian rerun matched NumPy in all 31,825 cases.
    Its stable vector control retained the positive-stride fast path and
    justified a bounded negative or zero vector pack-once follow-up.
+9. The explicit 72-row Accelerate boundary confirmed the portable pack-once
+   rule and showed that its threshold is conservative for Apple without
+   justifying wider matrix packing.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

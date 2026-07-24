@@ -344,7 +344,8 @@ output batch contains at least four contractions
 
 The rule does not enable matrix packing for vector-batch work.  It also leaves
 smaller reusable vectors generic even when an isolated Ubuntu row improves.
-The exact boundary now needs the same focused rerun on Accelerate.
+The exact boundary needs the same focused rerun on Accelerate before the
+portable policy freezes.
 
 ## Reproduce the pack-once crossover
 
@@ -387,12 +388,36 @@ $ PYTHONPATH=.:profiling python3 \
     --filter negative-vector \
     --filter negative-step2-vector \
     --filter zero-vector \
-    --cpu 0 \
     --output /tmp/matmul-vector-pack-boundary.json
 $ python3 profiling/render_matmul_pack_crossover.py \
     /tmp/matmul-vector-pack-boundary.json \
     /tmp/matmul-vector-pack-boundary.md
 ```
+
+The clean Apple Silicon rerun used revision `d1ebc1cc`, 15 samples, five
+warmups, and one thread.  NumPy and `_solvcon` both link to Accelerate.  All
+72 cases and every explicit route match NumPy.  The
+[complete boundary report](macos-matmul-vector-pack-boundary-results.md) and
+[raw JSON](macos-matmul-vector-pack-boundary-results.json) retain every
+sample and linkage record.
+
+| Current automatic route | Rows | Generic/current | Pack/current | Classification |
+| --- | ---: | ---: | ---: | --- |
+| Generic outside the portable boundary | 36 | 0.996x (0.995..0.998) | 0.587x (0.485..0.915) | Generic parity; pack faster in 36 |
+| Pack once at the portable boundary | 36 | 2.456x (1.816..2.879) | 0.990x (0.986..0.993) | Current faster in 36; pack parity in 36 |
+| Exact side 32, batch 4 boundary | 6 | 1.768x (1.766..1.823) | 0.989x (0.988..0.991) | Current faster in 6; pack parity in 6 |
+
+At side 32 and batch 4, the six individual generic/current medians range
+from 1.766 to 1.832.  The automatic route therefore reproduces the Ubuntu
+decision on Accelerate and selects the same execution as the explicit
+pack-once control.
+
+The threshold is conservative for this backend.  Every one of the 36
+threshold-off rows makes explicit pack-once execution conclusively faster
+than current generic dispatch, including side 24 and batch 2.  This does not
+invalidate the portable rule, which is bounded by the Ubuntu crossover.  It
+shows that a lower Accelerate-specific threshold could be measured later
+without changing the common plan or the current cross-platform policy.
 
 ## Reproduce the large 1D by ND and ND by 1D suite
 
@@ -596,12 +621,12 @@ broadcasting avoids matrix arithmetic.
 - Same-backend Apple Silicon data must accompany any upstream speed claim and
   identify the NumPy strided-view route as the source of the large ratio.
 
-The Cartesian Apple decision gate is complete.  Keep the positive-stride
-direct-GEMV route.  The prototype now adds the bounded negative or zero vector
-pack-once policy supported by the Apple gate and Ubuntu crossover.  Leave
-non-describable matrices generic for vector-batch work because the explicit
-in-call packing control rejects a broad matrix policy.  Rerun only the focused
-vector boundary on Accelerate before freezing dispatch.  The common layer does
-not need another abstraction.
+The focused Accelerate decision gate is complete.  Keep the positive-stride
+direct-GEMV route and the bounded negative or zero vector pack-once policy.
+Leave non-describable matrices generic for vector-batch work because the
+explicit in-call packing control rejects a broad matrix policy.  The current
+portable threshold is safe on both measured backends, although Accelerate
+could support a lower backend-specific threshold.  Freeze portable dispatch
+and the common layer at this boundary.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->
