@@ -296,9 +296,103 @@ so the current small direct-GEMV route passes the gate.
 All 72 negative or zero vector rows make pack-once forced BLAS conclusively
 faster.  Its median time is 0.535 of current, or about 1.87 times faster.
 This supports widening the automatic vector pack-once path on Accelerate at
-the measured work and batch size.  The 280 non-describable matrix rows keep
-forced BLAS and generic execution at parity with current dispatch, so they
-do not support a wider matrix policy.
+the measured work and batch size.
+
+The 280 non-describable matrix rows do not answer whether packing the matrix
+would help.  The historical forced-BLAS helper returned to generic execution
+when GEMV could not describe the matrix.  Its parity only shows that both
+controls followed the same route.  The explicit pack-once control below
+removes this ambiguity.
+
+## Explicit pack-once crossover
+
+The follow-up adds two benchmark-only contracts.  Direct BLAS rejects any
+operand without a valid descriptor.  Pack-once BLAS copies only unsupported
+supplied operands, rebuilds the plan, and must enter BLAS.  Neither control
+may silently return to generic execution.
+
+The [complete Ubuntu crossover](ubuntu-matmul-pack-crossover-results.md) and
+its [raw JSON](ubuntu-matmul-pack-crossover-results.json) contain 1,080
+rows.  They cover both vector-batch directions, 15 vector and matrix layout
+pairs, sides 8 through 256, and batches 1 through 64.  Seven paired samples
+follow two warmups.
+
+The matrix result rejects a broad pack policy for vector-batch operations.
+Among 504 rows requiring only a matrix pack, current generic execution is
+conclusively faster in 339, pack-once is faster in 19, and 146 are
+inconclusive.  When both operands require packing, current is faster in 47
+of 72 rows, pack-once is faster in three, and 22 are inconclusive.  A dense
+control can be much faster while copying the supplied matrix inside the call
+is still too expensive.
+
+The [stable vector boundary](ubuntu-matmul-vector-pack-boundary-results.md)
+and its
+[raw JSON](ubuntu-matmul-vector-pack-boundary-results.json) retain 72 rows
+with 15 samples and five warmups.  At side 32 and batch 4, the six
+negative, negative-step-two, and zero-vector direction pairs have a median
+generic/current ratio of 1.465.  The individual medians range from 1.413 to
+1.546, and all six are conclusively faster.
+
+The prototype therefore adds one conservative automatic rule:
+
+```text
+matrix has a direct GEMV descriptor
+vector stride is negative or zero
+core work is at least 32 * 32
+output batch contains at least four contractions
+```
+
+The rule does not enable matrix packing for vector-batch work.  It also leaves
+smaller reusable vectors generic even when an isolated Ubuntu row improves.
+The exact boundary now needs the same focused rerun on Accelerate.
+
+## Reproduce the pack-once crossover
+
+The build command names the devenv pybind11 CMake directory explicitly, so a
+fresh worktree does not depend on an existing CMake cache.
+
+```console
+$ source /path/to/devenv/scripts/init
+$ devenv use prime
+$ make BUILD_QT=OFF \
+    CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)"
+$ export OPENBLAS_NUM_THREADS=1
+$ export OMP_NUM_THREADS=1
+$ export MKL_NUM_THREADS=1
+$ export VECLIB_MAXIMUM_THREADS=1
+$ export BLIS_NUM_THREADS=1
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_pack_crossover.py \
+    --sides 8,16,32,64,128,256 \
+    --batches 1,2,4,8,16,64 \
+    --repeat 7 \
+    --warmup 2 \
+    --cpu 0 \
+    --output /tmp/matmul-pack-crossover.json
+$ python3 profiling/render_matmul_pack_crossover.py \
+    /tmp/matmul-pack-crossover.json \
+    /tmp/matmul-pack-crossover.md
+```
+
+The focused Accelerate decision gate uses the same script and changes only
+the case set and sample count:
+
+```console
+$ PYTHONPATH=.:profiling python3 \
+    profiling/profile_matmul_pack_crossover.py \
+    --sides 24,32,40 \
+    --batches 2,4,8,16 \
+    --repeat 15 \
+    --warmup 5 \
+    --filter negative-vector \
+    --filter negative-step2-vector \
+    --filter zero-vector \
+    --cpu 0 \
+    --output /tmp/matmul-vector-pack-boundary.json
+$ python3 profiling/render_matmul_pack_crossover.py \
+    /tmp/matmul-vector-pack-boundary.json \
+    /tmp/matmul-vector-pack-boundary.md
+```
 
 ## Reproduce the large 1D by ND and ND by 1D suite
 
@@ -503,11 +597,11 @@ broadcasting avoids matrix arithmetic.
   identify the NumPy strided-view route as the source of the large ratio.
 
 The Cartesian Apple decision gate is complete.  Keep the positive-stride
-direct-GEMV route and add only the bounded negative or zero vector pack-once
-policy supported by the 72-row control.  Leave non-describable matrix layouts
-generic at this small-work threshold.  The common layer should now freeze.
-The measured implementation can be split into upstream-sized work for shared
-coordinate primitives, `MatmulPlan`, correct batched execution, and the
-measured automatic fast paths.
+direct-GEMV route.  The prototype now adds the bounded negative or zero vector
+pack-once policy supported by the Apple gate and Ubuntu crossover.  Leave
+non-describable matrices generic for vector-batch work because the explicit
+in-call packing control rejects a broad matrix policy.  Rerun only the focused
+vector boundary on Accelerate before freezing dispatch.  The common layer does
+not need another abstraction.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

@@ -712,9 +712,21 @@ sample.  The
 [raw JSON](macos-matmul-vector-cartesian-results.json) show that all 48
 positive-stride direct-GEMV rows retain the intended fast path.  Forced
 pack-once BLAS is faster in all 72 negative or zero vector rows, with a
-median time of 0.535 of current generic dispatch.  The 280
-non-directly-describable matrix rows remain at parity, which bounds the
-recommended policy to the reusable vector.
+median time of 0.535 of current generic dispatch.  The historical forced-BLAS
+helper did not test matrix packing in the remaining 280 rows because it
+returned to generic execution when GEMV could not describe the matrix.
+
+The follow-up
+[Ubuntu pack crossover](ubuntu-matmul-pack-crossover-results.md) adds
+explicit direct and pack-once contracts that cannot silently fall back.
+Among 504 rows requiring a matrix pack, current generic execution is faster
+in 339, pack-once is faster in 19, and 146 are inconclusive.  The
+[stable vector boundary](ubuntu-matmul-vector-pack-boundary-results.md)
+supports a conservative automatic rule at side 32, batch 4.  Its six
+negative, negative-step-two, and zero-vector direction pairs have a median
+generic/current ratio of 1.465, and all six show a conclusive improvement.
+This adds the reusable-vector policy without
+widening vector-batch matrix packing.
 
 ## Outer-contiguous reduction experiment
 
@@ -763,12 +775,11 @@ reduction target.
    Both OpenBLAS and Accelerate equal-work controls remove the repeated
    strided-matrix cost.  Treat its 4096-work threshold as backend-tunable.
 6. Freeze the matrix common layer at the current boundary.  Retain the
-   positive-stride direct-GEMV route and add only the measured negative or
-   zero vector pack-once policy for a directly describable matrix.  The Apple
-   sweep does not justify an Accelerate-specific batched call or a wider
-   small-matrix packing rule.  Split the measured work into shared coordinate
-   primitives, `MatmulPlan`, correct batched execution, and automatic fast
-   paths before adding another route.
+   positive-stride direct-GEMV route and the measured negative or zero vector
+   pack-once policy for a directly describable matrix.  The explicit Ubuntu
+   control rejects wider vector-batch matrix packing.  Rerun the narrow vector
+   boundary on Accelerate, but do not add a platform-specific batched call or
+   another common abstraction.
 7. Add unary, ternary, mixed-dtype, and mixed-output executor adapters only
    when a concrete operation needs them.  The existing mapping list can
    support them without a virtual plan hierarchy.
@@ -780,7 +791,7 @@ reduction target.
 
 The prototype currently passes:
 
-- 71 focused Python tests, including partial overlap, invalid axes and matrix
+- 72 focused Python tests, including partial overlap, invalid axes and matrix
   shapes, zero contraction, and float and complex outer-contiguous routes.
 - 154 fixed profiler cases across C-contiguous, F-contiguous, negative-stride,
   step-two, mixed-layout, broadcast, vector, matrix, and batch roles.
