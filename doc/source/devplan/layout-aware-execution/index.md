@@ -755,20 +755,22 @@ revalidates that decision.  All 270 automatic and explicit-route results
 match NumPy; both libraries link to Accelerate.  The reuse-aware extension
 selects 72 new rows, and all 72 are pack-faster.  Their median pack/generic
 ratio is 0.521, and the worst individual q90 is 0.862.  The implemented
-combined predicate selects 180 rows, all pack-faster, while all 11
-conclusive generic wins remain outside it.  Explicit pack execution remains
-at parity with automatic dispatch in every selected row.
+combined small-vector predicate selects 180 rows.  The existing 4096-work
+general BLAS gate selects another 18, so the complete automatic pack range
+contains 198 rows.  All 198 are pack-faster, while all 11 conclusive generic
+wins remain outside it.  Explicit pack execution is at parity with automatic
+dispatch in 196 rows and inconclusive in two.
 
 The strict OpenBLAS and Accelerate gate therefore passed.  Revision
 `b38d3f40` implements the extension only as a private logical-OR addition
 to the baseline.  It does not change `MatmulPlan`, matrix packing policy,
 execution routes, or the common layer.
 
-The clean `048c8d61` post-implementation Ubuntu rerun measures the automatic
-combined route.  The 72 added rows contain 50 conclusive pack wins, 22
-inconclusive results, and no generic win.  Across all 180 selected rows,
-147 are pack-faster and 33 are inconclusive.  All five conclusive generic
-wins in the 270-row notebook stay outside automatic packing.
+The clean `048c8d61` post-implementation Ubuntu rerun measures the complete
+automatic route.  The 72 added rows contain 50 conclusive pack wins, 22
+inconclusive results, and no generic win.  Across all 198 automatic pack
+rows, 162 are pack-faster and 36 are inconclusive.  All five conclusive
+generic wins in the 270-row notebook stay outside automatic packing.
 
 ## Outer-contiguous reduction experiment
 
@@ -920,7 +922,8 @@ and reproduce the same correctness matrix and timing protocol.
     predicate.  The follow-up implemented only that private predicate and
     revalidated all 270 rectangular and 31,825 Cartesian layout cases.
 11. The post-implementation Accelerate rerun matched NumPy in all 270
-    automatic and explicit-route cases and reproduced pack-once timing for
-    every selected row.
+    automatic and explicit-route cases.  It reproduced pack-once timing for
+    the 180-row combined small-vector predicate and the 18 additional rows
+    selected by the existing general BLAS gate.
 
 <!-- vim: set ft=markdown ff=unix fenc=utf8 et sw=2 ts=2 sts=2 tw=79: -->

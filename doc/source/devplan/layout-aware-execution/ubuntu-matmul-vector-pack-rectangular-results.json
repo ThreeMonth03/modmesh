@@ -199,7 +199,10 @@
       "minimum_core_work": 576,
       "minimum_reuse_intensity": 128
     },
-    "automatic_policy": "combined"
+    "automatic_policy": "general_blas_or_combined",
+    "general_blas_policy": {
+      "minimum_core_work": 4096
+    }
   },
   "results": [
     {

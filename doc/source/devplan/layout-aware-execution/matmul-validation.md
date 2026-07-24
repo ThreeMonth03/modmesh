@@ -437,7 +437,14 @@ cover both vector directions, three unsupported vector strides, three equal
 work levels, three factorizations per work level, and batches 1 through 16.
 The matrix core remains C layout so no matrix packing enters the comparison.
 
-The portable baseline before the reuse-aware change was:
+The existing general vector BLAS gate is:
+
+```text
+core work >= 4096
+```
+
+Below that gate, the portable small-vector baseline before the reuse-aware
+change was:
 
 ```text
 core work >= 1024
@@ -452,22 +459,26 @@ reuse intensity = batch * output extent
 reuse intensity >= 128
 ```
 
-The extension is combined with the baseline predicate using logical OR.  It
-never disables a baseline pack-once selection.  Because core work is
-`K * output extent`, reuse intensity compares the total contracted work with
-the `K` values copied once from the vector.
+The extension is combined with the baseline predicate using logical OR.  The
+complete automatic pack range is the general gate OR the baseline OR the
+extension.  Because core work is `K * output extent`, reuse intensity
+compares the total contracted work with the `K` values copied once from the
+vector.
 
 | Ubuntu selection | Rows | Pack faster | Inconclusive | Generic faster |
 | --- | ---: | ---: | ---: | ---: |
 | Portable baseline predicate | 108 | 97 | 11 | 0 |
 | Reuse-aware extension only | 72 | 50 | 22 | 0 |
-| Implemented combined predicate | 180 | 147 | 33 | 0 |
+| Combined small-vector predicate | 180 | 147 | 33 | 0 |
+| General BLAS gate only | 18 | 15 | 3 | 0 |
+| Implemented automatic pack range | 198 | 162 | 36 | 0 |
+| Automatic generic range | 72 | 4 | 63 | 5 |
 | All measured rows | 270 | 166 | 99 | 5 |
 
-All five conclusive generic wins remain outside the combined predicate.  The
-clean post-implementation run used revision `048c8d61`; its automatic route
-uses the combined predicate.  All 270 automatic and explicit-route results
-match NumPy.  The common plan and execution routes remain unchanged.
+All five conclusive generic wins remain outside automatic packing.  The
+clean post-implementation run used revision `048c8d61`.  All 270 automatic
+and explicit-route results match NumPy.  The common plan and execution
+routes remain unchanged.
 
 The clean post-implementation Apple Silicon rerun used revision `2cb65320`,
 15 samples, five warmups, and one thread.  NumPy and `_solvcon` both link to
@@ -480,7 +491,10 @@ sample, operand shape, predicate result, and linkage record.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Portable baseline predicate | 108 | 108 | 0 | 0 | 0 |
 | Reuse-aware extension only | 72 | 72 | 0 | 0 | 0 |
-| Implemented combined predicate | 180 | 180 | 0 | 0 | 0 |
+| Combined small-vector predicate | 180 | 180 | 0 | 0 | 0 |
+| General BLAS gate only | 18 | 18 | 0 | 0 | 0 |
+| Implemented automatic pack range | 198 | 198 | 0 | 0 | 0 |
+| Automatic generic range | 72 | 53 | 6 | 2 | 11 |
 | All measured rows | 270 | 251 | 6 | 2 | 11 |
 
 The 72 extension-only rows have a median pack/generic ratio of 0.521, with
@@ -489,12 +503,15 @@ still below the 0.95 pack-faster boundary.  Both vector directions pass in
 36 of 36 rows, and each negative, negative-step-two, and zero-stride class
 passes in 24 of 24 rows.
 
-All 11 conclusive generic wins remain outside the implemented predicate.
-Across all 180 selected rows, explicit pack/automatic has a median of 0.992;
-every row remains within the 0.95 to 1.05 parity band.  The strict
-post-implementation gate therefore passes on both backends.  Revision
-`b38d3f40` implements the extension as a private logical-OR predicate without
-modifying `MatmulPlan`, the execution routes, or the common layer.
+All 11 conclusive generic wins remain outside automatic packing.  The
+general gate selects another 18 rows beyond the combined small-vector
+predicate, and all 18 are pack-faster.  Across all 198 automatic pack rows,
+explicit pack/automatic has a median of 0.992; 196 rows are at parity and
+two are inconclusive.  Generic/automatic is slower in all 198 rows, with a
+median of 2.414.  The strict post-implementation gate therefore passes on
+both backends.  Revision `b38d3f40` implements the extension as a private
+logical-OR predicate without modifying `MatmulPlan`, the execution routes,
+or the common layer.
 
 Reproduce the Apple gate without CPU affinity:
 

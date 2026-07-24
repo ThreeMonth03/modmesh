@@ -12,6 +12,7 @@ STATUSES = (
     'inconclusive',
     'generic-faster',
 )
+GENERAL_BLAS_MINIMUM_CORE_WORK = 4096
 
 
 def parse_args():
@@ -67,6 +68,20 @@ def baseline_selected(row):
     )
 
 
+def general_blas_selected(row):
+    return row.get(
+        'general_blas_policy_selected',
+        row['core_work'] >= GENERAL_BLAS_MINIMUM_CORE_WORK,
+    )
+
+
+def automatic_selected(row):
+    return row.get(
+        'automatic_policy_selected',
+        general_blas_selected(row) or row['combined_policy_selected'],
+    )
+
+
 def render_environment(lines, metadata):
     pairs = ', '.join(
         f'{inner_size}x{output_extent}'
@@ -101,13 +116,25 @@ def render_policy(lines, metadata):
     baseline = metadata.get(
         'baseline_policy', metadata.get('current_policy'))
     reuse = metadata['reuse_extension']
+    general = metadata.get(
+        'general_blas_policy',
+        {'minimum_core_work': GENERAL_BLAS_MINIMUM_CORE_WORK},
+    )
     automatic = metadata.get('automatic_policy', 'baseline')
     combined = (
-        'implemented' if automatic == 'combined' else 'candidate')
+        'implemented'
+        if automatic == 'general_blas_or_combined'
+        else 'candidate')
     lines.extend((
         '## Predicates under test',
         '',
-        'The portable baseline before the reuse-aware extension is:',
+        'The existing general vector BLAS gate is:',
+        '',
+        '```text',
+        f"core_work >= {general['minimum_core_work']}",
+        '```',
+        '',
+        'Below that gate, the portable small-vector baseline is:',
         '',
         '```text',
         f"core_work >= {baseline['minimum_core_work']}",
@@ -130,18 +157,20 @@ def render_policy(lines, metadata):
         'The extension adds work to the baseline predicate.  It does not',
         'disable an existing pack-once selection.',
         '',
-        f'The combined predicate was the **{combined}** policy for this',
-        f'run.  The measured automatic route used the `{automatic}`',
-        'policy.',
+        'For the negative or zero-stride vectors in this notebook, the',
+        'automatic pack range is the general gate OR the baseline OR the',
+        f'reuse extension.  That complete range was **{combined}** for',
+        f'this run (`{automatic}`).',
         '',
     ))
 
 
 def render_summary(lines, rows, automatic):
-    combined = (
-        'Implemented combined predicate'
-        if automatic == 'combined'
-        else 'Candidate combined predicate')
+    combined = 'Combined small-vector predicate'
+    automatic_label = (
+        'Implemented automatic pack range'
+        if automatic == 'general_blas_or_combined'
+        else 'Candidate automatic pack range')
     policies = (
         (
             'Portable baseline predicate',
@@ -158,6 +187,20 @@ def render_summary(lines, rows, automatic):
             combined,
             [row for row in rows
              if row['combined_policy_selected']],
+        ),
+        (
+            'General BLAS gate only',
+            [row for row in rows
+             if general_blas_selected(row)
+             and not row['combined_policy_selected']],
+        ),
+        (
+            automatic_label,
+            [row for row in rows if automatic_selected(row)],
+        ),
+        (
+            'Automatic generic range',
+            [row for row in rows if not automatic_selected(row)],
         ),
         ('All measured rows', rows),
     )
@@ -190,14 +233,15 @@ def render_rows(lines, rows):
         '## Detailed rectangular crossover',
         '',
         '| Topology | Vector layout | K | O | Core work | B | '
-        'Reuse intensity | Baseline | Extension | Combined | '
+        'Reuse intensity | General BLAS | Baseline | Extension | '
+        'Combined | Automatic | '
         'Supplied operands | '
         'Number | Automatic us | Generic us | Pack us | Prepacked us | '
         'NumPy us | Pack/generic | Generic/automatic | Pack/automatic | '
         'NumPy/automatic | Result |',
         '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | '
-        '--- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | '
-        '---: | ---: | ---: | ---: | --- |',
+        '--- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | '
+        '---: | ---: | ---: | ---: | ---: | --- |',
     ))
     for row in rows:
         medians = row['medians_seconds']
@@ -208,12 +252,16 @@ def render_rows(lines, rows):
             'pack' if row['reuse_policy_selected'] else 'generic')
         combined = (
             'pack' if row['combined_policy_selected'] else 'generic')
+        general = (
+            'pack' if general_blas_selected(row) else 'generic')
+        automatic = (
+            'pack' if automatic_selected(row) else 'generic')
         lines.append(
             f"| `{row['topology']}` | `{row['layout']}` | "
             f"{row['inner_size']} | {row['output_extent']} | "
             f"{row['core_work']} | {row['batch']} | "
-            f"{row['reuse_intensity']} | {baseline} | {reuse} | "
-            f"{combined} | "
+            f"{row['reuse_intensity']} | {general} | {baseline} | "
+            f"{reuse} | {combined} | {automatic} | "
             f"{format_strides(row)} | {row['number']} | "
             f"{format_seconds(medians['current'])} | "
             f"{format_seconds(medians['generic'])} | "

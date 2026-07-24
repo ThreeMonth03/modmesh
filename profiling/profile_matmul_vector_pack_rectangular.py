@@ -39,6 +39,7 @@ BASELINE_MINIMUM_CORE_WORK = 1024
 BASELINE_MINIMUM_BATCHES = 4
 REUSE_MINIMUM_CORE_WORK = 576
 REUSE_MINIMUM_INTENSITY = 128
+GENERAL_BLAS_MINIMUM_CORE_WORK = 4096
 
 
 def comma_separated_integers(value):
@@ -125,6 +126,9 @@ def benchmark_case(topology, layout, vector_layout, inner_size,
     baseline_selected = baseline_policy(core_work, batch)
     reuse_selected = reuse_policy(
         core_work, output_extent, batch)
+    general_blas_selected = (
+        core_work >= GENERAL_BLAS_MINIMUM_CORE_WORK)
+    combined_selected = baseline_selected or reuse_selected
     return {
         'topology': topology,
         'layout': layout,
@@ -138,8 +142,10 @@ def benchmark_case(topology, layout, vector_layout, inner_size,
         'number': number,
         'baseline_policy_selected': baseline_selected,
         'reuse_policy_selected': reuse_selected,
-        'combined_policy_selected': (
-            baseline_selected or reuse_selected),
+        'combined_policy_selected': combined_selected,
+        'general_blas_policy_selected': general_blas_selected,
+        'automatic_policy_selected': (
+            general_blas_selected or combined_selected),
         'pack': pack_metadata(topology, lhs, rhs),
         'operands': describe_operands(lhs=lhs, rhs=rhs),
         'medians_seconds': medians,
@@ -241,7 +247,10 @@ def main():
         'minimum_core_work': REUSE_MINIMUM_CORE_WORK,
         'minimum_reuse_intensity': REUSE_MINIMUM_INTENSITY,
     }
-    run_metadata['automatic_policy'] = 'combined'
+    run_metadata['general_blas_policy'] = {
+        'minimum_core_work': GENERAL_BLAS_MINIMUM_CORE_WORK,
+    }
+    run_metadata['automatic_policy'] = 'general_blas_or_combined'
     payload = {'metadata': run_metadata, 'results': rows}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
