@@ -115,16 +115,25 @@ def render_reproduction(lines, metadata):
     cpu = metadata.get('requested_cpu')
     cpu_option = '' if cpu is None else f' --cpu {cpu}'
     revision = metadata['git_revision'][:8]
+    benchmark_script = metadata.get(
+        'benchmark_script', 'profile_execution_prototype.py')
     command = [
-        '$ python3 profiling/profile_execution_prototype.py \\',
-        '    --benchmark-only \\',
+        f'$ python3 profiling/{benchmark_script} \\',
     ]
-    if metadata.get('hpc_matmul', False):
-        command.append('    --hpc-matmul \\')
-    if metadata.get('hpc_matmul_slow', False):
-        command.append('    --hpc-matmul-slow \\')
-    if metadata.get('matmul_only', False):
-        command.append('    --matmul-only \\')
+    if benchmark_script == 'profile_execution_prototype.py':
+        command.append('    --benchmark-only \\')
+        if metadata.get('hpc_matmul', False):
+            command.append('    --hpc-matmul \\')
+        if metadata.get('hpc_matmul_slow', False):
+            command.append('    --hpc-matmul-slow \\')
+        if metadata.get('matmul_only', False):
+            command.append('    --matmul-only \\')
+    elif benchmark_script == 'profile_matmul_cartesian.py':
+        command.extend((
+            f"    --side {metadata['cartesian_side']} \\",
+            f"    --batch {metadata['cartesian_batch']} \\",
+            f"    --number {metadata['cartesian_number']} \\",
+        ))
     for case_filter in metadata.get('case_filters', []):
         command.append(f'    --filter {shlex.quote(case_filter)} \\')
     command.extend((
@@ -171,6 +180,35 @@ def render_reading_guide(lines):
     ))
 
 
+def render_cartesian_catalog(lines, metadata):
+    catalog = metadata.get('cartesian_catalog')
+    if catalog is None:
+        return
+    lines.extend((
+        '## Cartesian coverage',
+        '',
+        'Every legal lhs layout in the declared catalog is paired with',
+        'every legal rhs layout for each topology. Matrix layouts combine',
+        'one matrix-core layout with every C, negative, step-two, or zero',
+        'stride choice on every batch axis.',
+        '',
+        '- Vector layouts: ' +
+        ', '.join(f"`{name}`" for name in catalog['vector_layouts']) + '.',
+        '- Matrix-core layouts: ' +
+        ', '.join(
+            f"`{name}`" for name in catalog['matrix_core_layouts']) + '.',
+        '- Per-batch-axis layouts: ' +
+        ', '.join(
+            f"`{name}`" for name in catalog['batch_axis_layouts']) + '.',
+        '',
+        '| Topology | Cartesian pairs |',
+        '| --- | ---: |',
+    ))
+    for topology, count in catalog['topology_counts'].items():
+        lines.append(f'| `{topology}` | {count} |')
+    lines.append('')
+
+
 def render_inventory(lines, rows, families):
     lines.extend((
         '## Coverage inventory',
@@ -203,10 +241,18 @@ def format_workload(workload):
         f"{workload['rows']}x{workload['inner_size']}x"
         f"{workload['columns']}")
     macs = workload['multiply_accumulates'] / 1e9
+    output_shape = workload.get('output_shape')
+    output_text = ''
+    if output_shape is not None:
+        output_text = (
+            'output shape=(' +
+            ','.join(str(value) for value in output_shape) +
+            ')<br>')
     return (
         f"B={workload['batch_matrices']}, "
         f"R={workload['batch_rank']}, "
         f"MxKxN={matrix}<br>"
+        f"{output_text}"
         f"MAC={macs:.3f}G, "
         f"logical input="
         f"{format_mib(workload['logical_input_bytes'])} MiB, "
@@ -350,6 +396,7 @@ def render_notebook(payload):
     render_environment(lines, metadata)
     render_reproduction(lines, metadata)
     render_reading_guide(lines)
+    render_cartesian_catalog(lines, metadata)
     render_inventory(lines, rows, families)
     lines.extend(('## Complete results', ''))
     for family in families:

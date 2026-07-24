@@ -65,6 +65,13 @@ public:
     static value_type planned_median(A const & self);
 
     static A planned_matmul(A const & self, A const & other);
+    static A planned_matmul_force_generic(
+        A const & self, A const & other);
+    static A planned_matmul_force_blas(A const & self, A const & other);
+    static void planned_matmul_force_blas_into(
+        A const & self, A const & other, A & output);
+    static void planned_matmul_affine_blas_into(
+        A const & self, A const & other, A & output);
 
 private:
     using add_executor_type = execution::ElementwiseExecutor<
@@ -358,6 +365,36 @@ A SimpleArrayExecution<A, T>::planned_matmul(
     A const & self, A const & other)
 {
     return matmul_executor_type::multiply(self, other);
+}
+
+template <typename A, typename T>
+A SimpleArrayExecution<A, T>::planned_matmul_force_generic(
+    A const & self, A const & other)
+{
+    return matmul_executor_type::multiply_force_generic(self, other);
+}
+
+template <typename A, typename T>
+A SimpleArrayExecution<A, T>::planned_matmul_force_blas(
+    A const & self, A const & other)
+{
+    return matmul_executor_type::multiply_force_blas(self, other);
+}
+
+template <typename A, typename T>
+void SimpleArrayExecution<A, T>::planned_matmul_force_blas_into(
+    A const & self, A const & other, A & output)
+{
+    matmul_executor_type::multiply_force_blas_into(
+        self, other, output);
+}
+
+template <typename A, typename T>
+void SimpleArrayExecution<A, T>::planned_matmul_affine_blas_into(
+    A const & self, A const & other, A & output)
+{
+    matmul_executor_type::multiply_affine_blas_into(
+        self, other, output);
 }
 
 } /* end namespace detail */

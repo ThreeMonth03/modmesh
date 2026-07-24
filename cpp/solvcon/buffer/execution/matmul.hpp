@@ -27,9 +27,19 @@ public:
     using helper_type = SimpleArrayMatmulHelper<Array, value_type>;
 
     static Array multiply(Array const & lhs, Array const & rhs);
+    static Array multiply_force_generic(
+        Array const & lhs, Array const & rhs);
+    static Array multiply_force_blas(Array const & lhs, Array const & rhs);
+    static void multiply_force_blas_into(Array const & lhs,
+                                         Array const & rhs,
+                                         Array & output);
+    static void multiply_affine_blas_into(Array const & lhs,
+                                          Array const & rhs,
+                                          Array & output);
 
 private:
     static constexpr size_t BLAS_MINIMUM_WORK = 4096;
+    static constexpr size_t DIRECT_VECTOR_BLAS_MINIMUM_WORK = 512;
 
     class BlasMatrixLayout
     {
@@ -69,6 +79,10 @@ private:
     static Array execute_vector_batch_blas(MatmulPlan const & plan,
                                            Array const & lhs,
                                            Array const & rhs);
+    static void execute_vector_batch_blas_into(MatmulPlan const & plan,
+                                               Array const & lhs,
+                                               Array const & rhs,
+                                               Array & output);
     static void execute_gemv(MatmulPlan const & plan,
                              BlasMatrixLayout const & layout,
                              value_type const * lhs_data,
@@ -84,6 +98,8 @@ private:
                                            bool pack_rhs);
     static bool large_enough_for_blas(Array const & lhs,
                                       Array const & rhs);
+    static bool use_small_batched_vector_blas(
+        MatmulPlan const & plan, size_t matrix_work);
     static Array execute_unbatched(Array const & lhs,
                                    Array const & rhs);
     static Array execute_unbatched_blas(Array const & lhs,
@@ -270,6 +286,25 @@ Array MatmulExecutor<Array, T>::execute_vector_batch_blas(
         return execute_generic(plan, lhs, rhs);
     }
     Array output(plan.output_shape());
+    execute_vector_batch_blas_into(plan, lhs, rhs, output);
+    return output;
+}
+
+template <typename Array, typename T>
+void MatmulExecutor<Array, T>::execute_vector_batch_blas_into(
+    MatmulPlan const & plan,
+    Array const & lhs,
+    Array const & rhs,
+    Array & output)
+{
+    std::optional<BlasMatrixLayout> const layout =
+        plan.lhs_vector() ? rhs_blas_layout(plan)
+                          : lhs_blas_layout(plan);
+    if (!layout)
+    {
+        throw std::invalid_argument(
+            "vector batch is not BLAS-describable");
+    }
     value_type * output_data = output.logical_data();
     value_type const * lhs_data = lhs.logical_data();
     value_type const * rhs_data = rhs.logical_data();
@@ -284,7 +319,6 @@ Array MatmulExecutor<Array, T>::execute_vector_batch_blas(
                      rhs_data + cursor.offset(2),
                      output_data + cursor.offset(0));
     }
-    return output;
 }
 
 template <typename Array, typename T>
@@ -472,6 +506,28 @@ bool MatmulExecutor<Array, T>::large_enough_for_blas(
 }
 
 template <typename Array, typename T>
+bool MatmulExecutor<Array, T>::use_small_batched_vector_blas(
+    MatmulPlan const & plan, size_t matrix_work)
+{
+    if (plan.batch().rank() == 0 ||
+        matrix_work < DIRECT_VECTOR_BLAS_MINIMUM_WORK)
+    {
+        return false;
+    }
+    std::optional<BlasMatrixLayout> const matrix_layout =
+        plan.lhs_vector() ? rhs_blas_layout(plan)
+                          : lhs_blas_layout(plan);
+    if (!matrix_layout)
+    {
+        return false;
+    }
+    ssize_t const vector_stride =
+        plan.lhs_vector() ? plan.lhs_inner_stride()
+                          : plan.rhs_inner_stride();
+    return vector_stride > 0;
+}
+
+template <typename Array, typename T>
 Array MatmulExecutor<Array, T>::execute_unbatched_blas(
     Array const & lhs, Array const & rhs)
 {
@@ -535,7 +591,9 @@ Array MatmulExecutor<Array, T>::execute_planned(
             static_cast<size_t>(plan.inner_size());
         bool const matrix_operands =
             !plan.lhs_vector() && !plan.rhs_vector();
-        if (!matrix_operands && matrix_work >= BLAS_MINIMUM_WORK)
+        if (!matrix_operands &&
+            (matrix_work >= BLAS_MINIMUM_WORK ||
+             use_small_batched_vector_blas(plan, matrix_work)))
         {
             return execute_vector_blas_dispatch(plan, lhs, rhs);
         }
@@ -575,6 +633,121 @@ Array MatmulExecutor<Array, T>::multiply(
     }
     MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
     return execute_planned(plan, lhs, rhs);
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::multiply_force_generic(
+    Array const & lhs, Array const & rhs)
+{
+    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    return execute_generic(plan, lhs, rhs);
+}
+
+template <typename Array, typename T>
+Array MatmulExecutor<Array, T>::multiply_force_blas(
+    Array const & lhs, Array const & rhs)
+{
+    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    if constexpr (can_matmul_blas_v<value_type>)
+    {
+        if (plan.lhs_vector() || plan.rhs_vector())
+        {
+            return execute_vector_blas_dispatch(plan, lhs, rhs);
+        }
+    }
+    return execute_planned(plan, lhs, rhs);
+}
+
+template <typename Array, typename T>
+void MatmulExecutor<Array, T>::multiply_force_blas_into(
+    Array const & lhs, Array const & rhs, Array & output)
+{
+    MatmulPlan const plan = MatmulPlan::make(lhs, rhs);
+    if (output.shape() != plan.output_shape())
+    {
+        throw std::invalid_argument(
+            "preallocated matmul output shape mismatch");
+    }
+    if constexpr (can_matmul_blas_v<value_type>)
+    {
+        if (plan.batch().rank() != 0 &&
+            (plan.lhs_vector() || plan.rhs_vector()))
+        {
+            execute_vector_batch_blas_into(plan, lhs, rhs, output);
+            return;
+        }
+    }
+    throw std::invalid_argument(
+        "preallocated BLAS control requires a vector batch");
+}
+
+template <typename Array, typename T>
+void MatmulExecutor<Array, T>::multiply_affine_blas_into(
+    Array const & lhs, Array const & rhs, Array & output)
+{
+    if constexpr (!can_matmul_blas_v<value_type>)
+    {
+        throw std::invalid_argument(
+            "affine BLAS control requires a BLAS value type");
+    }
+    if (!lhs.is_c_contiguous() || !rhs.is_c_contiguous() ||
+        !output.is_c_contiguous())
+    {
+        throw std::invalid_argument(
+            "affine BLAS control requires C-contiguous arrays");
+    }
+
+    bool const lhs_vector = lhs.ndim() == 1;
+    bool const rhs_vector = rhs.ndim() == 1;
+    if (lhs_vector == rhs_vector)
+    {
+        throw std::invalid_argument(
+            "affine BLAS control requires one vector operand");
+    }
+
+    Array const & matrix = lhs_vector ? rhs : lhs;
+    ssize_t const rows = matrix.shape(matrix.ndim() - 2);
+    ssize_t const columns = matrix.shape(matrix.ndim() - 1);
+    ssize_t const result_size = lhs_vector ? columns : rows;
+    if (lhs.shape(lhs.ndim() - 1) !=
+        rhs.shape(rhs_vector ? 0 : rhs.ndim() - 2))
+    {
+        throw std::invalid_argument(
+            "affine BLAS control shape mismatch");
+    }
+
+    size_t const matrix_size =
+        static_cast<size_t>(rows * columns);
+    size_t const batch_size = matrix.size() / matrix_size;
+    if (output.size() !=
+        batch_size * static_cast<size_t>(result_size))
+    {
+        throw std::invalid_argument(
+            "affine BLAS control output shape mismatch");
+    }
+
+    value_type const * lhs_data = lhs.logical_data();
+    value_type const * rhs_data = rhs.logical_data();
+    value_type * output_data = output.logical_data();
+    for (size_t batch = 0; batch < batch_size; ++batch)
+    {
+        value_type const * matrix_data =
+            (lhs_vector ? rhs_data : lhs_data) + batch * matrix_size;
+        value_type const * vector_data =
+            lhs_vector ? lhs_data : rhs_data;
+        if constexpr (can_matmul_blas_v<value_type>)
+        {
+            gemv_blas(
+                rows,
+                columns,
+                matrix_data,
+                vector_data,
+                output_data + batch * static_cast<size_t>(result_size),
+                lhs_vector,
+                columns,
+                1);
+        }
+    }
 }
 
 } /* end namespace execution */

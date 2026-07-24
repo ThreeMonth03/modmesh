@@ -116,6 +116,15 @@ def matmul_workload(lhs, rhs):
     rows = 1 if lhs_vector else lhs_array.shape[-2]
     inner_size = lhs_array.shape[-1]
     columns = 1 if rhs_vector else rhs_array.shape[-1]
+    output_shape = list(batch_shape)
+    if lhs_vector and rhs_vector:
+        output_shape.append(1)
+    elif lhs_vector:
+        output_shape.append(columns)
+    elif rhs_vector:
+        output_shape.append(rows)
+    else:
+        output_shape.extend((rows, columns))
     itemsize = lhs_array.dtype.itemsize
     logical_input_bytes = (lhs_array.size + rhs_array.size) * itemsize
     lhs_storage = root_storage(lhs_array)
@@ -132,6 +141,7 @@ def matmul_workload(lhs, rhs):
         'batch_shape': list(batch_shape),
         'batch_rank': len(batch_shape),
         'batch_matrices': batch_matrices,
+        'output_shape': output_shape,
         'rows': rows,
         'inner_size': inner_size,
         'columns': columns,
@@ -180,7 +190,7 @@ def make_stepped(values, axis=-1):
 
 def append_matmul_case(
         cases, layout, lhs, rhs, number, note='', dense_control=False,
-        family='matmul', legacy=True, blas=True):
+        force_blas_control=False, family='matmul', legacy=True, blas=True):
     lhs_sa = make_array(lhs)
     rhs_sa = make_array(rhs)
     legacy_call = None
@@ -197,7 +207,13 @@ def append_matmul_case(
         blas_call = run_blas
     control_call = None
     control_label = ''
-    if dense_control:
+    if force_blas_control:
+        def run_control(lhs=lhs_sa, rhs=rhs_sa):
+            return lhs._planned_matmul_force_blas(rhs)
+
+        control_call = run_control
+        control_label = 'same plan with forced BLAS'
+    elif dense_control:
         dense_lhs = make_array(
             np.ascontiguousarray(lhs, dtype='float64'))
         dense_rhs = make_array(
@@ -784,6 +800,8 @@ def matmul_cases(rng, quick):
         (batch, matrix, matrix), dtype='float64')
     same_batch_rhs = rng.random(
         (batch, matrix, matrix), dtype='float64')
+    matrix_lhs = rng.random((matrix, matrix), dtype='float64')
+    matrix_rhs = rng.random((matrix, matrix), dtype='float64')
     vector = rng.random((matrix,), dtype='float64')
     vector_batch_rhs = rng.random(
         (2, batch, matrix, matrix), dtype='float64')
@@ -794,6 +812,22 @@ def matmul_cases(rng, quick):
             same_batch_lhs,
             same_batch_rhs,
             'Dense same-shape matrix batches.'),
+        'matrix-batch-matrix-c': (
+            matrix_lhs,
+            same_batch_rhs,
+            'A rank-two lhs is implicitly reused by the batch.'),
+        'batch-matrix-matrix-c': (
+            same_batch_lhs,
+            matrix_rhs,
+            'A rank-two rhs is implicitly reused by the batch.'),
+        'batch-same-shape-f-matrices': (
+            same_batch_lhs.swapaxes(-1, -2),
+            same_batch_rhs.swapaxes(-1, -2),
+            'Each matrix has a BLAS-describable F layout.'),
+        'batch-same-shape-padded-matrices': (
+            make_stepped(same_batch_lhs, axis=-2),
+            make_stepped(same_batch_rhs, axis=-2),
+            'Each matrix has a padded positive leading dimension.'),
         'batch-broadcast-c': (
             batch_lhs,
             batch_rhs,
@@ -870,6 +904,10 @@ def matmul_cases(rng, quick):
             note,
             dense_control=not (
                 lhs.flags.c_contiguous and rhs.flags.c_contiguous),
+            force_blas_control=layout_name in (
+                'vector-batch-matrix-c',
+                'batch-matrix-vector-c',
+            ),
             family='matmul-batch',
             legacy=False,
             blas=False,
@@ -918,6 +956,66 @@ def append_hpc_matmul_case(
         operands=describe_operands(lhs=lhs, rhs=rhs),
         workload=matmul_workload(lhs, rhs),
     ))
+
+
+def append_hpc_matmul_rank_cases(cases, rng):
+    side = 256
+    batch = 64
+    lhs_matrix = rng.random((side, side), dtype='float64')
+    rhs_matrix = rng.random((side, side), dtype='float64')
+    lhs_batch = rng.random((batch, side, side), dtype='float64')
+    rhs_batch = rng.random((batch, side, side), dtype='float64')
+    rank_cases = {
+        'matrix-batch-matrix-256-b64': (
+            lhs_matrix,
+            rhs_batch,
+            'A rank-two lhs is implicitly reused by 64 GEMMs.'),
+        'batch-matrix-matrix-256-b64': (
+            lhs_batch,
+            rhs_matrix,
+            'A rank-two rhs is implicitly reused by 64 GEMMs.'),
+        'batch-paired-matrix-256-b64': (
+            lhs_batch,
+            rhs_batch,
+            'Two batches advance independently without zero strides.'),
+        'matrix-negative-batch-matrix-256-b64': (
+            lhs_matrix[..., ::-1],
+            rhs_batch,
+            'An implicit lhs broadcast packs one negative matrix.'),
+        'batch-matrix-negative-matrix-256-b64': (
+            lhs_batch,
+            rhs_matrix[..., ::-1],
+            'An implicit rhs broadcast packs one negative matrix.'),
+        'matrix-step2-batch-matrix-256-b64': (
+            make_stepped(lhs_matrix),
+            rhs_batch,
+            'An implicit lhs broadcast packs one step-two matrix.'),
+        'batch-matrix-step2-matrix-256-b64': (
+            lhs_batch,
+            make_stepped(rhs_matrix),
+            'An implicit rhs broadcast packs one step-two matrix.'),
+    }
+    for layout, case in rank_cases.items():
+        lhs, rhs, note = case
+        control_lhs = None
+        control_rhs = None
+        control_label = ''
+        if not lhs.flags.c_contiguous:
+            control_lhs = np.ascontiguousarray(lhs, dtype='float64')
+            control_label = 'contiguous lhs planned'
+        if not rhs.flags.c_contiguous:
+            control_rhs = np.ascontiguousarray(rhs, dtype='float64')
+            control_label = 'contiguous rhs planned'
+        append_hpc_matmul_case(
+            cases,
+            layout,
+            lhs,
+            rhs,
+            control_lhs=control_lhs,
+            control_rhs=control_rhs,
+            control_label=control_label,
+            note=note,
+        )
 
 
 def hpc_matmul_cases(rng, include_slow=False):
@@ -976,6 +1074,7 @@ def hpc_matmul_cases(rng, include_slow=False):
         rhs_cross_512,
         note='Two batch axes cross-broadcast into 64 large matrices.',
     )
+    append_hpc_matmul_rank_cases(cases, rng)
 
     same_lhs_32 = rng.random(
         (4096, 32, 32), dtype='float64')
@@ -1605,6 +1704,12 @@ def metadata(args):
         'matmul_only': args.matmul_only,
         'case_count': args.case_count,
         'case_filters': args.case_filters,
+        'benchmark_script': getattr(
+            args, 'benchmark_script',
+            'profile_execution_prototype.py'),
+        'cartesian_side': getattr(args, 'cartesian_side', None),
+        'cartesian_batch': getattr(args, 'cartesian_batch', None),
+        'cartesian_number': getattr(args, 'cartesian_number', None),
         'requested_cpu': args.cpu,
         'cpu_affinity': sorted(os.sched_getaffinity(0))
         if hasattr(os, 'sched_getaffinity') else None,

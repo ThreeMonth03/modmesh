@@ -710,6 +710,24 @@ class SOLVCON_PYTHON_WRAPPER_VISIBILITY WrapSimpleArray
                 "_planned_matmul",
                 &execution_type::planned_matmul,
                 pybind11::arg("other"))
+            .def(
+                "_planned_matmul_force_generic",
+                &execution_type::planned_matmul_force_generic,
+                pybind11::arg("other"))
+            .def(
+                "_planned_matmul_force_blas",
+                &execution_type::planned_matmul_force_blas,
+                pybind11::arg("other"))
+            .def(
+                "_planned_matmul_force_blas_into",
+                &execution_type::planned_matmul_force_blas_into,
+                pybind11::arg("other"),
+                pybind11::arg("output"))
+            .def(
+                "_planned_matmul_affine_blas_into",
+                &execution_type::planned_matmul_affine_blas_into,
+                pybind11::arg("other"),
+                pybind11::arg("output"))
             //
             ;
     }

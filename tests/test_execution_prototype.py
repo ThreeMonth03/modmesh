@@ -303,6 +303,33 @@ class PlannedMatmulTC(unittest.TestCase):
                     rhs_strides=case_rhs.strides):
                 self.assert_matmul_equal(case_lhs, case_rhs)
 
+    def test_matrix_batch_rank_alignment(self):
+        lhs_matrix = np.arange(
+            3 * 4, dtype='float64').reshape(3, 4)
+        rhs_matrix = np.arange(
+            4 * 2, dtype='float64').reshape(4, 2)
+        lhs_batch = np.arange(
+            2 * 1 * 3 * 4, dtype='float64').reshape(2, 1, 3, 4)
+        rhs_batch = np.arange(
+            1 * 5 * 4 * 2, dtype='float64').reshape(1, 5, 4, 2)
+        cases = (
+            (lhs_matrix, rhs_batch),
+            (lhs_batch, rhs_matrix),
+            (lhs_matrix[..., ::-1], rhs_batch[..., ::-1, :]),
+            (lhs_batch[..., ::-1], rhs_matrix[::-1, :]),
+            (make_stepped(lhs_matrix),
+             make_stepped(rhs_batch, axis=-2)),
+            (make_stepped(lhs_batch),
+             make_stepped(rhs_matrix, axis=0)),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_shape=case_lhs.shape,
+                    lhs_strides=case_lhs.strides,
+                    rhs_shape=case_rhs.shape,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
     def test_batched_vector_roles(self):
         vector = np.arange(4, dtype='float64')
         rhs = np.arange(
@@ -327,6 +354,32 @@ class PlannedMatmulTC(unittest.TestCase):
                     rhs_strides=case_rhs.strides):
                 self.assert_matmul_equal(case_lhs, case_rhs)
 
+    def test_force_blas_vector_batch_control(self):
+        vector = np.arange(32, dtype='float64') / 32
+        matrix = np.arange(
+            2 * 8 * 32 * 32, dtype='float64').reshape(2, 8, 32, 32)
+        matrix /= matrix.size
+        cases = ((vector, matrix), (matrix, vector))
+        for lhs, rhs in cases:
+            with self.subTest(lhs_shape=lhs.shape, rhs_shape=rhs.shape):
+                lhs_array = make_array(lhs)
+                rhs_array = make_array(rhs)
+                result = lhs_array._planned_matmul_force_blas(rhs_array)
+                np.testing.assert_allclose(
+                    result.ndarray, np.matmul(lhs, rhs))
+                result = lhs_array._planned_matmul_force_generic(rhs_array)
+                np.testing.assert_allclose(
+                    result.ndarray, np.matmul(lhs, rhs))
+                output = make_array(np.empty_like(np.matmul(lhs, rhs)))
+                lhs_array._planned_matmul_force_blas_into(
+                    rhs_array, output)
+                np.testing.assert_allclose(
+                    output.ndarray, np.matmul(lhs, rhs))
+                lhs_array._planned_matmul_affine_blas_into(
+                    rhs_array, output)
+                np.testing.assert_allclose(
+                    output.ndarray, np.matmul(lhs, rhs))
+
     def test_batched_packed_blas(self):
         rng = np.random.default_rng(20260723)
         lhs = rng.random((2, 1, 17, 17), dtype='float64')
@@ -336,6 +389,21 @@ class PlannedMatmulTC(unittest.TestCase):
             (make_stepped(lhs), rhs),
             (lhs, make_stepped(rhs)),
             (make_stepped(lhs), make_stepped(rhs)),
+        )
+        for case_lhs, case_rhs in cases:
+            with self.subTest(
+                    lhs_strides=case_lhs.strides,
+                    rhs_strides=case_rhs.strides):
+                self.assert_matmul_equal(case_lhs, case_rhs)
+
+    def test_batched_blas_descriptors(self):
+        rng = np.random.default_rng(20260724)
+        lhs = rng.random((2, 3, 17, 17), dtype='float64')
+        rhs = rng.random((2, 3, 17, 17), dtype='float64')
+        cases = (
+            (lhs.swapaxes(-1, -2), rhs.swapaxes(-1, -2)),
+            (make_stepped(lhs, axis=-2),
+             make_stepped(rhs, axis=-2)),
         )
         for case_lhs, case_rhs in cases:
             with self.subTest(
@@ -376,6 +444,23 @@ class PlannedMatmulTC(unittest.TestCase):
             shape=(5, 4, 6), value=1.0)
         with self.assertRaisesRegex(ValueError, 'broadcast'):
             batch_lhs._planned_matmul(batch_rhs)
+
+    def test_non_blas_type_families(self):
+        type_cases = (
+            (np.int32, solvcon.SimpleArrayInt32),
+            (np.uint32, solvcon.SimpleArrayUint32),
+            (np.bool_, solvcon.SimpleArrayBool),
+        )
+        lhs_values = np.arange(2 * 1 * 3 * 4).reshape(2, 1, 3, 4)
+        rhs_values = np.arange(1 * 2 * 4 * 3).reshape(1, 2, 4, 3)
+        for dtype, array_type in type_cases:
+            with self.subTest(dtype=dtype):
+                lhs = lhs_values.astype(dtype)
+                rhs = rhs_values.astype(dtype)
+                result = array_type(array=lhs)._planned_matmul(
+                    array_type(array=rhs))
+                np.testing.assert_array_equal(
+                    result.ndarray, np.matmul(lhs, rhs))
 
 
 class PlannedTypedExecutionTC(unittest.TestCase):
